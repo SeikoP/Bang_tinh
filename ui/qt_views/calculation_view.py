@@ -129,7 +129,7 @@ class CalculationView(QWidget):
         # 1. Calculation Tab
         self.calc_tab = QWidget()
         self._setup_calc_tab()
-        self.tabs.addTab(self.calc_tab, "🧮 Máy tính & Dịch thuật")
+        self.tabs.addTab(self.calc_tab, "🧮 Máy tính")
         
         # 2. Product Management Tab (Moved from Product View)
         self.prod_tab = QWidget()
@@ -262,7 +262,7 @@ class CalculationView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(60)
+        self.table.verticalHeader().setDefaultSectionSize(60) # Tăng thêm để tạo khoảng thở
 
     def _setup_prod_table(self):
         self.prod_table.setColumnCount(6)
@@ -278,7 +278,7 @@ class CalculationView(QWidget):
         self.prod_table.setColumnWidth(2, 75)
         self.prod_table.setColumnWidth(3, 75)
         self.prod_table.setColumnWidth(4, 110)
-        self.prod_table.setColumnWidth(5, 140)
+        self.prod_table.setColumnWidth(5, 190)
         
         self.prod_table.setAlternatingRowColors(True)
         self.prod_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -313,7 +313,7 @@ class CalculationView(QWidget):
             handover_layout.setContentsMargins(0, 0, 0, 0)
             handover_edit = QLineEdit(handover_disp if s.handover_qty > 0 else "0")
             handover_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            handover_edit.setMinimumHeight(34)
+            handover_edit.setMinimumHeight(24) # Thu nhỏ xuống 24px
             handover_edit.setStyleSheet(self._input_style())
             handover_edit.setProperty("product_id", p.id)
             handover_edit.setProperty("conversion", p.conversion)
@@ -329,7 +329,7 @@ class CalculationView(QWidget):
             closing_layout.setContentsMargins(0, 0, 0, 0)
             closing_edit = QLineEdit(closing_disp if s.closing_qty > 0 else "0")
             closing_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            closing_edit.setMinimumHeight(34)
+            closing_edit.setMinimumHeight(24) # Thu nhỏ xuống 24px
             closing_edit.setStyleSheet(self._input_style())
             closing_edit.setProperty("product_id", p.id)
             closing_edit.setProperty("conversion", p.conversion)
@@ -377,22 +377,51 @@ class CalculationView(QWidget):
             self._set_cell_helper(self.prod_table, row, 2, p.large_unit, center=True, fg=AppColors.PRIMARY)
             self._set_cell_helper(self.prod_table, row, 3, str(p.conversion), center=True, fg=AppColors.TEXT)
             self._set_cell_helper(self.prod_table, row, 4, f"{p.unit_price:,.0f}", center=True, fg=AppColors.SUCCESS, bold=True)
-            actions = QFrame()
+            # Force layout zero margins/spacing
+            actions = QWidget()
+            actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             al = QHBoxLayout(actions)
-            al.setContentsMargins(0, 0, 0, 0)
+            al.setContentsMargins(4, 0, 4, 0)
             al.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            al.setSpacing(10)
+            al.setSpacing(4)
+            
+            # Action Button Style
+            btn_style = """
+                QPushButton {
+                    border: 1px solid #cbd5e1;
+                    border-radius: 4px;
+                    background-color: white;
+                    color: #334155;
+                    font-size: 12px;
+                    font-weight: 600;
+                    padding: 0px;
+                    margin: 0px;
+                }
+                QPushButton:hover { background-color: #f1f5f9; border-color: #94a3b8; }
+            """
+            del_style = """
+                QPushButton {
+                    border: 1px solid #ef4444;
+                    border-radius: 4px;
+                    background-color: white;
+                    color: #ef4444;
+                    font-size: 12px;
+                    font-weight: 600;
+                    padding: 0px;
+                    margin: 0px;
+                }
+                QPushButton:hover { background-color: #fef2f2; }
+            """
+
             eb = QPushButton("Sửa")
-            eb.setObjectName("secondary")
-            eb.setMinimumWidth(80)
-            eb.setFixedHeight(32)
+            eb.setFixedSize(60, 26)
+            eb.setStyleSheet(btn_style)
             eb.clicked.connect(lambda _, pid=p.id: self._edit_product(pid))
             al.addWidget(eb)
+            
             db = QPushButton("Xóa")
-            db.setObjectName("iconBtn")
-            db.setMinimumWidth(80)
-            db.setFixedHeight(32)
-            db.setStyleSheet(f"color: {AppColors.ERROR}; border-color: {AppColors.ERROR};")
+            db.setFixedSize(60, 26)
+            db.setStyleSheet(del_style)
             db.clicked.connect(lambda _, pid=p.id, name=p.name: self._delete_product(pid, name))
             al.addWidget(db)
             self.prod_table.setCellWidget(row, 5, actions)
@@ -402,10 +431,11 @@ class CalculationView(QWidget):
             QLineEdit {{
                 border: 1px solid {AppColors.BORDER};
                 border-radius: 4px;
-                padding: 2px 4px;
+                padding: 0px 2px;
                 font-weight: 700;
-                font-size: 13px;
+                font-size: 13px; /* Trả về font to */
                 background: white;
+                margin-bottom: 4px; /* Đẩy lên cao hơn chút nữa */
             }}
             QLineEdit:focus {{
                 border: 2px solid {AppColors.PRIMARY};

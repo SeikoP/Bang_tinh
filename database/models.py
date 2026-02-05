@@ -151,3 +151,24 @@ class QuickPrice:
             name=row['name'],
             price=row['price']
         )
+
+@dataclass
+class BankNotification:
+    """Lịch sử thông báo ngân hàng"""
+    id: int
+    time_str: str
+    source: str
+    amount: str
+    content: str
+    created_at: datetime
+    
+    @classmethod
+    def from_row(cls, row) -> "BankNotification":
+        return cls(
+            id=row['id'],
+            time_str=row['time_str'],
+            source=row['source'],
+            amount=row['amount'],
+            content=row['content'],
+            created_at=row['created_at']
+        )

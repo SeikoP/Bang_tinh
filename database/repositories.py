@@ -4,7 +4,7 @@ Repositories - CRUD operations cho database
 from typing import List, Optional
 from datetime import date, datetime
 from .connection import get_connection
-from .models import Product, SessionData, SessionHistory, SessionHistoryItem, QuickPrice
+from .models import Product, SessionData, SessionHistory, SessionHistoryItem, QuickPrice, BankNotification
 
 
 class ProductRepository:
@@ -275,3 +275,42 @@ class QuickPriceRepository:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM quick_prices WHERE id=?", (id,))
             return cursor.rowcount > 0
+
+
+class BankRepository:
+    """Repository cho lịch sử thông báo ngân hàng"""
+    
+    @staticmethod
+    def add(time_str: str, source: str, amount: str, content: str) -> int:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO bank_history (time_str, source, amount, content) 
+                   VALUES (?, ?, ?, ?)""",
+                (time_str, source, amount, content)
+            )
+            return cursor.lastrowid
+
+    @staticmethod
+    def get_all(limit: int = 100) -> List[BankNotification]:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM bank_history ORDER BY id DESC LIMIT ?",
+                (limit,)
+            )
+            return [BankNotification.from_row(row) for row in cursor.fetchall()]
+
+    @staticmethod
+    def delete(id: int) -> bool:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM bank_history WHERE id=?", (id,))
+            return cursor.rowcount > 0
+
+    @staticmethod
+    def clear_all() -> bool:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM bank_history")
+            return True

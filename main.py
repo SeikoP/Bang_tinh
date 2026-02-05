@@ -16,6 +16,7 @@ import html
 from PyQt6.QtGui import QFont, QIcon, QColor
 
 from database.connection import init_db
+from database.repositories import BankRepository
 init_db()
 
 from config import APP_NAME, APP_VERSION, WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT, BASE_DIR
@@ -74,7 +75,22 @@ class BankView(QWidget):
         self.table.verticalHeader().setDefaultSectionSize(45) # Tăng chiều cao hàng để tránh mất chữ
         layout.addWidget(self.table)
         
+        self.load_history()
+
+    def load_history(self):
+        """Tải lại lịch sử từ database"""
+        notifs = BankRepository.get_all()
+        for n in reversed(notifs): # Đảo ngược để thêm theo thứ tự cũ -> mới (vì add_row thêm lên đầu)
+            self._add_row_ui(n.id, n.time_str, n.source, n.amount, n.content)
+            
     def add_notif(self, time_str, source, amount, raw_message):
+        # 1. Lưu vào database trước
+        new_id = BankRepository.add(time_str, source, amount, raw_message)
+        
+        # 2. Hiển thị lên UI
+        self._add_row_ui(new_id, time_str, source, amount, raw_message)
+
+    def _add_row_ui(self, db_id, time_str, source, amount, raw_message):
         row = 0
         self.table.insertRow(row) # Thêm vào đầu bảng
         
@@ -92,24 +108,57 @@ class BankView(QWidget):
         
         self.table.setItem(row, 3, QTableWidgetItem(raw_message))
         
-        # Nút xóa từng dòng
+        # Nút xóa từng dòng (Centered Layout & Force Style)
+        del_container = QWidget()
+        del_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        del_layout = QHBoxLayout(del_container)
+        del_layout.setContentsMargins(0, 0, 0, 0)
+        del_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
         del_btn = QPushButton("🗑️")
         del_btn.setFixedSize(30, 30)
         del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        del_btn.setStyleSheet(f"color: {AppColors.ERROR}; background: transparent; border: none; font-size: 16px;")
-        del_btn.clicked.connect(lambda: self._delete_row(raw_message)) # Dùng message làm key tạm
-        self.table.setCellWidget(row, 4, del_btn)
+        # Force style mạnh mẽ
+        del_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent; 
+                border: none; 
+                font-size: 16px; 
+                margin: 0px; 
+                padding: 0px;
+                color: #ef4444; 
+            }
+            QPushButton:hover {
+                background-color: #fef2f2;
+                border: 1px solid #ef4444;
+                border-radius: 4px;
+            }
+        """)
+        del_btn.clicked.connect(lambda: self._delete_row(db_id))
+        
+        del_layout.addWidget(del_btn)
+        self.table.setCellWidget(row, 4, del_container)
+        
+        # Lưu ID vào item ẩn để tham chiếu nếu cần
+        self.table.item(row, 0).setData(Qt.ItemDataRole.UserRole, db_id)
 
-    def _delete_row(self, message_to_find):
-        """Xóa một dòng cụ thể"""
+    def _delete_row(self, db_id): # Xóa row_index khỏi tham số vì không cần thiết
+        """Xóa một dòng cụ thể dựa trên ID database"""
+        # Tìm row index hiện tại (vì nó có thể thay đổi sau khi xóa row khác)
+        target_row = -1
         for r in range(self.table.rowCount()):
-            item = self.table.item(r, 3)
-            if item and item.text() == message_to_find:
-                self.table.removeRow(r)
+            item = self.table.item(r, 0)
+            if item.data(Qt.ItemDataRole.UserRole) == db_id:
+                target_row = r
                 break
         
+        if target_row != -1:
+            BankRepository.delete(db_id)
+            self.table.removeRow(target_row)
+
     def clear_history(self):
         """Xóa sạch bảng lịch sử"""
+        BankRepository.clear_all()
         self.table.setRowCount(0)
 
 

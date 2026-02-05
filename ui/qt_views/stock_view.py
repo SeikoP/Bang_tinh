@@ -69,7 +69,7 @@ class StockView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(64) # Độ cao thoải mái cho container
+        self.table.verticalHeader().setDefaultSectionSize(60) # Độ cao thoải mái cho container
     
     def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):
         item = QTableWidgetItem(text)
@@ -119,7 +119,7 @@ class StockView(QWidget):
                 QLineEdit {{
                     border: 1px solid {AppColors.BORDER};
                     border-radius: 4px;
-                    padding: 2px;
+                    padding: 0px;
                     font-weight: 700;
                     font-size: 13px;
                     background: white;
@@ -131,60 +131,66 @@ class StockView(QWidget):
             # Large qty controls
             l_container = QFrame()
             l_layout = QHBoxLayout(l_container)
-            l_layout.setContentsMargins(4, 0, 4, 0)
-            l_layout.setSpacing(6)
+            l_layout.setContentsMargins(0, 0, 0, 0) # Zero margins for container
+            l_layout.setSpacing(4)
+            l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             
             btn_m_l = QPushButton("➖")
             btn_m_l.setObjectName("iconBtn")
-            btn_m_l.setFixedSize(36, 36)
+            btn_m_l.setFixedSize(28, 28) # Tăng size lên 28
+            btn_m_l.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_m_l.clicked.connect(lambda _, pid=p.id, c=p.conversion, sq=s_qty: 
                                   self._adjust_qty(pid, c, sq, -1, True))
             
             edit_l = QLineEdit(str(l_qty))
             edit_l.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            edit_l.setFixedHeight(34)
+            edit_l.setFixedSize(60, 28) # Fixed width & height MATCHING button
             edit_l.setStyleSheet(input_css)
             edit_l.editingFinished.connect(lambda w=edit_l, sq=s_qty, c=p.conversion, pid=p.id: 
                                          self._on_direct_change(pid, w.text(), str(sq), c))
             
             btn_p_l = QPushButton("➕")
             btn_p_l.setObjectName("iconBtn")
-            btn_p_l.setFixedSize(36, 36)
+            btn_p_l.setFixedSize(28, 28)
+            btn_p_l.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_p_l.clicked.connect(lambda _, pid=p.id, c=p.conversion, sq=s_qty: 
                                   self._adjust_qty(pid, c, sq, 1, True))
             
             l_layout.addWidget(btn_m_l)
-            l_layout.addWidget(edit_l, 1)
+            l_layout.addWidget(edit_l)
             l_layout.addWidget(btn_p_l)
             self.table.setCellWidget(row, 4, l_container)
             
             # Small qty controls
             s_container = QFrame()
             s_layout = QHBoxLayout(s_container)
-            s_layout.setContentsMargins(4, 0, 4, 0)
-            s_layout.setSpacing(6)
+            s_layout.setContentsMargins(0, 0, 0, 0)
+            s_layout.setSpacing(4)
+            s_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             
             btn_m_s = QPushButton("➖")
             btn_m_s.setObjectName("iconBtn")
-            btn_m_s.setFixedSize(36, 36)
+            btn_m_s.setFixedSize(28, 28)
+            btn_m_s.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_m_s.clicked.connect(lambda _, pid=p.id, c=p.conversion, lq=l_qty: 
                                   self._adjust_qty(pid, c, lq, -1, False))
             
             edit_s = QLineEdit(str(s_qty))
             edit_s.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            edit_s.setFixedHeight(34)
+            edit_s.setFixedSize(60, 28) # Sync height
             edit_s.setStyleSheet(input_css)
             edit_s.editingFinished.connect(lambda w=edit_s, lq=l_qty, c=p.conversion, pid=p.id: 
                                          self._on_direct_change(pid, str(lq), w.text(), c))
             
             btn_p_s = QPushButton("➕")
             btn_p_s.setObjectName("iconBtn")
-            btn_p_s.setFixedSize(36, 36)
+            btn_p_s.setFixedSize(28, 28)
+            btn_p_s.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_p_s.clicked.connect(lambda _, pid=p.id, c=p.conversion, lq=l_qty: 
                                   self._adjust_qty(pid, c, lq, 1, False))
             
             s_layout.addWidget(btn_m_s)
-            s_layout.addWidget(edit_s, 1)
+            s_layout.addWidget(edit_s)
             s_layout.addWidget(btn_p_s)
             self.table.setCellWidget(row, 5, s_container)
             

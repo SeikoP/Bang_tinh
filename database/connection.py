@@ -127,6 +127,18 @@ def init_db():
             cursor.execute("ALTER TABLE products ADD COLUMN is_favorite INTEGER DEFAULT 0")
         except sqlite3.OperationalError:
             pass
+            
+        # Bảng bank_history (lưu lịch sử thông báo ngân hàng)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS bank_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                time_str TEXT,
+                source TEXT,
+                amount TEXT,
+                content TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
         
         # Thêm dữ liệu mẫu nếu bảng trống
         cursor.execute("SELECT COUNT(*) FROM products")

@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QTableWidget, QTableWidgetItem, QHeaderView,
+    QTableWidget, QTableWidgetItem, QHeaderView, QSizePolicy,
     QDialog, QFormLayout, QLineEdit, QDoubleSpinBox,
     QFrame
 )
@@ -104,21 +104,22 @@ class ProductView(QWidget):
     def _setup_table(self):
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["STT", "Tên dịch vụ", "Đơn giá", "Thao tác"])
+        self.table.setShowGrid(False)  # Bỏ grid lines để tránh cắt viền visual
         
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        # Auto resize cột Thao tác theo nội dung nút
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         
         self.table.setColumnWidth(0, 45)
         self.table.setColumnWidth(2, 120)
-        self.table.setColumnWidth(3, 120)
         
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(50)
+        self.table.verticalHeader().setDefaultSectionSize(50) # Tăng lên 50px cho thoáng
     
     def refresh_list(self):
         query = self.search_input.text().lower().strip()
@@ -132,26 +133,63 @@ class ProductView(QWidget):
             self._set_cell(row, 1, item.name, bold=True)
             self._set_cell(row, 2, f"{item.price:,.0f} đ", center=True, fg=AppColors.PRIMARY, bold=True)
             
-            actions = QFrame()
+            # Container widget
+            actions = QWidget()
+            actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            
+            # 1. Tối ưu layout trong cell
             actions_layout = QHBoxLayout(actions)
-            actions_layout.setContentsMargins(0, 0, 0, 0)
+            # 2. Set contentsMargins cực nhỏ hoặc 0 để đảm bảo không bị quá khổ
+            actions_layout.setContentsMargins(0, 4, 0, 4)
             actions_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            actions_layout.setSpacing(10)
+            actions_layout.setSpacing(8)
+            
+            # Action Button Style - Thay đổi màu sắc RÕ RỆT để user thấy
+            btn_style = f"""
+                QPushButton {{
+                    border: none;
+                    border-radius: 4px;
+                    background-color: {AppColors.PRIMARY}; 
+                    color: white;
+                    font-size: 11px;
+                    font-weight: 600;
+                    padding: 4px 10px;
+                }}
+                QPushButton:hover {{ background-color: #1d4ed8; }}
+                QPushButton:pressed {{ background-color: #1e40af; }}
+            """
+            del_style = """
+                QPushButton {
+                    border: none;
+                    border-radius: 4px;
+                    background-color: #fee2e2;
+                    color: #ef4444;
+                    font-size: 11px;
+                    font-weight: 600;
+                    padding: 4px 10px;
+                }
+                QPushButton:hover { background-color: #fecaca; }
+            """
             
             edit_btn = QPushButton("Sửa")
-            edit_btn.setObjectName("secondary")
-            edit_btn.setMinimumWidth(80)
-            edit_btn.setFixedHeight(32)
+            edit_btn.setStyleSheet(btn_style)
+            edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            edit_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus) # Bỏ viền focus
+            # 3. Set sizePolicy & 5. Đảm bảo không bị clipped
+            edit_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            edit_btn.setFixedHeight(30) # Giảm xuống 30px để an toàn hơn
             edit_btn.clicked.connect(lambda _, it=item: self._edit_quick_price(it))
             actions_layout.addWidget(edit_btn)
             
             del_btn = QPushButton("Xóa")
-            del_btn.setObjectName("iconBtn")
-            del_btn.setMinimumWidth(80)
-            del_btn.setFixedHeight(32)
-            del_btn.setStyleSheet(f"color: {AppColors.ERROR}; border-color: {AppColors.ERROR};")
+            del_btn.setStyleSheet(del_style)
+            del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            del_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            del_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+            del_btn.setFixedHeight(30)
             del_btn.clicked.connect(lambda _, i_id=item.id: self._delete_quick_price(i_id))
             actions_layout.addWidget(del_btn)
+            
             self.table.setCellWidget(row, 3, actions)
             
     def _add_quick_price(self):
