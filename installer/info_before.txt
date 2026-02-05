@@ -1,0 +1,25 @@
+Warehouse Management System - Installation Information
+
+Thank you for choosing Warehouse Management System!
+
+This installer will guide you through the installation process.
+
+SYSTEM REQUIREMENTS:
+- Windows 10 or later (64-bit)
+- 100 MB free disk space
+- 2 GB RAM (minimum)
+
+WHAT WILL BE INSTALLED:
+- Warehouse Management application
+- Configuration templates
+- Sample assets and resources
+
+IMPORTANT NOTES:
+- The application will create a database file (storage.db) in the installation directory
+- Configuration can be customized via the .env file after installation
+- Logs will be stored in the logs/ subdirectory
+
+For support and documentation, please visit:
+https://github.com/bangla-team/warehouse-management
+
+Click Next to continue with the installation.

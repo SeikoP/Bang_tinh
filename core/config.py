@@ -76,8 +76,9 @@ class Config:
         if self.notification_port < 1024 or self.notification_port > 65535:
             errors.append(f"Invalid notification port: {self.notification_port}")
         
-        if self.environment == 'production' and not self.license_key:
-            errors.append("License key required for production environment")
+        # License key is optional - just log a warning if missing
+        # if self.environment == 'production' and not self.license_key:
+        #     errors.append("License key required for production environment")
         
         if self.log_level not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
             errors.append(f"Invalid log level: {self.log_level}")

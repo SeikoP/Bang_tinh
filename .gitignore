@@ -61,17 +61,16 @@ coverage.xml
 ############################
 build/
 dist/
-*.spec
-*.exe
-*.msi
 *.whl
 *.zip
+build_*.log
 
 ############################
 # PyInstaller
 ############################
 *.manifest
 *.toc
+warehouse_app.spec
 
 ############################
 # Database (Local)
