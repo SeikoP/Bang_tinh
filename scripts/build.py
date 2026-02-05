@@ -25,7 +25,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler(f'build_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+        logging.FileHandler(f'logs/build_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
     ]
 )
 logger = logging.getLogger(__name__)
@@ -45,8 +45,8 @@ class Builder:
         self.dist_dir = project_root / 'dist'
         self.spec_file = project_root / 'warehouse_app.spec'
     
-    def clean(self):
-        """Remove previous build artifacts"""
+    def clean(self, clean_data=False):
+        """Remove previous build artifacts and optionally data"""
         logger.info("Cleaning build directories...")
         
         dirs_to_clean = [
@@ -73,6 +73,34 @@ class Builder:
                 pyc_file.unlink()
             except Exception as e:
                 logger.warning(f"  Failed to remove {pyc_file}: {e}")
+        
+        # Clean data if requested
+        if clean_data:
+            logger.info("Cleaning data files for fresh build...")
+            data_files = [
+                self.project_root / 'storage.db',
+                self.project_root / 'logs',
+                self.project_root / 'exports',
+                self.project_root / 'audit_reports',
+            ]
+            
+            for data_path in data_files:
+                if data_path.exists():
+                    try:
+                        if data_path.is_file():
+                            data_path.unlink()
+                            logger.info(f"  Removed data file: {data_path.name}")
+                        elif data_path.is_dir():
+                            # Keep directory but remove contents
+                            for item in data_path.iterdir():
+                                if item.name != '.gitkeep':
+                                    if item.is_file():
+                                        item.unlink()
+                                    elif item.is_dir():
+                                        shutil.rmtree(item)
+                            logger.info(f"  Cleaned directory: {data_path.name}")
+                    except Exception as e:
+                        logger.warning(f"  Failed to clean {data_path}: {e}")
         
         logger.info("Clean completed successfully")
     
@@ -218,6 +246,11 @@ def main():
         help='Only clean build artifacts without building'
     )
     parser.add_argument(
+        '--clean-data',
+        action='store_true',
+        help='Clean data files (database, logs, exports) for fresh build'
+    )
+    parser.add_argument(
         '--no-installer',
         action='store_true',
         help='Skip installer creation'
@@ -238,7 +271,7 @@ def main():
     
     try:
         # Always clean first
-        builder.clean()
+        builder.clean(clean_data=args.clean_data)
         
         if args.clean_only:
             logger.info("Clean-only mode: Exiting without building")

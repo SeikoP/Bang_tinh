@@ -336,83 +336,89 @@ class CalculationView(QWidget):
                 total += s.amount
                 has_data = s.used_qty > 0
                 row_bg = "rgba(37, 99, 235, 0.05)" if has_data else None
-            unit_item = QTableWidgetItem(p.large_unit)
-            unit_item.setFlags(unit_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            unit_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
-            unit_item.setBackground(QColor(row_bg if has_data else "#f1f5f9"))
-            unit_item.setForeground(QColor(AppColors.PRIMARY))
-            font = unit_item.font()
-            font.setBold(True)
-            unit_item.setFont(font)
-            self.table.setItem(row, 0, unit_item)
-            self._set_cell_helper(self.table, row, 1, str(p.conversion), right=True, fg=AppColors.TEXT, bg=row_bg)
-            self._set_cell_helper(self.table, row, 2, p.name, bold=True, fg=AppColors.TEXT, bg=row_bg)
-            handover_container = QWidget()
-            handover_layout = QVBoxLayout(handover_container)
-            handover_layout.setContentsMargins(10, 8, 10, 8)  # Tăng margin để widget không bị overflow
-            handover_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            handover_edit = QLineEdit(handover_disp if s.handover_qty > 0 else "0")
-            handover_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            handover_edit.setFixedHeight(self._widget_height)
-            # Set stylesheet trực tiếp với specificity cao
-            handover_edit.setStyleSheet(f"""
-                QLineEdit {{
-                    border: 2px solid {AppColors.BORDER};
-                    border-radius: 5px;
-                    padding: 2px 6px;
-                    font-weight: 700;
-                    font-size: 13px;
-                    background: white;
-                }}
-            """)
-            handover_edit.setProperty("product_id", p.id)
-            handover_edit.setProperty("conversion", p.conversion)
-            handover_edit.setProperty("row", row)
-            handover_edit.setProperty("col", 3)
-            handover_edit.editingFinished.connect(self._on_handover_change)
-            handover_edit.returnPressed.connect(self._on_return_pressed)
-            handover_layout.addWidget(handover_edit)
-            self.table.setCellWidget(row, 3, handover_container)
-            closing_container = QWidget()
-            closing_layout = QVBoxLayout(closing_container)
-            closing_layout.setContentsMargins(10, 8, 10, 8)  # Tăng margin để widget không bị overflow
-            closing_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            closing_edit = QLineEdit(closing_disp if s.closing_qty > 0 else "0")
-            closing_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            closing_edit.setFixedHeight(self._widget_height)
-            # Set stylesheet trực tiếp với specificity cao
-            closing_edit.setStyleSheet(f"""
-                QLineEdit {{
-                    border: 2px solid {AppColors.BORDER};
-                    border-radius: 5px;
-                    padding: 2px 6px;
-                    font-weight: 700;
-                    font-size: 13px;
-                    background: white;
-                }}
-            """)
-            closing_edit.setProperty("product_id", p.id)
-            closing_edit.setProperty("conversion", p.conversion)
-            closing_edit.setProperty("row", row)
-            closing_edit.setProperty("col", 4)
-            closing_edit.editingFinished.connect(self._on_closing_change)
-            closing_edit.returnPressed.connect(self._on_return_pressed)
-            closing_layout.addWidget(closing_edit)
-            self.table.setCellWidget(row, 4, closing_container)
-            if s.used_qty > 0:
-                used_item = QTableWidgetItem(str(s.used_qty))
-                used_item.setFlags(used_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                used_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-                used_item.setBackground(QColor(AppColors.WARNING))
-                used_item.setForeground(QColor("white"))
-                font = used_item.font()
+                
+                unit_item = QTableWidgetItem(p.large_unit)
+                unit_item.setFlags(unit_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                unit_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+                unit_item.setBackground(QColor(row_bg if has_data else "#f1f5f9"))
+                unit_item.setForeground(QColor(AppColors.PRIMARY))
+                font = unit_item.font()
                 font.setBold(True)
-                used_item.setFont(font)
-                self.table.setItem(row, 5, used_item)
-            else:
-                self._set_cell_helper(self.table, row, 5, "0", right=True, fg=AppColors.TEXT, bg=row_bg)
-            self._set_cell_helper(self.table, row, 6, f"{p.unit_price:,.0f}", right=True, fg=AppColors.TEXT, bg=row_bg)
-            self._set_cell_helper(self.table, row, 7, f"{s.amount:,.0f}", right=True, fg=AppColors.SUCCESS, bold=True, bg=row_bg)
+                unit_item.setFont(font)
+                self.table.setItem(row, 0, unit_item)
+                self._set_cell_helper(self.table, row, 1, str(p.conversion), right=True, fg=AppColors.TEXT, bg=row_bg)
+                self._set_cell_helper(self.table, row, 2, p.name, bold=True, fg=AppColors.TEXT, bg=row_bg)
+                
+                handover_container = QWidget()
+                handover_layout = QVBoxLayout(handover_container)
+                handover_layout.setContentsMargins(10, 8, 10, 8)  # Tăng margin để widget không bị overflow
+                handover_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                handover_edit = QLineEdit(handover_disp if s.handover_qty > 0 else "0")
+                handover_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                handover_edit.setFixedHeight(self._widget_height)
+                # Set stylesheet trực tiếp với specificity cao
+                handover_edit.setStyleSheet(f"""
+                    QLineEdit {{
+                        border: 2px solid {AppColors.BORDER};
+                        border-radius: 5px;
+                        padding: 2px 6px;
+                        font-weight: 700;
+                        font-size: 13px;
+                        background: white;
+                    }}
+                """)
+                handover_edit.setProperty("product_id", p.id)
+                handover_edit.setProperty("conversion", p.conversion)
+                handover_edit.setProperty("row", row)
+                handover_edit.setProperty("col", 3)
+                handover_edit.editingFinished.connect(self._on_handover_change)
+                handover_edit.returnPressed.connect(self._on_return_pressed)
+                handover_layout.addWidget(handover_edit)
+                self.table.setCellWidget(row, 3, handover_container)
+                
+                closing_container = QWidget()
+                closing_layout = QVBoxLayout(closing_container)
+                closing_layout.setContentsMargins(10, 8, 10, 8)  # Tăng margin để widget không bị overflow
+                closing_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                closing_edit = QLineEdit(closing_disp if s.closing_qty > 0 else "0")
+                closing_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                closing_edit.setFixedHeight(self._widget_height)
+                # Set stylesheet trực tiếp với specificity cao
+                closing_edit.setStyleSheet(f"""
+                    QLineEdit {{
+                        border: 2px solid {AppColors.BORDER};
+                        border-radius: 5px;
+                        padding: 2px 6px;
+                        font-weight: 700;
+                        font-size: 13px;
+                        background: white;
+                    }}
+                """)
+                closing_edit.setProperty("product_id", p.id)
+                closing_edit.setProperty("conversion", p.conversion)
+                closing_edit.setProperty("row", row)
+                closing_edit.setProperty("col", 4)
+                closing_edit.editingFinished.connect(self._on_closing_change)
+                closing_edit.returnPressed.connect(self._on_return_pressed)
+                closing_layout.addWidget(closing_edit)
+                self.table.setCellWidget(row, 4, closing_container)
+                
+                if s.used_qty > 0:
+                    used_item = QTableWidgetItem(str(s.used_qty))
+                    used_item.setFlags(used_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    used_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                    used_item.setBackground(QColor(AppColors.WARNING))
+                    used_item.setForeground(QColor("white"))
+                    font = used_item.font()
+                    font.setBold(True)
+                    used_item.setFont(font)
+                    self.table.setItem(row, 5, used_item)
+                else:
+                    self._set_cell_helper(self.table, row, 5, "0", right=True, fg=AppColors.TEXT, bg=row_bg)
+                
+                self._set_cell_helper(self.table, row, 6, f"{p.unit_price:,.0f}", right=True, fg=AppColors.TEXT, bg=row_bg)
+                self._set_cell_helper(self.table, row, 7, f"{s.amount:,.0f}", right=True, fg=AppColors.SUCCESS, bold=True, bg=row_bg)
+            
             self.total_label.setText(f"💰 TỔNG TIỀN: {total:,.0f} VNĐ")
             if self._next_focus:
                 row, col = self._next_focus

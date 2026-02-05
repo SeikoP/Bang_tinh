@@ -154,24 +154,7 @@ def init_db():
             )
         ''')
         
-        # Thêm dữ liệu mẫu nếu bảng trống
-        cursor.execute("SELECT COUNT(*) FROM products")
-        if cursor.fetchone()[0] == 0:
-            samples = [
-                ('Nước', 'Thùng', 24, 10000),
-                ('Trứng', 'Vỉ', 30, 3000),
-                ('Xúc xích', 'Gói', 10, 5000),
-                ('Chai sành', 'Két', 20, 15000)
-            ]
-            cursor.executemany(
-                "INSERT INTO products (name, large_unit, conversion, unit_price) VALUES (?, ?, ?, ?)",
-                samples
-            )
-            
-            # Khởi tạo session_data cho các sản phẩm mẫu
-            cursor.execute("SELECT id FROM products")
-            for (pid,) in cursor.fetchall():
-                cursor.execute(
-                    "INSERT OR IGNORE INTO session_data (product_id) VALUES (?)",
-                    (pid,)
-                )
+        # Sample data removed for production build
+        # Database will start empty
+        # Users can add their own products
+        pass

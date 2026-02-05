@@ -47,6 +47,7 @@ desktop.ini
 ############################
 logs/
 *.log
+build_*.log
 
 ############################
 # Test / Coverage
