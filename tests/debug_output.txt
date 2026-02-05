@@ -1,7 +1,0 @@
-
---- DEBUG: STARTING SCAN ---
-
-SUCCESS: No misplaced FilePicker found in page.controls.
-
-Total items in overlay: 1
-Overlay[0]: FilePicker
