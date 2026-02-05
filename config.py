@@ -14,9 +14,10 @@ else:
     # Running as script
     BASE_DIR = Path(__file__).parent
 
-DB_PATH = BASE_DIR / "storage.db"
-BACKUP_DIR = BASE_DIR / "backups"
-EXPORT_DIR = BASE_DIR / "exports"
+# Load from environment variables with fallbacks
+DB_PATH = Path(os.getenv('DB_PATH', BASE_DIR / "storage.db"))
+BACKUP_DIR = Path(os.getenv('BACKUP_DIR', BASE_DIR / "backups"))
+EXPORT_DIR = Path(os.getenv('EXPORT_DIR', BASE_DIR / "exports"))
 
 # === Theme Colors ===
 class Colors:
@@ -55,14 +56,15 @@ DEFAULT_UNITS = [
 ]
 
 # === Window Settings ===
-WINDOW_WIDTH = 1200
-WINDOW_HEIGHT = 800
+# Load from environment variables with fallbacks
+WINDOW_WIDTH = int(os.getenv('WINDOW_WIDTH', '1200'))
+WINDOW_HEIGHT = int(os.getenv('WINDOW_HEIGHT', '800'))
 WINDOW_MIN_WIDTH = 850
 WINDOW_MIN_HEIGHT = 600
 
 # === App Info ===
-APP_NAME = "Phần mềm Quản lý Xuất kho & Dịch vụ"
-APP_VERSION = "2.0.0"
+APP_NAME = os.getenv('APP_NAME', 'Phần mềm Quản lý Xuất kho & Dịch vụ')
+APP_VERSION = os.getenv('APP_VERSION', '2.0.0')
 APP_AUTHOR = "Bang_tinh Team"
 
 # === Export Settings ===

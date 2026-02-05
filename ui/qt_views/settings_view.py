@@ -23,8 +23,9 @@ class SettingsView(QWidget):
     row_height_changed = pyqtSignal(int)
     widget_height_changed = pyqtSignal(int)
     
-    def __init__(self):
+    def __init__(self, container=None):
         super().__init__()
+        self.container = container
         self.current_row_height = 70
         self.current_widget_height = 28
         self._setup_ui()
@@ -147,7 +148,14 @@ class SettingsView(QWidget):
         layout.addLayout(self.ip_box)
         
         # Guide
-        guide = QLabel("Gợi ý URL: http://[Địa chỉ IP trên]:5005?content={not_text}")
+        # Get port from config if available
+        port = 5005  # default
+        if self.container:
+            config = self.container.get('config')
+            if config:
+                port = config.notification_port
+        
+        guide = QLabel(f"Gợi ý URL: http://[Địa chỉ IP trên]:{port}?content={{not_text}}")
         guide.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 12px;")
         layout.addWidget(guide)
         

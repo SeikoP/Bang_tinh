@@ -1,0 +1,119 @@
+
+
+.hypothesis
+############################
+# Python
+############################
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+*.dll
+
+############################
+# Virtual Environment
+############################
+.venv/
+venv/
+env/
+ENV/
+
+############################
+# Environment / Secrets
+############################
+.env
+.env.*
+!.env.example
+
+############################
+# IDE / Editor
+############################
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+############################
+# OS Files
+############################
+.DS_Store
+Thumbs.db
+desktop.ini
+
+############################
+# Logs
+############################
+logs/
+*.log
+
+############################
+# Test / Coverage
+############################
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+############################
+# Build / Distribution
+############################
+build/
+dist/
+*.spec
+*.exe
+*.msi
+*.whl
+*.zip
+
+############################
+# PyInstaller
+############################
+*.manifest
+*.toc
+
+############################
+# Database (Local)
+############################
+*.db
+*.sqlite
+*.sqlite3
+
+############################
+# Migrations Cache
+############################
+alembic/versions/__pycache__/
+
+############################
+# Reports / Audit
+############################
+audit_reports/
+reports/
+*.html
+*.json
+
+############################
+# Temp / Cache
+############################
+.cache/
+.tmp/
+temp/
+tmp/
+
+############################
+# Node (nếu có frontend)
+############################
+node_modules/
+dist-electron/
+
+############################
+# Installer
+############################
+installer/output/
+*.iss.bak
+
+############################
+# CI Artifacts
+############################
+artifacts/

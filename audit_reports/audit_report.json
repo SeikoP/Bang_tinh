@@ -1,14 +1,14 @@
 {
   "project_name": "Warehouse Management System",
-  "timestamp": "2026-02-06T02:21:18.802108",
+  "timestamp": "2026-02-06T02:25:38.034894",
   "summary": {
-    "total_findings": 364,
+    "total_findings": 378,
     "critical": 1,
     "high": 90,
-    "medium": 23,
-    "low": 250,
+    "medium": 25,
+    "low": 262,
     "categories": {
-      "Code Quality": 274,
+      "Code Quality": 288,
       "Security": 90
     }
   },
@@ -23,6 +23,18 @@
       "details": {
         "complexity": 12,
         "function": "_do_show_notification"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "High cyclomatic complexity (11) in to_html",
+      "risk_level": "Medium",
+      "file_path": "audit\\reporters.py",
+      "line_number": 140,
+      "recommendation": "Refactor to reduce complexity below 10",
+      "details": {
+        "complexity": 11,
+        "function": "to_html"
       }
     },
     {
@@ -233,26 +245,26 @@
     },
     {
       "category": "Code Quality",
-      "description": "Long method (177 lines): AuditReport",
+      "description": "Long method (521 lines): AuditReport",
       "risk_level": "Medium",
       "file_path": "audit\\reporters.py",
       "line_number": 44,
       "recommendation": "Refactor into smaller methods (target < 50 lines)",
       "details": {
-        "lines": 177,
+        "lines": 521,
         "name": "AuditReport",
         "type": "class"
       }
     },
     {
       "category": "Code Quality",
-      "description": "Long method (61 lines): to_html",
-      "risk_level": "Low",
+      "description": "Long method (405 lines): to_html",
+      "risk_level": "Medium",
       "file_path": "audit\\reporters.py",
       "line_number": 140,
       "recommendation": "Refactor into smaller methods (target < 50 lines)",
       "details": {
-        "lines": 61,
+        "lines": 405,
         "name": "to_html",
         "type": "function"
       }
@@ -1654,6 +1666,214 @@
           "audit\\reporters.py:144"
         ],
         "preview": "        \n        Returns:\n            HTML formatted report\n        \"\"\"\n        summary = self.gener"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 191,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:191",
+          "audit\\reporters.py:192"
+        ],
+        "preview": "        \n        .header h1 {{\n            font-size: 32px;\n            margin-bottom: 10px;\n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 196,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:196",
+          "audit\\reporters.py:197"
+        ],
+        "preview": "        \n        .header .meta {{\n            opacity: 0.9;\n            font-size: 14px;\n        }}"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 247,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:247",
+          "audit\\reporters.py:248"
+        ],
+        "preview": "        \n        .filters label {{\n            font-weight: 600;\n            margin-right: 10px;\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 262,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:262",
+          "audit\\reporters.py:263"
+        ],
+        "preview": "        \n        .filter-btn:hover {{\n            border-color: #667eea;\n            color: #667eea;"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 299,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:299",
+          "audit\\reporters.py:300"
+        ],
+        "preview": "        \n        .finding:hover {{\n            transform: translateX(5px);\n            box-shadow: 0"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 304,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:304",
+          "audit\\reporters.py:305"
+        ],
+        "preview": "        \n        .finding.critical {{ border-left-color: #d32f2f; }}\n        .finding.high {{ border"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 326,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:326",
+          "audit\\reporters.py:327"
+        ],
+        "preview": "        \n        .risk-critical {{\n            background: #d32f2f;\n            color: white;\n      "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 331,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:331",
+          "audit\\reporters.py:332"
+        ],
+        "preview": "        \n        .risk-high {{\n            background: #f57c00;\n            color: white;\n        }}"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 336,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:336",
+          "audit\\reporters.py:337"
+        ],
+        "preview": "        \n        .risk-medium {{\n            background: #fbc02d;\n            color: #333;\n        }"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 341,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:341",
+          "audit\\reporters.py:342"
+        ],
+        "preview": "        \n        .risk-low {{\n            background: #388e3c;\n            color: white;\n        }}"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 390,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:390",
+          "audit\\reporters.py:391"
+        ],
+        "preview": "        \n        @media (max-width: 768px) {{\n            .summary {{\n                grid-template-"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 395,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:395",
+          "audit\\reporters.py:396"
+        ],
+        "preview": "            \n            .filters {{\n                flex-direction: column;\n                align-i"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 495,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:495",
+          "audit\\reporters.py:506"
+        ],
+        "preview": "                </div>\n\"\"\"\n            \n            html += \"\"\"\n            </div>"
       }
     },
     {
@@ -4624,7 +4844,7 @@
       "description": "Missing input validation in entry point: save_json",
       "risk_level": "High",
       "file_path": "audit\\reporters.py",
-      "line_number": 202,
+      "line_number": 546,
       "recommendation": "Add input validation before processing user data",
       "details": {
         "function": "save_json",
@@ -4639,7 +4859,7 @@
       "description": "Missing input validation in entry point: save_html",
       "risk_level": "High",
       "file_path": "audit\\reporters.py",
-      "line_number": 212,
+      "line_number": 556,
       "recommendation": "Add input validation before processing user data",
       "details": {
         "function": "save_html",

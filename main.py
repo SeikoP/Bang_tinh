@@ -170,22 +170,25 @@ class NotificationHandler(BaseHTTPRequestHandler):
     def handle_request(self):
         try:
             msg = None
-            # Log incoming request for debugging
-            print(f"[Server] Received {self.command} request to {self.path}")
+            # Log incoming request
+            if hasattr(self.server, 'logger') and self.server.logger:
+                self.server.logger.debug(f"Received {self.command} request to {self.path}")
             
             # 1. Thử lấy từ URL Query (?content=...)
             parsed_url = urlparse(self.path)
             query_params = parse_qs(parsed_url.query)
             if 'content' in query_params:
                 msg = query_params['content'][0]
-                print(f"[Server] Found content in query: {msg}")
+                if hasattr(self.server, 'logger') and self.server.logger:
+                    self.server.logger.debug(f"Found content in query: {msg}")
                 
             # 2. Nếu URL không có, thử lấy từ Body
             if not msg:
                 content_length = self.headers.get('Content-Length')
                 if content_length and int(content_length) > 0:
                     post_data = self.rfile.read(int(content_length)).decode('utf-8')
-                    print(f"[Server] Received body: {post_data}")
+                    if hasattr(self.server, 'logger') and self.server.logger:
+                        self.server.logger.debug(f"Received body: {post_data}")
                     try:
                         data = json.loads(post_data)
                         msg = data.get('content', post_data)
@@ -200,14 +203,16 @@ class NotificationHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b'{"status":"success"}')
                 
                 # Sau đó mới đẩy lên giao diện
-                print(f"[Server] Content: {msg}")
+                if hasattr(self.server, 'logger') and self.server.logger:
+                    self.server.logger.info(f"Notification received: {msg[:50]}...")
                 if hasattr(self.server, 'signal'):
                     self.server.signal.emit(str(msg))
             else:
                 self.send_response(400)
                 self.end_headers()
         except Exception as e:
-            # print(f"[Server] Error: {e}")
+            if hasattr(self.server, 'logger') and self.server.logger:
+                self.server.logger.error(f"Error handling request: {e}")
             try:
                 self.send_response(500)
                 self.end_headers()
@@ -228,17 +233,26 @@ class NotificationServer(QThread):
     """Luồng chạy server lắng nghe thông báo"""
     msg_received = pyqtSignal(str)
     
+    def __init__(self, host='0.0.0.0', port=5005, logger=None):
+        super().__init__()
+        self.host = host
+        self.port = port
+        self.logger = logger
+    
     def run(self):
         try:
             # Sử dụng ThreadingHTTPServer để xử lý đa luồng
-            server = ThreadingHTTPServer(('0.0.0.0', 5005), NotificationHandler)
+            server = ThreadingHTTPServer((self.host, self.port), NotificationHandler)
             server.allow_reuse_address = True
             server.timeout = 5
             server.signal = self.msg_received
-            print("\n>>> Notification Server OK (Port 5005) <<<")
+            server.logger = self.logger  # Pass logger to handler
+            if self.logger:
+                self.logger.info(f"Notification Server started on {self.host}:{self.port}")
             server.serve_forever()
         except Exception as e:
-            print(f"Could not start server: {e}")
+            if self.logger:
+                self.logger.error(f"Could not start server: {e}")
 
 
 class QuickBankPeek(QFrame):
@@ -303,8 +317,32 @@ class QuickBankPeek(QFrame):
 class MainWindow(QMainWindow):
     """Main window - modern premium design"""
     
-    def __init__(self):
+    def __init__(self, container=None):
         super().__init__()
+        # Inject dependency container
+        from core.container import Container
+        from core.config import Config
+        
+        if container is None:
+            # Fallback: create default container if not provided
+            config = Config.from_env()
+            container = Container(config)
+        
+        self.container = container
+        self.logger = container.get('logger')
+        self.config = container.get('config')
+        self.error_handler = None  # Will be initialized in _setup_ui
+        
+        # Production mode checks
+        if self.config and self.config.environment == 'production':
+            self.logger.info("Running in PRODUCTION mode")
+            # Disable debug features in production
+            self._production_mode = True
+        else:
+            self._production_mode = False
+            if self.config:
+                self.logger.info(f"Running in {self.config.environment.upper()} mode")
+        
         self._setup_window()
         self._setup_ui()
         self._apply_theme()
@@ -542,12 +580,23 @@ class MainWindow(QMainWindow):
             btn.style().polish(btn)
     
     def _create_views(self):
-        self.calc_view = CalculationView(on_refresh_stock=self._refresh_stock)
+        # Initialize error handler
+        from utils.error_handler import ErrorHandler
+        self.error_handler = ErrorHandler(self.logger)
+        
+        # Pass container to views
+        self.calc_view = CalculationView(
+            container=self.container,
+            on_refresh_stock=self._refresh_stock
+        )
         self.stock_view = StockView(on_refresh_calc=self._refresh_calc)
-        self.product_view = ProductView(on_refresh_calc=self._refresh_calc)
+        self.product_view = ProductView(
+            container=self.container,
+            on_refresh_calc=self._refresh_calc
+        )
         self.bank_view = BankView() # View mới cho Ngân hàng
         self.history_view = HistoryView()
-        self.settings_view = SettingsView()
+        self.settings_view = SettingsView(container=self.container)
         
         # Kết nối signals từ settings để cập nhật UI real-time
         self.settings_view.row_height_changed.connect(self._on_row_height_changed)
@@ -555,9 +604,25 @@ class MainWindow(QMainWindow):
     
     def _start_notification_server(self):
         """Khởi chạy server ngầm để nhận thông báo"""
-        self.notif_thread = NotificationServer()
-        self.notif_thread.msg_received.connect(self._show_notification)
-        self.notif_thread.start()
+        # Get notification service from container
+        notification_service = self.container.get('notification')
+        if notification_service:
+            notification_service.register_handler(self._show_notification)
+            notification_service.start_server()
+            self.logger.info("Notification server started successfully")
+        else:
+            # Fallback to old implementation if service not available
+            config = self.container.get('config')
+            if config:
+                self.notif_thread = NotificationServer(
+                    host=config.notification_host,
+                    port=config.notification_port,
+                    logger=self.logger
+                )
+            else:
+                self.notif_thread = NotificationServer(logger=self.logger)
+            self.notif_thread.msg_received.connect(self._show_notification)
+            self.notif_thread.start()
         
     def _show_notification(self, message):
         """Hiển thị thông báo an toàn (Safe UI Thread)"""
@@ -674,7 +739,54 @@ def main():
     font = QFont("Segoe UI", 10)
     app.setFont(font)
     
-    window = MainWindow()
+    # Initialize container with configuration
+    from core.config import Config
+    from core.container import Container
+    from core.license import LicenseValidator, LicenseManager
+    from PyQt6.QtWidgets import QMessageBox
+    
+    config = Config.from_env()
+    
+    # Validate configuration
+    config_errors = config.validate()
+    if config_errors:
+        error_msg = "Configuration errors:\n" + "\n".join(config_errors)
+        QMessageBox.critical(None, "Configuration Error", error_msg)
+        sys.exit(1)
+    
+    container = Container(config)
+    logger = container.get('logger')
+    
+    # Validate license at startup
+    try:
+        validator = LicenseValidator(logger=logger)
+        license_manager = LicenseManager(validator, logger)
+        
+        if not license_manager.validate_startup_license(config.license_key, config.environment):
+            QMessageBox.critical(
+                None,
+                "License Error",
+                "Invalid or expired license key.\n\n"
+                "Please contact support to obtain a valid license."
+            )
+            logger.error("Application startup blocked: Invalid license")
+            sys.exit(1)
+        
+        # Store license manager in container for later use
+        container.register_singleton('license_manager', license_manager)
+        
+    except Exception as e:
+        logger.error(f"License validation error: {e}")
+        if config.environment == 'production':
+            QMessageBox.critical(
+                None,
+                "License Error",
+                f"Failed to validate license: {str(e)}"
+            )
+            sys.exit(1)
+    
+    # Create main window with injected container
+    window = MainWindow(container=container)
     window.show()
     sys.exit(app.exec())
 

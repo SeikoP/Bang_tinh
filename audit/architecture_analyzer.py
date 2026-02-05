@@ -181,9 +181,10 @@ class ArchitectureAnalyzer(CodeAnalyzer):
                                 return True
                         elif imported_file in rec_stack:
                             # Found cycle
-                            cycle_start = path.index(imported_file)
-                            cycle = path[cycle_start:] + [imported_file]
-                            self._add_circular_dependency_finding(cycle)
+                            if imported_file in path:
+                                cycle_start = path.index(imported_file)
+                                cycle = path[cycle_start:] + [imported_file]
+                                self._add_circular_dependency_finding(cycle)
                             return True
             
             rec_stack.remove(file_path)

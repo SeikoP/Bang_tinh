@@ -85,13 +85,38 @@ class SaveSessionDialog(QDialog):
 class CalculationView(QWidget):
     """View bảng tính kèm quản lý danh mục sản phẩm"""
     
-    def __init__(self, on_refresh_stock=None):
+    def __init__(self, container=None, on_refresh_stock=None):
         super().__init__()
-        self.calc_service = CalculatorService()
-        self.report_service = ReportService()
+        # Inject services from container
+        self.container = container
+        if container:
+            self.calc_service = container.get('calculator')
+            self.report_service = container.get('report_service') or ReportService()
+            self.product_repo = container.get('product_repo')
+            self.session_repo = container.get('session_repo')
+            self.history_repo = container.get('history_repo')
+            self.logger = container.get('logger')
+            # Get error handler from container
+            from utils.error_handler import ErrorHandler
+            self.error_handler = ErrorHandler(self.logger)
+        else:
+            # Fallback to direct instantiation
+            self.calc_service = CalculatorService()
+            self.report_service = ReportService()
+            self.product_repo = ProductRepository
+            self.session_repo = SessionRepository
+            self.history_repo = HistoryRepository
+            self.logger = None
+            self.error_handler = None
+        
         self.on_refresh_stock = on_refresh_stock
         self._next_focus = None
         self._widget_height = 28  # Chiều cao mặc định
+        
+        # Loading state flags to prevent duplicate actions
+        self._is_loading = False
+        self._is_saving = False
+        
         self._setup_ui()
         self.refresh_table()
         self.refresh_product_list()
@@ -287,16 +312,30 @@ class CalculationView(QWidget):
         self.prod_table.verticalHeader().setDefaultSectionSize(64)
 
     def refresh_table(self):
-        sessions = SessionRepository.get_all()
-        self.table.setRowCount(len(sessions))
-        total = 0
-        for row, s in enumerate(sessions):
-            p = s.product
-            handover_disp = self.calc_service.format_to_display(s.handover_qty, p.conversion, p.unit_char)
-            closing_disp = self.calc_service.format_to_display(s.closing_qty, p.conversion, p.unit_char)
-            total += s.amount
-            has_data = s.used_qty > 0
-            row_bg = "rgba(37, 99, 235, 0.05)" if has_data else None
+        # Prevent duplicate refresh operations
+        if self._is_loading:
+            return
+            
+        self._is_loading = True
+        try:
+            # Optimize table rendering by disabling updates during batch operations
+            self.table.setUpdatesEnabled(False)
+            
+            # Use repository interface instead of direct access
+            if self.container:
+                sessions = self.session_repo.get_all()
+            else:
+                sessions = SessionRepository.get_all()
+                
+            self.table.setRowCount(len(sessions))
+            total = 0
+            for row, s in enumerate(sessions):
+                p = s.product
+                handover_disp = self.calc_service.format_to_display(s.handover_qty, p.conversion, p.unit_char)
+                closing_disp = self.calc_service.format_to_display(s.closing_qty, p.conversion, p.unit_char)
+                total += s.amount
+                has_data = s.used_qty > 0
+                row_bg = "rgba(37, 99, 235, 0.05)" if has_data else None
             unit_item = QTableWidgetItem(p.large_unit)
             unit_item.setFlags(unit_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             unit_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
@@ -374,88 +413,117 @@ class CalculationView(QWidget):
                 self._set_cell_helper(self.table, row, 5, "0", right=True, fg=AppColors.TEXT, bg=row_bg)
             self._set_cell_helper(self.table, row, 6, f"{p.unit_price:,.0f}", right=True, fg=AppColors.TEXT, bg=row_bg)
             self._set_cell_helper(self.table, row, 7, f"{s.amount:,.0f}", right=True, fg=AppColors.SUCCESS, bold=True, bg=row_bg)
-        self.total_label.setText(f"💰 TỔNG TIỀN: {total:,.0f} VNĐ")
-        if self._next_focus:
-            row, col = self._next_focus
-            self._next_focus = None
-            if row < self.table.rowCount():
-                wc = self.table.cellWidget(row, col)
-                if wc:
-                    e = wc.findChild(QLineEdit)
-                    if e:
-                        e.setFocus()
-                        e.selectAll()
+            self.total_label.setText(f"💰 TỔNG TIỀN: {total:,.0f} VNĐ")
+            if self._next_focus:
+                row, col = self._next_focus
+                self._next_focus = None
+                if row < self.table.rowCount():
+                    wc = self.table.cellWidget(row, col)
+                    if wc:
+                        e = wc.findChild(QLineEdit)
+                        if e:
+                            e.setFocus()
+                            e.selectAll()
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error refreshing calculation table: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
+        finally:
+            # Re-enable table updates after batch operations
+            self.table.setUpdatesEnabled(True)
+            self._is_loading = False
 
     def refresh_product_list(self):
-        query = self.search_input.text().lower().strip()
-        products = ProductRepository.get_all()
-        if query:
-            products = [p for p in products if query in p.name.lower()]
-        self.prod_table.setRowCount(len(products))
-        for row, p in enumerate(products):
-            self._set_cell_helper(self.prod_table, row, 0, str(row + 1), center=True)
-            self._set_cell_helper(self.prod_table, row, 1, p.name, bold=True)
-            self._set_cell_helper(self.prod_table, row, 2, p.large_unit, center=True, fg=AppColors.PRIMARY)
-            self._set_cell_helper(self.prod_table, row, 3, str(p.conversion), center=True, fg=AppColors.TEXT)
-            self._set_cell_helper(self.prod_table, row, 4, f"{p.unit_price:,.0f}", center=True, fg=AppColors.SUCCESS, bold=True)
-            # Force layout - Dùng VBoxLayout để căn giữa
-            actions = QWidget()
-            actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # Prevent duplicate refresh operations
+        if self._is_loading:
+            return
             
-            actions_v_layout = QVBoxLayout(actions)
-            actions_v_layout.setContentsMargins(0, 6, 0, 6)  # Tăng margin vertical
-            actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        try:
+            query = self.search_input.text().lower().strip()
+            # Use repository interface
+            if self.container:
+                products = self.product_repo.get_all()
+            else:
+                products = ProductRepository.get_all()
+                
+            if query:
+                products = [p for p in products if query in p.name.lower()]
             
-            actions_h_widget = QWidget()
-            al = QHBoxLayout(actions_h_widget)
-            al.setContentsMargins(10, 0, 10, 0)
-            al.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            al.setSpacing(10)
-            
-            # Action Button Style
-            btn_style = """
-                QPushButton {
-                    border: 1px solid #cbd5e1;
-                    border-radius: 4px;
-                    background-color: white;
-                    color: #334155;
-                    font-size: 12px;
-                    font-weight: 600;
-                    padding: 0px;
-                    margin: 0px;
-                }
-                QPushButton:hover { background-color: #f1f5f9; border-color: #94a3b8; }
-            """
-            del_style = """
-                QPushButton {
-                    border: 1px solid #ef4444;
-                    border-radius: 4px;
-                    background-color: white;
-                    color: #ef4444;
-                    font-size: 12px;
-                    font-weight: 600;
-                    padding: 0px;
-                    margin: 0px;
-                }
-                QPushButton:hover { background-color: #fef2f2; }
-            """
+            # Optimize table rendering by disabling updates during batch operations
+            self.prod_table.setUpdatesEnabled(False)
+            self.prod_table.setRowCount(len(products))
+            for row, p in enumerate(products):
+                self._set_cell_helper(self.prod_table, row, 0, str(row + 1), center=True)
+                self._set_cell_helper(self.prod_table, row, 1, p.name, bold=True)
+                self._set_cell_helper(self.prod_table, row, 2, p.large_unit, center=True, fg=AppColors.PRIMARY)
+                self._set_cell_helper(self.prod_table, row, 3, str(p.conversion), center=True, fg=AppColors.TEXT)
+                self._set_cell_helper(self.prod_table, row, 4, f"{p.unit_price:,.0f}", center=True, fg=AppColors.SUCCESS, bold=True)
+                # Force layout - Dùng VBoxLayout để căn giữa
+                actions = QWidget()
+                actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+                
+                actions_v_layout = QVBoxLayout(actions)
+                actions_v_layout.setContentsMargins(0, 6, 0, 6)  # Tăng margin vertical
+                actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                
+                actions_h_widget = QWidget()
+                al = QHBoxLayout(actions_h_widget)
+                al.setContentsMargins(10, 0, 10, 0)
+                al.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                al.setSpacing(10)
+                
+                # Action Button Style
+                btn_style = """
+                    QPushButton {
+                        border: 1px solid #cbd5e1;
+                        border-radius: 4px;
+                        background-color: white;
+                        color: #334155;
+                        font-size: 12px;
+                        font-weight: 600;
+                        padding: 0px;
+                        margin: 0px;
+                    }
+                    QPushButton:hover { background-color: #f1f5f9; border-color: #94a3b8; }
+                """
+                del_style = """
+                    QPushButton {
+                        border: 1px solid #ef4444;
+                        border-radius: 4px;
+                        background-color: white;
+                        color: #ef4444;
+                        font-size: 12px;
+                        font-weight: 600;
+                        padding: 0px;
+                        margin: 0px;
+                    }
+                    QPushButton:hover { background-color: #fef2f2; }
+                """
 
-            eb = QPushButton("Sửa")
-            eb.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
-            eb.setStyleSheet(btn_style)
-            eb.setCursor(Qt.CursorShape.PointingHandCursor)
-            eb.clicked.connect(lambda _, pid=p.id: self._edit_product(pid))
-            al.addWidget(eb)
-            
-            db = QPushButton("Xóa")
-            db.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
-            db.setStyleSheet(del_style)
-            db.setCursor(Qt.CursorShape.PointingHandCursor)
-            db.clicked.connect(lambda _, pid=p.id, name=p.name: self._delete_product(pid, name))
-            al.addWidget(db)
-            
-            actions_v_layout.addWidget(actions_h_widget)
-            self.prod_table.setCellWidget(row, 5, actions)
+                eb = QPushButton("Sửa")
+                eb.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
+                eb.setStyleSheet(btn_style)
+                eb.setCursor(Qt.CursorShape.PointingHandCursor)
+                eb.clicked.connect(lambda _, pid=p.id: self._edit_product(pid))
+                al.addWidget(eb)
+                
+                db = QPushButton("Xóa")
+                db.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
+                db.setStyleSheet(del_style)
+                db.setCursor(Qt.CursorShape.PointingHandCursor)
+                db.clicked.connect(lambda _, pid=p.id, name=p.name: self._delete_product(pid, name))
+                al.addWidget(db)
+                
+                actions_v_layout.addWidget(actions_h_widget)
+                self.prod_table.setCellWidget(row, 5, actions)
+        
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error refreshing product list: {str(e)}", exc_info=True)
+        finally:
+            # Re-enable table updates after batch operations
+            self.prod_table.setUpdatesEnabled(True)
 
     def _on_return_pressed(self):
         w = self.sender()
@@ -471,14 +539,25 @@ class CalculationView(QWidget):
     
     def _update_qty(self, w, pid, conv, is_h):
         new = self.calc_service.parse_to_small_units(w.text(), conv)
-        sessions = SessionRepository.get_all()
+        # Use repository interface
+        if self.container:
+            sessions = self.session_repo.get_all()
+        else:
+            sessions = SessionRepository.get_all()
+            
         curr = next((s for s in sessions if s.product.id == pid), None)
         if not curr: return
         h = new if is_h else curr.handover_qty
         c = curr.closing_qty if is_h else new
         if is_h: c = h
         if c > h: c = h
-        SessionRepository.update_qty(pid, h, c)
+        
+        # Use repository interface
+        if self.container:
+            self.session_repo.update_qty(pid, h, c)
+        else:
+            SessionRepository.update_qty(pid, h, c)
+            
         self.refresh_table()
         if self.on_refresh_stock: self.on_refresh_stock()
     
@@ -497,32 +576,70 @@ class CalculationView(QWidget):
         table.setItem(row, col, item)
 
     def _add_product(self):
-        dialog = ProductDialog(parent=self)
-        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
-            d = dialog.result_data
-            ProductRepository.add(d['name'], d['large_unit'], d['conversion'], d['unit_price'])
-            self.refresh_product_list()
-            self.refresh_table()
-            if self.on_refresh_stock: self.on_refresh_stock()
+        try:
+            dialog = ProductDialog(parent=self)
+            if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
+                d = dialog.result_data
+                # Use repository interface
+                if self.container:
+                    self.product_repo.add(d['name'], d['large_unit'], d['conversion'], d['unit_price'])
+                else:
+                    ProductRepository.add(d['name'], d['large_unit'], d['conversion'], d['unit_price'])
+                    
+                self.refresh_product_list()
+                self.refresh_table()
+                if self.on_refresh_stock: self.on_refresh_stock()
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error adding product: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
     
     def _edit_product(self, pid):
-        product = ProductRepository.get_by_id(pid)
-        if not product: return
-        dialog = ProductDialog(product=product, parent=self)
-        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
-            d = dialog.result_data
-            ProductRepository.update(pid, d['name'], d['large_unit'], d['conversion'], d['unit_price'])
-            self.refresh_product_list()
-            self.refresh_table()
-            if self.on_refresh_stock: self.on_refresh_stock()
+        try:
+            # Use repository interface
+            if self.container:
+                product = self.product_repo.get_by_id(pid)
+            else:
+                product = ProductRepository.get_by_id(pid)
+                
+            if not product: return
+            dialog = ProductDialog(product=product, parent=self)
+            if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
+                d = dialog.result_data
+                # Use repository interface
+                if self.container:
+                    self.product_repo.update(pid, d['name'], d['large_unit'], d['conversion'], d['unit_price'])
+                else:
+                    ProductRepository.update(pid, d['name'], d['large_unit'], d['conversion'], d['unit_price'])
+                    
+                self.refresh_product_list()
+                self.refresh_table()
+                if self.on_refresh_stock: self.on_refresh_stock()
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error editing product: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
     
     def _delete_product(self, pid, name):
-        reply = QMessageBox.question(self, "Xác nhận", f"Xóa sản phẩm '{name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-        if reply == QMessageBox.StandardButton.Yes:
-            ProductRepository.delete(pid)
-            self.refresh_product_list()
-            self.refresh_table()
-            if self.on_refresh_stock: self.on_refresh_stock()
+        try:
+            reply = QMessageBox.question(self, "Xác nhận", f"Xóa sản phẩm '{name}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if reply == QMessageBox.StandardButton.Yes:
+                # Use repository interface
+                if self.container:
+                    self.product_repo.delete(pid)
+                else:
+                    ProductRepository.delete(pid)
+                    
+                self.refresh_product_list()
+                self.refresh_table()
+                if self.on_refresh_stock: self.on_refresh_stock()
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error deleting product: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
     
     def _import_html(self):
         path, _ = QFileDialog.getOpenFileName(self, "Chọn file HTML", "", "HTML Files (*.html *.htm)")
@@ -589,11 +706,52 @@ class CalculationView(QWidget):
         return f"{int(h[0:2], 16)}, {int(h[2:4], 16)}, {int(h[4:6], 16)}"
     
     def _save_session(self):
-        total = SessionRepository.get_total_amount()
-        dialog = SaveSessionDialog(total, self)
-        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
-            HistoryRepository.save_current_session(shift_name=dialog.result_data['shift_name'], notes=dialog.result_data['notes'])
-            SessionRepository.reset_all()
-            self.refresh_table()
-            if self.on_refresh_stock: self.on_refresh_stock()
-            QMessageBox.information(self, "Thành công", "Đã lưu phiên làm việc!")
+        # Prevent duplicate save operations
+        if self._is_saving:
+            return
+            
+        self._is_saving = True
+        try:
+            # Disable save button during operation
+            save_btn = self.sender()
+            if save_btn:
+                save_btn.setEnabled(False)
+                save_btn.setText("⏳ Đang lưu...")
+            
+            # Use repository interface
+            if self.container:
+                total = self.session_repo.get_total_amount()
+            else:
+                total = SessionRepository.get_total_amount()
+                
+            dialog = SaveSessionDialog(total, self)
+            if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
+                # Use repository interface
+                if self.container:
+                    self.history_repo.save_current_session(
+                        shift_name=dialog.result_data['shift_name'], 
+                        notes=dialog.result_data['notes']
+                    )
+                    self.session_repo.reset_all()
+                else:
+                    HistoryRepository.save_current_session(
+                        shift_name=dialog.result_data['shift_name'], 
+                        notes=dialog.result_data['notes']
+                    )
+                    SessionRepository.reset_all()
+                    
+                self.refresh_table()
+                if self.on_refresh_stock: self.on_refresh_stock()
+                QMessageBox.information(self, "Thành công", "Đã lưu phiên làm việc!")
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error saving session: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
+        finally:
+            self._is_saving = False
+            # Re-enable save button
+            save_btn = self.sender()
+            if save_btn:
+                save_btn.setEnabled(True)
+                save_btn.setText("💾 Lưu toàn bộ phiên")

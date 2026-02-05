@@ -60,8 +60,25 @@ class QuickPriceDialog(QDialog):
 class ProductView(QWidget):
     """View theo dõi giá nhanh (Quick Price)"""
     
-    def __init__(self, on_refresh_calc=None):
+    def __init__(self, container=None, on_refresh_calc=None):
         super().__init__()
+        # Inject repository from container
+        self.container = container
+        if container:
+            self.quick_price_repo = container.get('quick_price_repo')
+            self.logger = container.get('logger')
+            # Get error handler
+            from utils.error_handler import ErrorHandler
+            self.error_handler = ErrorHandler(self.logger)
+        else:
+            # Fallback to direct access
+            self.quick_price_repo = QuickPriceRepository
+            self.logger = None
+            self.error_handler = None
+        
+        # Loading state flag to prevent duplicate actions
+        self._is_loading = False
+            
         self.on_refresh_calc = on_refresh_calc
         self._setup_ui()
         self.refresh_list()
@@ -122,100 +139,155 @@ class ProductView(QWidget):
         self.table.verticalHeader().setDefaultSectionSize(68)
     
     def refresh_list(self):
-        query = self.search_input.text().lower().strip()
-        items = QuickPriceRepository.get_all()
-        if query:
-            items = [i for i in items if query in i.name.lower()]
+        # Prevent duplicate refresh operations
+        if self._is_loading:
+            return
             
-        self.table.setRowCount(len(items))
-        for row, item in enumerate(items):
-            self._set_cell(row, 0, str(row + 1), center=True)
-            self._set_cell(row, 1, item.name, bold=True)
-            self._set_cell(row, 2, f"{item.price:,.0f} đ", center=True, fg=AppColors.PRIMARY, bold=True)
+        self._is_loading = True
+        try:
+            # Optimize table rendering by disabling updates during batch operations
+            self.table.setUpdatesEnabled(False)
             
-            # Container widget - Dùng VBoxLayout để căn giữa theo chiều dọc
-            actions = QWidget()
-            actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            query = self.search_input.text().lower().strip()
+            # Use repository interface
+            if self.container:
+                items = self.quick_price_repo.get_all()
+            else:
+                items = QuickPriceRepository.get_all()
+                
+            if query:
+                items = [i for i in items if query in i.name.lower()]
+                
+            self.table.setRowCount(len(items))
+            for row, item in enumerate(items):
+                self._set_cell(row, 0, str(row + 1), center=True)
+                self._set_cell(row, 1, item.name, bold=True)
+                self._set_cell(row, 2, f"{item.price:,.0f} đ", center=True, fg=AppColors.PRIMARY, bold=True)
+                
+                # Container widget - Dùng VBoxLayout để căn giữa theo chiều dọc
+                actions = QWidget()
+                actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             
-            actions_v_layout = QVBoxLayout(actions)
-            actions_v_layout.setContentsMargins(0, 0, 0, 0)
-            actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            
-            # Inner HBox cho buttons
-            actions_h_widget = QWidget()
-            actions_layout = QHBoxLayout(actions_h_widget)
-            actions_layout.setContentsMargins(10, 0, 10, 0)
-            actions_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            actions_layout.setSpacing(10)
-            
-            # Action Button Style - Thay đổi màu sắc RÕ RỆT để user thấy
-            btn_style = f"""
-                QPushButton {{
-                    border: none;
-                    border-radius: 4px;
-                    background-color: {AppColors.PRIMARY}; 
-                    color: white;
-                    font-size: 11px;
-                    font-weight: 600;
-                    padding: 4px 10px;
-                }}
-                QPushButton:hover {{ background-color: #1d4ed8; }}
-                QPushButton:pressed {{ background-color: #1e40af; }}
-            """
-            del_style = """
-                QPushButton {
-                    border: none;
-                    border-radius: 4px;
-                    background-color: #fee2e2;
-                    color: #ef4444;
-                    font-size: 11px;
-                    font-weight: 600;
-                    padding: 4px 10px;
-                }
-                QPushButton:hover { background-color: #fecaca; }
-            """
-            
-            edit_btn = QPushButton("Sửa")
-            edit_btn.setStyleSheet(btn_style)
-            edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            edit_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            edit_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-            edit_btn.setFixedSize(58, 30) # Thu nhỏ xuống
-            edit_btn.clicked.connect(lambda _, it=item: self._edit_quick_price(it))
-            actions_layout.addWidget(edit_btn)
-            
-            del_btn = QPushButton("Xóa")
-            del_btn.setStyleSheet(del_style)
-            del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            del_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            del_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-            del_btn.setFixedSize(58, 30) # Thu nhỏ xuống
-            del_btn.clicked.connect(lambda _, i_id=item.id: self._delete_quick_price(i_id))
-            actions_layout.addWidget(del_btn)
-            
-            actions_v_layout.addWidget(actions_h_widget)
-            self.table.setCellWidget(row, 3, actions)
+                actions_v_layout = QVBoxLayout(actions)
+                actions_v_layout.setContentsMargins(0, 0, 0, 0)
+                actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                
+                # Inner HBox cho buttons
+                actions_h_widget = QWidget()
+                actions_layout = QHBoxLayout(actions_h_widget)
+                actions_layout.setContentsMargins(10, 0, 10, 0)
+                actions_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                actions_layout.setSpacing(10)
+                
+                # Action Button Style - Thay đổi màu sắc RÕ RỆT để user thấy
+                btn_style = f"""
+                    QPushButton {{
+                        border: none;
+                        border-radius: 4px;
+                        background-color: {AppColors.PRIMARY}; 
+                        color: white;
+                        font-size: 11px;
+                        font-weight: 600;
+                        padding: 4px 10px;
+                    }}
+                    QPushButton:hover {{ background-color: #1d4ed8; }}
+                    QPushButton:pressed {{ background-color: #1e40af; }}
+                """
+                del_style = """
+                    QPushButton {
+                        border: none;
+                        border-radius: 4px;
+                        background-color: #fee2e2;
+                        color: #ef4444;
+                        font-size: 11px;
+                        font-weight: 600;
+                        padding: 4px 10px;
+                    }
+                    QPushButton:hover { background-color: #fecaca; }
+                """
+                
+                edit_btn = QPushButton("Sửa")
+                edit_btn.setStyleSheet(btn_style)
+                edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                edit_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+                edit_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+                edit_btn.setFixedSize(58, 30) # Thu nhỏ xuống
+                edit_btn.clicked.connect(lambda _, it=item: self._edit_quick_price(it))
+                actions_layout.addWidget(edit_btn)
+                
+                del_btn = QPushButton("Xóa")
+                del_btn.setStyleSheet(del_style)
+                del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                del_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+                del_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+                del_btn.setFixedSize(58, 30) # Thu nhỏ xuống
+                del_btn.clicked.connect(lambda _, i_id=item.id: self._delete_quick_price(i_id))
+                actions_layout.addWidget(del_btn)
+                
+                actions_v_layout.addWidget(actions_h_widget)
+                self.table.setCellWidget(row, 3, actions)
+        
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error refreshing quick price list: {str(e)}", exc_info=True)
+        finally:
+            # Re-enable table updates after batch operations
+            self.table.setUpdatesEnabled(True)
+            self._is_loading = False
             
     def _add_quick_price(self):
-        dialog = QuickPriceDialog(parent=self)
-        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
-            d = dialog.result_data
-            QuickPriceRepository.add(d['name'], d['price'])
-            self.refresh_list()
-            if self.on_refresh_calc: self.on_refresh_calc()
+        try:
+            dialog = QuickPriceDialog(parent=self)
+            if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
+                d = dialog.result_data
+                # Use repository interface
+                if self.container:
+                    self.quick_price_repo.add(d['name'], d['price'])
+                else:
+                    QuickPriceRepository.add(d['name'], d['price'])
+                    
+                self.refresh_list()
+                if self.on_refresh_calc: self.on_refresh_calc()
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error adding quick price: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
             
     def _edit_quick_price(self, item):
-        dialog = QuickPriceDialog(item=item, parent=self)
-        if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
-            d = dialog.result_data
-            QuickPriceRepository.update(item.id, d['name'], d['price'])
-            self.refresh_list()
-            if self.on_refresh_calc: self.on_refresh_calc()
+        try:
+            dialog = QuickPriceDialog(item=item, parent=self)
+            if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
+                d = dialog.result_data
+                # Use repository interface
+                if self.container:
+                    self.quick_price_repo.update(item.id, d['name'], d['price'])
+                else:
+                    QuickPriceRepository.update(item.id, d['name'], d['price'])
+                    
+                self.refresh_list()
+                if self.on_refresh_calc: self.on_refresh_calc()
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error editing quick price: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
             
     def _delete_quick_price(self, item_id):
-        QuickPriceRepository.delete(item_id)
-        self.refresh_list()
-        if self.on_refresh_calc: self.on_refresh_calc()
+        try:
+            # Use repository interface
+            if self.container:
+                self.quick_price_repo.delete(item_id)
+            else:
+                QuickPriceRepository.delete(item_id)
+                
+            self.refresh_list()
+            if self.on_refresh_calc: self.on_refresh_calc()
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error deleting quick price: {str(e)}", exc_info=True)
+            if self.error_handler:
+                self.error_handler.handle(e, self)
 
     def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):
         item = QTableWidgetItem(text)
