@@ -1,6 +1,7 @@
 """
 Database connection management với context manager
 """
+
 import sqlite3
 from contextlib import contextmanager
 from typing import Generator
@@ -17,7 +18,7 @@ def get_connection() -> Generator[sqlite3.Connection, None, None]:
     """
     Context manager để quản lý database connection.
     Tự động đóng connection khi hoàn thành.
-    
+
     Usage:
         with get_connection() as conn:
             cursor = conn.cursor()
@@ -42,9 +43,10 @@ def init_db():
     """
     with get_connection() as conn:
         cursor = conn.cursor()
-        
+
         # Bảng products
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -55,20 +57,24 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-        
+        """
+        )
+
         # Bảng session_data (dữ liệu phiên hiện tại)
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS session_data (
                 product_id INTEGER PRIMARY KEY,
                 handover_qty INTEGER DEFAULT 0,
                 closing_qty INTEGER DEFAULT 0,
                 FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
             )
-        ''')
-        
+        """
+        )
+
         # Bảng session_history (lịch sử các phiên)
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS session_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_date DATE NOT NULL,
@@ -77,10 +83,12 @@ def init_db():
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-        
+        """
+        )
+
         # Bảng session_history_items (chi tiết từng phiên)
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS session_history_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 history_id INTEGER NOT NULL,
@@ -95,41 +103,53 @@ def init_db():
                 amount REAL DEFAULT 0,
                 FOREIGN KEY (history_id) REFERENCES session_history (id) ON DELETE CASCADE
             )
-        ''')
-        
+        """
+        )
+
         # Migration: thêm cột mới nếu chưa có
         try:
-            cursor.execute("ALTER TABLE products ADD COLUMN is_active INTEGER DEFAULT 1")
+            cursor.execute(
+                "ALTER TABLE products ADD COLUMN is_active INTEGER DEFAULT 1"
+            )
         except sqlite3.OperationalError:
             pass  # Column đã tồn tại
-            
+
         try:
-            cursor.execute("ALTER TABLE products ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            cursor.execute(
+                "ALTER TABLE products ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            )
         except sqlite3.OperationalError:
             pass
-            
+
         try:
-            cursor.execute("ALTER TABLE products ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+            cursor.execute(
+                "ALTER TABLE products ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            )
         except sqlite3.OperationalError:
             pass
-            
+
         # Bảng quick_prices cho Bảng giá nhanh (nhập tay)
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS quick_prices (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 price REAL NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-            
+        """
+        )
+
         try:
-            cursor.execute("ALTER TABLE products ADD COLUMN is_favorite INTEGER DEFAULT 0")
+            cursor.execute(
+                "ALTER TABLE products ADD COLUMN is_favorite INTEGER DEFAULT 0"
+            )
         except sqlite3.OperationalError:
             pass
-            
+
         # Bảng bank_history (lưu lịch sử thông báo ngân hàng)
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS bank_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 time_str TEXT,
@@ -138,10 +158,12 @@ def init_db():
                 content TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        ''')
-        
+        """
+        )
+
         # Bảng stock_change_logs (lịch sử thay đổi số lượng kho)
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS stock_change_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 product_id INTEGER NOT NULL,
@@ -152,8 +174,9 @@ def init_db():
                 changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
             )
-        ''')
-        
+        """
+        )
+
         # Sample data removed for production build
         # Database will start empty
         # Users can add their own products

@@ -3,45 +3,49 @@ Qt Theme - Modern Premium Design
 Inspired by modern desktop applications with enhanced visual appeal
 """
 
+
 class AppColors:
     """Modern premium color palette"""
+
     # Background - Softer gradients
     BG = "#f5f7fa"
     BG_DARK = "#eef1f6"
     BG_GRADIENT_START = "#f8f9fc"
     BG_GRADIENT_END = "#f0f2f7"
-    
+
     # Surface - Pure white with subtle shadow
     SURFACE = "#ffffff"
     SURFACE_HOVER = "#fafbfc"
-    
+
     # Primary - Vibrant blue with depth
     PRIMARY = "#2563eb"
     PRIMARY_HOVER = "#1d4ed8"
     PRIMARY_LIGHT = "#3b82f6"
     PRIMARY_DARK = "#1e40af"
-    
+
     # Text - Senior Corporate Palette
-    TEXT = "#0f172a"          # Trùng với thiết kế SaaS hiện đại
-    TEXT_SECONDARY = "#334155"   # Đơn mức Slate 700 để đạt độ tương phản tối đa trên nền xám
+    TEXT = "#0f172a"  # Trùng với thiết kế SaaS hiện đại
+    TEXT_SECONDARY = (
+        "#334155"  # Đơn mức Slate 700 để đạt độ tương phản tối đa trên nền xám
+    )
     TEXT_DISABLED = "#94a3b8"
-    
+
     # Sidebar - Solid Core Design
     SIDEBAR_BG = "#0f172a"
     SIDEBAR_TEXT = "#94a3b8"
     SIDEBAR_ITEM_HOVER = "#1e293b"
     SIDEBAR_ITEM_ACTIVE = "#2563eb"
-    
+
     # Border - Subtle and refined
     BORDER = "#e2e8f0"
     BORDER_HOVER = "#cbd5e1"
-    
+
     # Status - Standard Enterprise
     SUCCESS = "#10b981"
     WARNING = "#f59e0b"
     ERROR = "#ef4444"
     INFO = "#3b82f6"
-    
+
     # Accent colors
     ACCENT_PURPLE = "#8b5cf6"
     ACCENT_PINK = "#ec4899"
@@ -50,12 +54,12 @@ class AppColors:
 
 class AppTheme:
     """Theme generator"""
-    
+
     @staticmethod
     def get_stylesheet() -> str:
         """Main application stylesheet with modern premium design"""
         c = AppColors
-        
+
         return f"""
         /* ===== Base ===== */
         QMainWindow {{
@@ -446,7 +450,7 @@ class AppTheme:
             color: {c.TEXT};
         }}
         """
-    
+
     @staticmethod
     def card_style() -> str:
         return f"""
@@ -454,7 +458,7 @@ class AppTheme:
             border: 1px solid {AppColors.BORDER};
             border-radius: 8px;
         """
-    
+
     @staticmethod
     def info_box_style(color: str) -> str:
         return f"""

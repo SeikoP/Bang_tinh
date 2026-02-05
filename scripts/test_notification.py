@@ -14,33 +14,30 @@ import sys
 from datetime import datetime
 
 
-def send_test_notification(port=5005, host='localhost'):
+def send_test_notification(port=5005, host="localhost"):
     """Send a test bank notification"""
-    
-    url = f'http://{host}:{port}'
-    
+
+    url = f"http://{host}:{port}"
+
     # Test notification data
     test_data = {
-        'time': datetime.now().strftime('%H:%M'),
-        'source': 'VCB',
-        'amount': '+1,000,000 VND',
-        'content': 'Test notification from test script'
+        "time": datetime.now().strftime("%H:%M"),
+        "source": "VCB",
+        "amount": "+1,000,000 VND",
+        "content": "Test notification from test script",
     }
-    
+
     print(f"Sending test notification to {url}...")
     print(f"Data: {json.dumps(test_data, indent=2, ensure_ascii=False)}")
-    
+
     try:
         response = requests.post(
-            url,
-            json=test_data,
-            headers={'Content-Type': 'application/json'},
-            timeout=5
+            url, json=test_data, headers={"Content-Type": "application/json"}, timeout=5
         )
-        
+
         print(f"\nResponse status: {response.status_code}")
         print(f"Response body: {response.text}")
-        
+
         if response.status_code == 200:
             print("\n✓ Test notification sent successfully!")
             print("Check the 'Ngân hàng' tab in the application.")
@@ -48,7 +45,7 @@ def send_test_notification(port=5005, host='localhost'):
         else:
             print(f"\n✗ Failed to send notification: {response.status_code}")
             return 1
-            
+
     except requests.exceptions.ConnectionError:
         print("\n✗ Connection failed!")
         print("Make sure the application is running.")
@@ -61,26 +58,26 @@ def send_test_notification(port=5005, host='localhost'):
 def main():
     """Main entry point"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(
-        description='Send test bank notification to the application'
+        description="Send test bank notification to the application"
     )
     parser.add_argument(
-        '--port',
+        "--port",
         type=int,
         default=5005,
-        help='Notification server port (default: 5005)'
+        help="Notification server port (default: 5005)",
     )
     parser.add_argument(
-        '--host',
-        default='localhost',
-        help='Notification server host (default: localhost)'
+        "--host",
+        default="localhost",
+        help="Notification server host (default: localhost)",
     )
-    
+
     args = parser.parse_args()
-    
+
     return send_test_notification(port=args.port, host=args.host)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

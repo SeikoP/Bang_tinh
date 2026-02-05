@@ -11,6 +11,7 @@ import json
 
 class RiskLevel(Enum):
     """Risk level classification for findings."""
+
     LOW = "Low"
     MEDIUM = "Medium"
     HIGH = "High"
@@ -20,6 +21,7 @@ class RiskLevel(Enum):
 @dataclass
 class Finding:
     """Represents a single audit finding."""
+
     category: str
     description: str
     risk_level: RiskLevel
@@ -27,27 +29,27 @@ class Finding:
     line_number: int = 0
     recommendation: str = ""
     details: Dict[str, Any] = field(default_factory=dict)
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert finding to dictionary."""
         return {
-            'category': self.category,
-            'description': self.description,
-            'risk_level': self.risk_level.value,
-            'file_path': self.file_path,
-            'line_number': self.line_number,
-            'recommendation': self.recommendation,
-            'details': self.details
+            "category": self.category,
+            "description": self.description,
+            "risk_level": self.risk_level.value,
+            "file_path": self.file_path,
+            "line_number": self.line_number,
+            "recommendation": self.recommendation,
+            "details": self.details,
         }
 
 
 class AuditReport:
     """Structured audit report with findings and recommendations."""
-    
+
     def __init__(self, project_name: str = "Unknown Project"):
         """
         Initialize audit report.
-        
+
         Args:
             project_name: Name of the project being audited
         """
@@ -55,104 +57,104 @@ class AuditReport:
         self.timestamp = datetime.now()
         self.findings: List[Finding] = []
         self.summary: Dict[str, Any] = {}
-        
+
     def add_finding(self, finding: Finding) -> None:
         """
         Add a finding to the report.
-        
+
         Args:
             finding: Finding object to add
         """
         self.findings.append(finding)
-    
+
     def add_findings(self, findings: List[Finding]) -> None:
         """
         Add multiple findings to the report.
-        
+
         Args:
             findings: List of Finding objects to add
         """
         self.findings.extend(findings)
-    
+
     def get_findings_by_risk(self, risk_level: RiskLevel) -> List[Finding]:
         """
         Get all findings with specified risk level.
-        
+
         Args:
             risk_level: Risk level to filter by
-            
+
         Returns:
             List of findings with matching risk level
         """
         return [f for f in self.findings if f.risk_level == risk_level]
-    
+
     def get_findings_by_category(self, category: str) -> List[Finding]:
         """
         Get all findings in specified category.
-        
+
         Args:
             category: Category to filter by
-            
+
         Returns:
             List of findings in matching category
         """
         return [f for f in self.findings if f.category == category]
-    
+
     def generate_summary(self) -> Dict[str, Any]:
         """
         Generate summary statistics for the report.
-        
+
         Returns:
             Dictionary with summary statistics
         """
         self.summary = {
-            'total_findings': len(self.findings),
-            'critical': len(self.get_findings_by_risk(RiskLevel.CRITICAL)),
-            'high': len(self.get_findings_by_risk(RiskLevel.HIGH)),
-            'medium': len(self.get_findings_by_risk(RiskLevel.MEDIUM)),
-            'low': len(self.get_findings_by_risk(RiskLevel.LOW)),
-            'categories': self._count_by_category()
+            "total_findings": len(self.findings),
+            "critical": len(self.get_findings_by_risk(RiskLevel.CRITICAL)),
+            "high": len(self.get_findings_by_risk(RiskLevel.HIGH)),
+            "medium": len(self.get_findings_by_risk(RiskLevel.MEDIUM)),
+            "low": len(self.get_findings_by_risk(RiskLevel.LOW)),
+            "categories": self._count_by_category(),
         }
         return self.summary
-    
+
     def _count_by_category(self) -> Dict[str, int]:
         """Count findings by category."""
         categories = {}
         for finding in self.findings:
             categories[finding.category] = categories.get(finding.category, 0) + 1
         return categories
-    
+
     def to_json(self) -> str:
         """
         Export report as JSON string.
-        
+
         Returns:
             JSON formatted report
         """
         report_dict = {
-            'project_name': self.project_name,
-            'timestamp': self.timestamp.isoformat(),
-            'summary': self.generate_summary(),
-            'findings': [f.to_dict() for f in self.findings]
+            "project_name": self.project_name,
+            "timestamp": self.timestamp.isoformat(),
+            "summary": self.generate_summary(),
+            "findings": [f.to_dict() for f in self.findings],
         }
         return json.dumps(report_dict, indent=2)
-    
+
     def to_html(self) -> str:
         """
         Export report as HTML string with enhanced styling and interactivity.
-        
+
         Returns:
             HTML formatted report
         """
         summary = self.generate_summary()
-        
+
         # Group findings by category and risk level
         findings_by_category = {}
         for finding in self.findings:
             if finding.category not in findings_by_category:
                 findings_by_category[finding.category] = []
             findings_by_category[finding.category].append(finding)
-        
+
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -448,24 +450,31 @@ class AuditReport:
         
         <div class="content">
 """
-        
+
         # Generate findings by category
         for category, category_findings in sorted(findings_by_category.items()):
             html += f"""
             <div class="category-section">
                 <h2 class="category-header">{category} ({len(category_findings)} findings)</h2>
 """
-            
+
             # Sort findings by risk level (Critical > High > Medium > Low)
-            risk_order = {RiskLevel.CRITICAL: 0, RiskLevel.HIGH: 1, RiskLevel.MEDIUM: 2, RiskLevel.LOW: 3}
-            sorted_findings = sorted(category_findings, key=lambda f: risk_order[f.risk_level])
-            
+            risk_order = {
+                RiskLevel.CRITICAL: 0,
+                RiskLevel.HIGH: 1,
+                RiskLevel.MEDIUM: 2,
+                RiskLevel.LOW: 3,
+            }
+            sorted_findings = sorted(
+                category_findings, key=lambda f: risk_order[f.risk_level]
+            )
+
             for finding in sorted_findings:
                 risk_class = finding.risk_level.value.lower()
                 location = f"{finding.file_path}"
                 if finding.line_number > 0:
                     location += f":{finding.line_number}"
-                
+
                 details_html = ""
                 if finding.details:
                     details_items = []
@@ -479,7 +488,7 @@ class AuditReport:
                     {' | '.join(details_items)}
                 </div>
 """
-                
+
                 html += f"""
                 <div class="finding {risk_class}" data-risk="{risk_class}">
                     <div class="finding-header">
@@ -494,18 +503,18 @@ class AuditReport:
                     </div>
                 </div>
 """
-            
+
             html += """
             </div>
 """
-        
+
         if not self.findings:
             html += """
             <div class="no-findings">
                 ✅ No findings detected. Great job!
             </div>
 """
-        
+
         html += """
         </div>
     </div>
@@ -542,23 +551,23 @@ class AuditReport:
 </html>
 """
         return html
-    
+
     def save_json(self, output_path: str) -> None:
         """
         Save report as JSON file.
-        
+
         Args:
             output_path: Path to save JSON file
         """
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(self.to_json())
-    
+
     def save_html(self, output_path: str) -> None:
         """
         Save report as HTML file.
-        
+
         Args:
             output_path: Path to save HTML file
         """
-        with open(output_path, 'w', encoding='utf-8') as f:
+        with open(output_path, "w", encoding="utf-8") as f:
             f.write(self.to_html())
