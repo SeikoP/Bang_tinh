@@ -112,6 +112,21 @@ def init_db():
             cursor.execute("ALTER TABLE products ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
         except sqlite3.OperationalError:
             pass
+            
+        # Bảng quick_prices cho Bảng giá nhanh (nhập tay)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS quick_prices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                price REAL NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+            
+        try:
+            cursor.execute("ALTER TABLE products ADD COLUMN is_favorite INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
         
         # Thêm dữ liệu mẫu nếu bảng trống
         cursor.execute("SELECT COUNT(*) FROM products")

@@ -4,7 +4,7 @@ Repositories - CRUD operations cho database
 from typing import List, Optional
 from datetime import date, datetime
 from .connection import get_connection
-from .models import Product, SessionData, SessionHistory, SessionHistoryItem
+from .models import Product, SessionData, SessionHistory, SessionHistoryItem, QuickPrice
 
 
 class ProductRepository:
@@ -68,7 +68,7 @@ class ProductRepository:
             cursor = conn.cursor()
             cursor.execute(
                 """UPDATE products 
-                   SET name=?, large_unit=?, conversion=?, unit_price=?, updated_at=CURRENT_TIMESTAMP 
+                   SET name=?, large_unit=?, conversion=?, unit_price=?
                    WHERE id=?""",
                 (name, large_unit, conversion, unit_price, product_id)
             )
@@ -81,12 +81,20 @@ class ProductRepository:
             cursor = conn.cursor()
             if soft_delete:
                 cursor.execute(
-                    "UPDATE products SET is_active = 0, updated_at=CURRENT_TIMESTAMP WHERE id=?",
+                    "UPDATE products SET is_active = 0 WHERE id=?",
                     (product_id,)
                 )
             else:
                 cursor.execute("DELETE FROM products WHERE id=?", (product_id,))
                 cursor.execute("DELETE FROM session_data WHERE product_id=?", (product_id,))
+            return cursor.rowcount > 0
+
+    @staticmethod
+    def toggle_favorite(product_id: int) -> bool:
+        """Bật/tắt trạng thái yêu thích"""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE products SET is_favorite = NOT is_favorite WHERE id = ?", (product_id,))
             return cursor.rowcount > 0
 
 
@@ -99,7 +107,7 @@ class SessionRepository:
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT p.id, p.name, p.large_unit, p.conversion, p.unit_price, p.is_active,
+                SELECT p.id, p.name, p.large_unit, p.conversion, p.unit_price, p.is_active, p.is_favorite,
                        COALESCE(s.handover_qty, 0) as handover_qty, 
                        COALESCE(s.closing_qty, 0) as closing_qty
                 FROM products p
@@ -228,4 +236,42 @@ class HistoryRepository:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM session_history_items WHERE history_id = ?", (history_id,))
             cursor.execute("DELETE FROM session_history WHERE id = ?", (history_id,))
+            return cursor.rowcount > 0
+
+
+class QuickPriceRepository:
+    """Repository cho Bảng giá nhanh (nhập tay)"""
+    
+    @staticmethod
+    def get_all() -> List[QuickPrice]:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM quick_prices ORDER BY id")
+            return [QuickPrice.from_row(row) for row in cursor.fetchall()]
+    
+    @staticmethod
+    def add(name: str, price: float) -> int:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO quick_prices (name, price) VALUES (?, ?)",
+                (name, price)
+            )
+            return cursor.lastrowid
+            
+    @staticmethod
+    def update(id: int, name: str, price: float) -> bool:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE quick_prices SET name=?, price=? WHERE id=?",
+                (name, price, id)
+            )
+            return cursor.rowcount > 0
+            
+    @staticmethod
+    def delete(id: int) -> bool:
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM quick_prices WHERE id=?", (id,))
             return cursor.rowcount > 0

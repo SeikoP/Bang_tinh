@@ -1,6 +1,6 @@
 """
 History View - Lịch sử phiên làm việc
-Clean Minimal Design
+Modern Premium Design
 """
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
@@ -24,21 +24,28 @@ class HistoryDetailDialog(QDialog):
     
     def _setup_ui(self):
         self.setWindowTitle(f"Chi tiết: {self.history.shift_name or 'Phiên làm việc'}")
-        self.setMinimumSize(550, 350)
+        self.setMinimumSize(600, 400)
         
         layout = QVBoxLayout(self)
-        layout.setSpacing(12)
-        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(16)
+        layout.setContentsMargins(24, 20, 24, 20)
         
         # Info
         info = QHBoxLayout()
-        info.setSpacing(16)
+        info.setSpacing(20)
         
-        info.addWidget(QLabel(f"Ngày: <b>{self.history.session_date}</b>"))
-        info.addWidget(QLabel(f"Ca: <b>{self.history.shift_name or 'N/A'}</b>"))
+        info.addWidget(QLabel(f"📅 Ngày: <b>{self.history.session_date}</b>"))
+        info.addWidget(QLabel(f"⏰ Ca: <b>{self.history.shift_name or 'N/A'}</b>"))
         
-        total = QLabel(f"Tổng: <b>{self.history.total_amount:,.0f} VNĐ</b>")
-        total.setStyleSheet(f"color: {AppColors.SUCCESS};")
+        total = QLabel(f"💰 Tổng: <b>{self.history.total_amount:,.0f} VNĐ</b>")
+        total.setStyleSheet(f"""
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            padding: 8px 16px;
+            background: {AppColors.SUCCESS};
+            border-radius: 6px;
+        """)
         info.addWidget(total)
         
         info.addStretch()
@@ -100,24 +107,21 @@ class HistoryView(QWidget):
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(20, 16, 20, 20)
+        layout.setSpacing(16)
         
-        # Header
-        header = QHBoxLayout()
+        # Toolbar
+        toolbar = QHBoxLayout()
+        toolbar.setContentsMargins(0, 0, 0, 0)
         
-        title = QLabel("Lịch sử Phiên làm việc")
-        title.setObjectName("title")
-        header.addWidget(title)
-        
-        header.addStretch()
-        
-        refresh_btn = QPushButton("Làm mới")
+        refresh_btn = QPushButton("🔄 Làm mới danh sách")
         refresh_btn.setObjectName("secondary")
+        refresh_btn.setFixedWidth(180)
         refresh_btn.clicked.connect(self.refresh_list)
-        header.addWidget(refresh_btn)
+        toolbar.addWidget(refresh_btn)
         
-        layout.addLayout(header)
+        toolbar.addStretch()
+        layout.addLayout(toolbar)
         
         # Table
         self.table = QTableWidget()
@@ -147,7 +151,7 @@ class HistoryView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(42)
+        self.table.verticalHeader().setDefaultSectionSize(48)
     
     def refresh_list(self):
         histories = HistoryRepository.get_all()

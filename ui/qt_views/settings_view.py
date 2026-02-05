@@ -1,6 +1,6 @@
 """
 Settings View - Cài đặt
-Clean Minimal Design
+Modern Premium Design
 """
 import os
 import shutil
@@ -25,39 +25,84 @@ class SettingsView(QWidget):
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 16)
-        layout.setSpacing(16)
+        layout.setContentsMargins(20, 16, 20, 20)
+        layout.setSpacing(20)
         
-        # Header
-        title = QLabel("Cài đặt")
-        title.setObjectName("title")
-        layout.addWidget(title)
+        # Network section
+        layout.addWidget(self._create_section("🌐 Kết nối điện thoại", self._network_content()))
         
         # Backup section
-        layout.addWidget(self._create_section("Sao lưu dữ liệu", self._backup_content()))
+        layout.addWidget(self._create_section("💾 Sao lưu dữ liệu", self._backup_content()))
         
         # About section
-        layout.addWidget(self._create_section("Thông tin ứng dụng", self._about_content()))
+        layout.addWidget(self._create_section("ℹ️ Thông tin ứng dụng", self._about_content()))
         
         layout.addStretch()
     
+    def _network_content(self) -> QWidget:
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+        
+        # Title/Description
+        desc = QLabel("Địa chỉ dùng để thiết lập trong MacroDroid:")
+        desc.setObjectName("subtitle")
+        layout.addWidget(desc)
+        
+        # IP Display
+        self.ip_box = QHBoxLayout()
+        self.ip_label = QLabel("Đang lấy địa chỉ IP...")
+        self.ip_label.setStyleSheet(f"""
+            font-size: 18px; 
+            font-weight: 800; 
+            color: {AppColors.PRIMARY};
+            background: {AppColors.BG};
+            padding: 10px;
+            border-radius: 6px;
+        """)
+        self.ip_box.addWidget(self.ip_label)
+        
+        refresh_btn = QPushButton("🔄 Làm mới")
+        refresh_btn.setFixedWidth(100)
+        refresh_btn.clicked.connect(self._refresh_ip)
+        self.ip_box.addWidget(refresh_btn)
+        layout.addLayout(self.ip_box)
+        
+        # Guide
+        guide = QLabel("Gợi ý URL: http://[Địa chỉ IP trên]:5005?content={not_text}")
+        guide.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 12px;")
+        layout.addWidget(guide)
+        
+        self._refresh_ip()
+        return content
+
+    def _refresh_ip(self):
+        import socket
+        try:
+            # Cách lấy IP nội bộ thực sự của máy
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            self.ip_label.setText(ip)
+        except Exception:
+            self.ip_label.setText("127.0.0.1 (Chưa kết nối mạng)")
+
     def _create_section(self, title: str, content: QWidget) -> QFrame:
         section = QFrame()
         section.setObjectName("card")
-        section.setStyleSheet(f"""
-            QFrame#card {{
-                background-color: {AppColors.SURFACE};
-                border: 1px solid {AppColors.BORDER};
-                border-radius: 8px;
-            }}
-        """)
         
         section_layout = QVBoxLayout(section)
-        section_layout.setContentsMargins(16, 14, 16, 14)
-        section_layout.setSpacing(12)
+        section_layout.setContentsMargins(20, 18, 20, 18)
+        section_layout.setSpacing(16)
         
         title_label = QLabel(title)
-        title_label.setStyleSheet("font-weight: 600; font-size: 14px;")
+        title_label.setStyleSheet(f"""
+            font-weight: 700;
+            font-size: 16px;
+            color: {AppColors.TEXT};
+        """)
         section_layout.addWidget(title_label)
         
         section_layout.addWidget(content)

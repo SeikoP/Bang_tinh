@@ -15,6 +15,7 @@ class Product:
     conversion: int
     unit_price: float
     is_active: bool = True
+    is_favorite: bool = False
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     
@@ -41,6 +42,7 @@ class Product:
             conversion=row['conversion'],
             unit_price=row['unit_price'],
             is_active=bool(row['is_active']) if 'is_active' in row.keys() else True,
+            is_favorite=bool(row['is_favorite']) if 'is_favorite' in row.keys() else False,
             created_at=row['created_at'] if 'created_at' in row.keys() else None,
             updated_at=row['updated_at'] if 'updated_at' in row.keys() else None,
         )
@@ -73,6 +75,7 @@ class SessionData:
             conversion=row['conversion'],
             unit_price=row['unit_price'],
             is_active=bool(row['is_active']) if 'is_active' in row.keys() else True,
+            is_favorite=bool(row['is_favorite']) if 'is_favorite' in row.keys() else False,
         )
         return cls(
             product=product,
@@ -133,4 +136,18 @@ class SessionHistory:
             total_amount=row['total_amount'],
             notes=row['notes'],
             created_at=row['created_at'],
+        )
+@dataclass
+class QuickPrice:
+    """Đại diện cho một mục trong bảng giá nhanh"""
+    id: int
+    name: str
+    price: float
+    
+    @classmethod
+    def from_row(cls, row) -> "QuickPrice":
+        return cls(
+            id=row['id'],
+            name=row['name'],
+            price=row['price']
         )
