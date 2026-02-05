@@ -1,0 +1,5 @@
+=== OVERLAY DEBUG ===
+Total overlay items: 2
+  [0] FilePicker
+  [1] FilePicker
+==================================================
