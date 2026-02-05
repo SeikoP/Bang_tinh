@@ -3,8 +3,11 @@ Core interfaces for repositories and services.
 Defines abstract base classes for dependency injection and clean architecture.
 """
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from datetime import date
+
+if TYPE_CHECKING:
+    from core.models import Product, SessionData, SessionHistory
 
 
 class IProductRepository(ABC):
