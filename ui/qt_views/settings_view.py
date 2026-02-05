@@ -8,9 +8,9 @@ from datetime import datetime
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFrame, QFileDialog, QMessageBox
+    QFrame, QFileDialog, QMessageBox, QSlider, QSpinBox
 )
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 from ui.qt_theme import AppColors
 from config import DB_PATH, BACKUP_DIR, APP_NAME, APP_VERSION
@@ -19,14 +19,23 @@ from config import DB_PATH, BACKUP_DIR, APP_NAME, APP_VERSION
 class SettingsView(QWidget):
     """View cài đặt"""
     
+    # Signals để thông báo thay đổi
+    row_height_changed = pyqtSignal(int)
+    widget_height_changed = pyqtSignal(int)
+    
     def __init__(self):
         super().__init__()
+        self.current_row_height = 70
+        self.current_widget_height = 28
         self._setup_ui()
     
     def _setup_ui(self):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 16, 20, 20)
         layout.setSpacing(20)
+        
+        # UI Config section
+        layout.addWidget(self._create_section("⚙️ Cấu hình giao diện", self._ui_config_content()))
         
         # Network section
         layout.addWidget(self._create_section("🌐 Kết nối điện thoại", self._network_content()))
@@ -38,6 +47,74 @@ class SettingsView(QWidget):
         layout.addWidget(self._create_section("ℹ️ Thông tin ứng dụng", self._about_content()))
         
         layout.addStretch()
+    
+    def _ui_config_content(self) -> QWidget:
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(16)
+        
+        # Row Height
+        row_height_layout = QVBoxLayout()
+        row_height_label = QLabel(f"Chiều cao hàng: {self.current_row_height}px")
+        row_height_label.setObjectName("subtitle")
+        row_height_layout.addWidget(row_height_label)
+        
+        row_height_slider = QSlider(Qt.Orientation.Horizontal)
+        row_height_slider.setMinimum(40)
+        row_height_slider.setMaximum(100)
+        row_height_slider.setValue(self.current_row_height)
+        row_height_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        row_height_slider.setTickInterval(10)
+        row_height_slider.valueChanged.connect(lambda v: self._on_row_height_change(v, row_height_label))
+        row_height_layout.addWidget(row_height_slider)
+        
+        layout.addLayout(row_height_layout)
+        
+        # Widget Height
+        widget_height_layout = QVBoxLayout()
+        widget_height_label = QLabel(f"Chiều cao widget: {self.current_widget_height}px")
+        widget_height_label.setObjectName("subtitle")
+        widget_height_layout.addWidget(widget_height_label)
+        
+        widget_height_slider = QSlider(Qt.Orientation.Horizontal)
+        widget_height_slider.setMinimum(20)
+        widget_height_slider.setMaximum(50)
+        widget_height_slider.setValue(self.current_widget_height)
+        widget_height_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        widget_height_slider.setTickInterval(5)
+        widget_height_slider.valueChanged.connect(lambda v: self._on_widget_height_change(v, widget_height_label))
+        widget_height_layout.addWidget(widget_height_slider)
+        
+        layout.addLayout(widget_height_layout)
+        
+        # Reset button
+        reset_btn = QPushButton("🔄 Đặt lại mặc định")
+        reset_btn.setObjectName("secondary")
+        reset_btn.setFixedWidth(180)
+        reset_btn.clicked.connect(lambda: self._reset_defaults(row_height_slider, widget_height_slider, row_height_label, widget_height_label))
+        layout.addWidget(reset_btn)
+        
+        # Info
+        info = QLabel("💡 Điều chỉnh để fix vấn đề hiển thị box bị cắt")
+        info.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-style: italic;")
+        layout.addWidget(info)
+        
+        return content
+    
+    def _on_row_height_change(self, value: int, label: QLabel):
+        self.current_row_height = value
+        label.setText(f"Chiều cao hàng: {value}px")
+        self.row_height_changed.emit(value)
+    
+    def _on_widget_height_change(self, value: int, label: QLabel):
+        self.current_widget_height = value
+        label.setText(f"Chiều cao widget: {value}px")
+        self.widget_height_changed.emit(value)
+    
+    def _reset_defaults(self, row_slider, widget_slider, row_label, widget_label):
+        row_slider.setValue(70)
+        widget_slider.setValue(28)
     
     def _network_content(self) -> QWidget:
         content = QWidget()

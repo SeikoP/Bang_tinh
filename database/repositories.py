@@ -4,7 +4,7 @@ Repositories - CRUD operations cho database
 from typing import List, Optional
 from datetime import date, datetime
 from .connection import get_connection
-from .models import Product, SessionData, SessionHistory, SessionHistoryItem, QuickPrice, BankNotification
+from .models import Product, SessionData, SessionHistory, SessionHistoryItem, QuickPrice, BankNotification, StockChangeLog
 
 
 class ProductRepository:
@@ -314,3 +314,48 @@ class BankRepository:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM bank_history")
             return True
+
+
+class StockChangeLogRepository:
+    """Repository cho lịch sử thay đổi kho"""
+    
+    @staticmethod
+    def add_log(product_id: int, product_name: str, old_qty: int, new_qty: int):
+        """Thêm log thay đổi số lượng"""
+        change_type = 'increase' if new_qty > old_qty else 'decrease'
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO stock_change_logs 
+                (product_id, product_name, old_qty, new_qty, change_type) 
+                VALUES (?, ?, ?, ?, ?)""",
+                (product_id, product_name, old_qty, new_qty, change_type)
+            )
+            return cursor.lastrowid
+    
+    @staticmethod
+    def get_all(limit: int = 100) -> List[StockChangeLog]:
+        """Lấy lịch sử thay đổi, mới nhất trước"""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT * FROM stock_change_logs 
+                ORDER BY changed_at DESC LIMIT ?""",
+                (limit,)
+            )
+            return [StockChangeLog.from_row(row) for row in cursor.fetchall()]
+    
+    @staticmethod
+    def delete(log_id: int) -> bool:
+        """Xóa một log cụ thể"""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM stock_change_logs WHERE id = ?", (log_id,))
+            return cursor.rowcount > 0
+    
+    @staticmethod
+    def clear_all():
+        """Xóa toàn bộ lịch sử"""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM stock_change_logs")

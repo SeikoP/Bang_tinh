@@ -172,3 +172,27 @@ class BankNotification:
             content=row['content'],
             created_at=row['created_at']
         )
+
+
+@dataclass
+class StockChangeLog:
+    """Lịch sử thay đổi số lượng kho"""
+    id: int
+    product_id: int
+    product_name: str
+    old_qty: int
+    new_qty: int
+    change_type: str  # 'increase' hoặc 'decrease'
+    changed_at: datetime
+    
+    @classmethod
+    def from_row(cls, row) -> "StockChangeLog":
+        return cls(
+            id=row['id'],
+            product_id=row['product_id'],
+            product_name=row['product_name'],
+            old_qty=row['old_qty'],
+            new_qty=row['new_qty'],
+            change_type=row['change_type'],
+            changed_at=row['changed_at']
+        )

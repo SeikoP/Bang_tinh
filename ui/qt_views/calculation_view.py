@@ -91,6 +91,7 @@ class CalculationView(QWidget):
         self.report_service = ReportService()
         self.on_refresh_stock = on_refresh_stock
         self._next_focus = None
+        self._widget_height = 28  # Chiều cao mặc định
         self._setup_ui()
         self.refresh_table()
         self.refresh_product_list()
@@ -262,7 +263,7 @@ class CalculationView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(60) # Tăng thêm để tạo khoảng thở
+        self.table.verticalHeader().setDefaultSectionSize(70)
 
     def _setup_prod_table(self):
         self.prod_table.setColumnCount(6)
@@ -278,12 +279,12 @@ class CalculationView(QWidget):
         self.prod_table.setColumnWidth(2, 75)
         self.prod_table.setColumnWidth(3, 75)
         self.prod_table.setColumnWidth(4, 110)
-        self.prod_table.setColumnWidth(5, 190)
+        self.prod_table.setColumnWidth(5, 200)
         
         self.prod_table.setAlternatingRowColors(True)
         self.prod_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.prod_table.verticalHeader().setVisible(False)
-        self.prod_table.verticalHeader().setDefaultSectionSize(50)
+        self.prod_table.verticalHeader().setDefaultSectionSize(64)
 
     def refresh_table(self):
         sessions = SessionRepository.get_all()
@@ -307,14 +308,24 @@ class CalculationView(QWidget):
             self.table.setItem(row, 0, unit_item)
             self._set_cell_helper(self.table, row, 1, str(p.conversion), right=True, fg=AppColors.TEXT, bg=row_bg)
             self._set_cell_helper(self.table, row, 2, p.name, bold=True, fg=AppColors.TEXT, bg=row_bg)
-            handover_container = QFrame()
-            handover_container.setStyleSheet("background: transparent; border: none;")
-            handover_layout = QHBoxLayout(handover_container)
-            handover_layout.setContentsMargins(0, 0, 0, 0)
+            handover_container = QWidget()
+            handover_layout = QVBoxLayout(handover_container)
+            handover_layout.setContentsMargins(10, 8, 10, 8)  # Tăng margin để widget không bị overflow
+            handover_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             handover_edit = QLineEdit(handover_disp if s.handover_qty > 0 else "0")
             handover_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            handover_edit.setMinimumHeight(24) # Thu nhỏ xuống 24px
-            handover_edit.setStyleSheet(self._input_style())
+            handover_edit.setFixedHeight(self._widget_height)
+            # Set stylesheet trực tiếp với specificity cao
+            handover_edit.setStyleSheet(f"""
+                QLineEdit {{
+                    border: 2px solid {AppColors.BORDER};
+                    border-radius: 5px;
+                    padding: 2px 6px;
+                    font-weight: 700;
+                    font-size: 13px;
+                    background: white;
+                }}
+            """)
             handover_edit.setProperty("product_id", p.id)
             handover_edit.setProperty("conversion", p.conversion)
             handover_edit.setProperty("row", row)
@@ -323,14 +334,24 @@ class CalculationView(QWidget):
             handover_edit.returnPressed.connect(self._on_return_pressed)
             handover_layout.addWidget(handover_edit)
             self.table.setCellWidget(row, 3, handover_container)
-            closing_container = QFrame()
-            closing_container.setStyleSheet("background: transparent; border: none;")
-            closing_layout = QHBoxLayout(closing_container)
-            closing_layout.setContentsMargins(0, 0, 0, 0)
+            closing_container = QWidget()
+            closing_layout = QVBoxLayout(closing_container)
+            closing_layout.setContentsMargins(10, 8, 10, 8)  # Tăng margin để widget không bị overflow
+            closing_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             closing_edit = QLineEdit(closing_disp if s.closing_qty > 0 else "0")
             closing_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            closing_edit.setMinimumHeight(24) # Thu nhỏ xuống 24px
-            closing_edit.setStyleSheet(self._input_style())
+            closing_edit.setFixedHeight(self._widget_height)
+            # Set stylesheet trực tiếp với specificity cao
+            closing_edit.setStyleSheet(f"""
+                QLineEdit {{
+                    border: 2px solid {AppColors.BORDER};
+                    border-radius: 5px;
+                    padding: 2px 6px;
+                    font-weight: 700;
+                    font-size: 13px;
+                    background: white;
+                }}
+            """)
             closing_edit.setProperty("product_id", p.id)
             closing_edit.setProperty("conversion", p.conversion)
             closing_edit.setProperty("row", row)
@@ -377,13 +398,19 @@ class CalculationView(QWidget):
             self._set_cell_helper(self.prod_table, row, 2, p.large_unit, center=True, fg=AppColors.PRIMARY)
             self._set_cell_helper(self.prod_table, row, 3, str(p.conversion), center=True, fg=AppColors.TEXT)
             self._set_cell_helper(self.prod_table, row, 4, f"{p.unit_price:,.0f}", center=True, fg=AppColors.SUCCESS, bold=True)
-            # Force layout zero margins/spacing
+            # Force layout - Dùng VBoxLayout để căn giữa
             actions = QWidget()
             actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-            al = QHBoxLayout(actions)
-            al.setContentsMargins(4, 0, 4, 0)
+            
+            actions_v_layout = QVBoxLayout(actions)
+            actions_v_layout.setContentsMargins(0, 6, 0, 6)  # Tăng margin vertical
+            actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
+            actions_h_widget = QWidget()
+            al = QHBoxLayout(actions_h_widget)
+            al.setContentsMargins(10, 0, 10, 0)
             al.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            al.setSpacing(4)
+            al.setSpacing(10)
             
             # Action Button Style
             btn_style = """
@@ -414,33 +441,21 @@ class CalculationView(QWidget):
             """
 
             eb = QPushButton("Sửa")
-            eb.setFixedSize(60, 26)
+            eb.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
             eb.setStyleSheet(btn_style)
+            eb.setCursor(Qt.CursorShape.PointingHandCursor)
             eb.clicked.connect(lambda _, pid=p.id: self._edit_product(pid))
             al.addWidget(eb)
             
             db = QPushButton("Xóa")
-            db.setFixedSize(60, 26)
+            db.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
             db.setStyleSheet(del_style)
+            db.setCursor(Qt.CursorShape.PointingHandCursor)
             db.clicked.connect(lambda _, pid=p.id, name=p.name: self._delete_product(pid, name))
             al.addWidget(db)
+            
+            actions_v_layout.addWidget(actions_h_widget)
             self.prod_table.setCellWidget(row, 5, actions)
-
-    def _input_style(self):
-        return f"""
-            QLineEdit {{
-                border: 1px solid {AppColors.BORDER};
-                border-radius: 4px;
-                padding: 0px 2px;
-                font-weight: 700;
-                font-size: 13px; /* Trả về font to */
-                background: white;
-                margin-bottom: 4px; /* Đẩy lên cao hơn chút nữa */
-            }}
-            QLineEdit:focus {{
-                border: 2px solid {AppColors.PRIMARY};
-            }}
-        """
 
     def _on_return_pressed(self):
         w = self.sender()

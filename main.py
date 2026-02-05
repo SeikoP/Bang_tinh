@@ -548,6 +548,10 @@ class MainWindow(QMainWindow):
         self.bank_view = BankView() # View mới cho Ngân hàng
         self.history_view = HistoryView()
         self.settings_view = SettingsView()
+        
+        # Kết nối signals từ settings để cập nhật UI real-time
+        self.settings_view.row_height_changed.connect(self._on_row_height_changed)
+        self.settings_view.widget_height_changed.connect(self._on_widget_height_changed)
     
     def _start_notification_server(self):
         """Khởi chạy server ngầm để nhận thông báo"""
@@ -607,6 +611,44 @@ class MainWindow(QMainWindow):
     def _refresh_stock(self):
         if hasattr(self, 'stock_view'):
             self.stock_view.refresh_list()
+    
+    def _on_row_height_changed(self, height: int):
+        """Cập nhật chiều cao row cho tất cả tables"""
+        # Calculation view
+        if hasattr(self, 'calc_view'):
+            self.calc_view.table.verticalHeader().setDefaultSectionSize(height)
+            self.calc_view.prod_table.verticalHeader().setDefaultSectionSize(height)
+        
+        # Stock view
+        if hasattr(self, 'stock_view'):
+            self.stock_view.table.verticalHeader().setDefaultSectionSize(height)
+        
+        # Product view
+        if hasattr(self, 'product_view'):
+            self.product_view.table.verticalHeader().setDefaultSectionSize(height)
+        
+        # History view
+        if hasattr(self, 'history_view'):
+            self.history_view.table.verticalHeader().setDefaultSectionSize(height)
+        
+        # Bank view
+        if hasattr(self, 'bank_view'):
+            self.bank_view.table.verticalHeader().setDefaultSectionSize(height)
+    
+    def _on_widget_height_changed(self, height: int):
+        """Cập nhật chiều cao widget - cần refresh lại views"""
+        # Lưu giá trị mới
+        if hasattr(self, 'calc_view'):
+            self.calc_view._widget_height = height
+            self.calc_view.refresh_table()
+        
+        if hasattr(self, 'stock_view'):
+            self.stock_view._widget_height = height
+            self.stock_view.refresh_list()
+        
+        if hasattr(self, 'product_view'):
+            self.product_view._widget_height = height
+            self.product_view.refresh_list()
     
     def _apply_theme(self):
         self.setStyleSheet(AppTheme.get_stylesheet())

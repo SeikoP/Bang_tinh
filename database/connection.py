@@ -140,6 +140,20 @@ def init_db():
             )
         ''')
         
+        # Bảng stock_change_logs (lịch sử thay đổi số lượng kho)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS stock_change_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                product_id INTEGER NOT NULL,
+                product_name TEXT NOT NULL,
+                old_qty INTEGER NOT NULL,
+                new_qty INTEGER NOT NULL,
+                change_type TEXT NOT NULL,
+                changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
+            )
+        ''')
+        
         # Thêm dữ liệu mẫu nếu bảng trống
         cursor.execute("SELECT COUNT(*) FROM products")
         if cursor.fetchone()[0] == 0:

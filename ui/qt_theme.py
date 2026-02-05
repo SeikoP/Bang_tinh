@@ -352,7 +352,7 @@ class AppTheme:
         }}
         
         QTableWidget::item {{
-            padding: 8px 8px;
+            padding: 4px;
             border: none;
         }}
         

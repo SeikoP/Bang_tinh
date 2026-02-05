@@ -145,13 +145,13 @@ class HistoryView(QWidget):
         self.table.setColumnWidth(0, 50)
         self.table.setColumnWidth(1, 100)
         self.table.setColumnWidth(3, 110)
-        self.table.setColumnWidth(5, 90)
+        self.table.setColumnWidth(5, 110) # Tăng lên 110px cho 2 icon buttons
         
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(48)
+        self.table.verticalHeader().setDefaultSectionSize(56) # Tăng lên 56px
     
     def refresh_list(self):
         histories = HistoryRepository.get_all()
@@ -167,20 +167,31 @@ class HistoryView(QWidget):
             self._set_cell(row, 4, notes_text, fg=AppColors.TEXT_SECONDARY)
             
             actions = QWidget()
-            actions_layout = QHBoxLayout(actions)
-            actions_layout.setContentsMargins(4, 2, 4, 2)
-            actions_layout.setSpacing(4)
+            
+            actions_v_layout = QVBoxLayout(actions)
+            actions_v_layout.setContentsMargins(0, 0, 0, 0)
+            actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
+            actions_h_widget = QWidget()
+            actions_layout = QHBoxLayout(actions_h_widget)
+            actions_layout.setContentsMargins(8, 0, 8, 0)
+            actions_layout.setSpacing(8)
             
             view_btn = QPushButton("⊙")
             view_btn.setObjectName("iconBtn")
+            view_btn.setFixedSize(28, 28) # Thu nhỏ xuống
+            view_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             view_btn.clicked.connect(lambda _, hid=h.id: self._view_detail(hid))
             actions_layout.addWidget(view_btn)
             
             del_btn = QPushButton("×")
             del_btn.setObjectName("iconBtn")
+            del_btn.setFixedSize(28, 28) # Thu nhỏ xuống
+            del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             del_btn.clicked.connect(lambda _, hid=h.id: self._delete_history(hid))
             actions_layout.addWidget(del_btn)
             
+            actions_v_layout.addWidget(actions_h_widget)
             self.table.setCellWidget(row, 5, actions)
     
     def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):

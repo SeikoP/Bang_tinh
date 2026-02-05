@@ -104,22 +104,22 @@ class ProductView(QWidget):
     def _setup_table(self):
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels(["STT", "Tên dịch vụ", "Đơn giá", "Thao tác"])
-        self.table.setShowGrid(False)  # Bỏ grid lines để tránh cắt viền visual
+        self.table.setShowGrid(False)
         
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        # Auto resize cột Thao tác theo nội dung nút
-        header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         
         self.table.setColumnWidth(0, 45)
         self.table.setColumnWidth(2, 120)
+        self.table.setColumnWidth(3, 160)
         
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(50) # Tăng lên 50px cho thoáng
+        self.table.verticalHeader().setDefaultSectionSize(68)
     
     def refresh_list(self):
         query = self.search_input.text().lower().strip()
@@ -133,16 +133,20 @@ class ProductView(QWidget):
             self._set_cell(row, 1, item.name, bold=True)
             self._set_cell(row, 2, f"{item.price:,.0f} đ", center=True, fg=AppColors.PRIMARY, bold=True)
             
-            # Container widget
+            # Container widget - Dùng VBoxLayout để căn giữa theo chiều dọc
             actions = QWidget()
             actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             
-            # 1. Tối ưu layout trong cell
-            actions_layout = QHBoxLayout(actions)
-            # 2. Set contentsMargins cực nhỏ hoặc 0 để đảm bảo không bị quá khổ
-            actions_layout.setContentsMargins(0, 4, 0, 4)
+            actions_v_layout = QVBoxLayout(actions)
+            actions_v_layout.setContentsMargins(0, 0, 0, 0)
+            actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            
+            # Inner HBox cho buttons
+            actions_h_widget = QWidget()
+            actions_layout = QHBoxLayout(actions_h_widget)
+            actions_layout.setContentsMargins(10, 0, 10, 0)
             actions_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            actions_layout.setSpacing(8)
+            actions_layout.setSpacing(10)
             
             # Action Button Style - Thay đổi màu sắc RÕ RỆT để user thấy
             btn_style = f"""
@@ -174,10 +178,9 @@ class ProductView(QWidget):
             edit_btn = QPushButton("Sửa")
             edit_btn.setStyleSheet(btn_style)
             edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            edit_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus) # Bỏ viền focus
-            # 3. Set sizePolicy & 5. Đảm bảo không bị clipped
+            edit_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             edit_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-            edit_btn.setFixedHeight(30) # Giảm xuống 30px để an toàn hơn
+            edit_btn.setFixedSize(58, 30) # Thu nhỏ xuống
             edit_btn.clicked.connect(lambda _, it=item: self._edit_quick_price(it))
             actions_layout.addWidget(edit_btn)
             
@@ -186,10 +189,11 @@ class ProductView(QWidget):
             del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             del_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             del_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-            del_btn.setFixedHeight(30)
+            del_btn.setFixedSize(58, 30) # Thu nhỏ xuống
             del_btn.clicked.connect(lambda _, i_id=item.id: self._delete_quick_price(i_id))
             actions_layout.addWidget(del_btn)
             
+            actions_v_layout.addWidget(actions_h_widget)
             self.table.setCellWidget(row, 3, actions)
             
     def _add_quick_price(self):

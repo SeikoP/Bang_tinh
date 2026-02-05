@@ -1,17 +1,18 @@
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QFrame
+    QTableWidget, QTableWidgetItem, QHeaderView, QLineEdit, QFrame, QMessageBox
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
+from datetime import datetime
 
 from ui.qt_theme import AppColors
-from database import SessionRepository
+from database import SessionRepository, StockChangeLogRepository
 from services import CalculatorService
 
 
 class StockView(QWidget):
-    """View kho hàng - Tối ưu nhập liệu bằng QLineEdit thay vì QSpinBox"""
+    """View kho hàng - Buttons tách riêng dễ nhấn"""
     
     def __init__(self, on_refresh_calc=None):
         super().__init__()
@@ -19,10 +20,17 @@ class StockView(QWidget):
         self.calc_service = CalculatorService()
         self._setup_ui()
         self.refresh_list()
+        self.refresh_history()
     
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 16, 20, 20)
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(20, 16, 20, 20)
+        main_layout.setSpacing(16)
+        
+        # Left: Table
+        left_widget = QWidget()
+        layout = QVBoxLayout(left_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(16)
         
         # Toolbar
@@ -33,7 +41,7 @@ class StockView(QWidget):
         
         refresh_btn = QPushButton("🔄 Làm mới dữ liệu")
         refresh_btn.setObjectName("secondary")
-        refresh_btn.setFixedWidth(200) # Đủ rộng cho text và icon
+        refresh_btn.setFixedWidth(200)
         refresh_btn.clicked.connect(self.refresh_list)
         toolbar_layout.addWidget(refresh_btn)
         
@@ -45,6 +53,51 @@ class StockView(QWidget):
         self.table = QTableWidget()
         self._setup_table()
         layout.addWidget(self.table, 1)
+        
+        main_layout.addWidget(left_widget, 3)
+        
+        # Right: History panel
+        history_panel = QFrame()
+        history_panel.setObjectName("card")
+        history_panel.setFixedWidth(300)
+        history_layout = QVBoxLayout(history_panel)
+        history_layout.setContentsMargins(16, 16, 16, 16)
+        history_layout.setSpacing(12)
+        
+        # Header
+        header_layout = QHBoxLayout()
+        history_title = QLabel("📋 Lịch sử thay đổi")
+        history_title.setStyleSheet(f"font-weight: 700; font-size: 15px; color: {AppColors.TEXT};")
+        header_layout.addWidget(history_title)
+        header_layout.addStretch()
+        
+        clear_btn = QPushButton("🗑️")
+        clear_btn.setObjectName("iconBtn")
+        clear_btn.setFixedSize(28, 28)
+        clear_btn.setToolTip("Xóa lịch sử")
+        clear_btn.clicked.connect(self._clear_history)
+        header_layout.addWidget(clear_btn)
+        
+        history_layout.addLayout(header_layout)
+        
+        # History list
+        self.history_table = QTableWidget()
+        self.history_table.setColumnCount(4)
+        self.history_table.setHorizontalHeaderLabels(["Sản phẩm", "Thay đổi", "Thời gian", ""])
+        self.history_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self.history_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        self.history_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        self.history_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self.history_table.setColumnWidth(1, 60)
+        self.history_table.setColumnWidth(2, 60)
+        self.history_table.setColumnWidth(3, 32)
+        self.history_table.verticalHeader().setVisible(False)
+        self.history_table.setAlternatingRowColors(True)
+        self.history_table.verticalHeader().setDefaultSectionSize(40)
+        self.history_table.setStyleSheet("font-size: 11px;")
+        history_layout.addWidget(self.history_table, 1)
+        
+        main_layout.addWidget(history_panel, 1)
     
     def _setup_table(self):
         self.table.setColumnCount(7)
@@ -61,15 +114,15 @@ class StockView(QWidget):
         self.table.setColumnWidth(0, 45)
         self.table.setColumnWidth(2, 75)
         self.table.setColumnWidth(3, 75)
-        self.table.setColumnWidth(4, 160) # Rộng hơn cho container nhập liệu
-        self.table.setColumnWidth(5, 160)
+        self.table.setColumnWidth(4, 130)
+        self.table.setColumnWidth(5, 130)
         self.table.setColumnWidth(6, 110)
         
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setWordWrap(False)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(60) # Độ cao thoải mái cho container
+        self.table.verticalHeader().setDefaultSectionSize(58)
     
     def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):
         item = QTableWidgetItem(text)
@@ -90,10 +143,99 @@ class StockView(QWidget):
         sessions = SessionRepository.get_all()
         self.table.setRowCount(len(sessions))
         
+        # Helper function - Buttons trong box, cao bằng box
+        def create_stepper(value, max_val, on_change):
+            wrapper = QWidget()
+            w_layout = QHBoxLayout(wrapper)
+            w_layout.setContentsMargins(0, 0, 0, 0)
+            w_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            w_layout.setSpacing(0)
+            
+            # Container box
+            container = QFrame()
+            container.setFixedHeight(36)
+            container.setStyleSheet(f"""
+                QFrame {{
+                    border: 2px solid {AppColors.BORDER};
+                    border-radius: 6px;
+                    background: white;
+                }}
+            """)
+            
+            box_layout = QHBoxLayout(container)
+            box_layout.setContentsMargins(0, 0, 0, 0)
+            box_layout.setSpacing(0)
+            
+            # Nút Trừ - Chiều cao bằng box
+            btn_sub = QPushButton("−")
+            btn_sub.setFixedSize(36, 36)
+            btn_sub.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_sub.setStyleSheet(f"""
+                QPushButton {{
+                    border: none;
+                    border-right: 2px solid {AppColors.BORDER};
+                    border-top-left-radius: 4px;
+                    border-bottom-left-radius: 4px;
+                    background: #fee2e2;
+                    color: #dc2626;
+                    font-weight: bold;
+                    font-size: 20px;
+                }}
+                QPushButton:hover {{ 
+                    background-color: #ef4444; 
+                    color: white;
+                }}
+            """)
+            btn_sub.clicked.connect(lambda: on_change(max(0, value - 1)))
+            
+            # Ô hiển thị số - Chỉ đọc
+            display = QLineEdit(str(value))
+            display.setReadOnly(True)
+            display.setFixedWidth(50)
+            display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            display.setStyleSheet("""
+                QLineEdit {
+                    border: none;
+                    background: white;
+                    color: #0f172a;
+                    font-weight: bold;
+                    font-size: 16px;
+                }
+            """)
+            
+            # Nút Cộng - Chiều cao bằng box
+            btn_add = QPushButton("+")
+            btn_add.setFixedSize(36, 36)
+            btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn_add.setStyleSheet(f"""
+                QPushButton {{
+                    border: none;
+                    border-left: 2px solid {AppColors.BORDER};
+                    border-top-right-radius: 4px;
+                    border-bottom-right-radius: 4px;
+                    background: #d1fae5;
+                    color: #059669;
+                    font-weight: bold;
+                    font-size: 20px;
+                }}
+                QPushButton:hover {{ 
+                    background-color: #10b981; 
+                    color: white;
+                }}
+            """)
+            btn_add.clicked.connect(lambda: on_change(min(max_val, value + 1)))
+            
+            box_layout.addWidget(btn_sub)
+            box_layout.addWidget(display)
+            box_layout.addWidget(btn_add)
+            
+            w_layout.addWidget(container)
+            return wrapper
+
         for row, s in enumerate(sessions):
             p = s.product
             l_qty = s.closing_qty // p.conversion
-            s_qty = s.closing_qty % p.conversion
+            s_qty_val = s.closing_qty % p.conversion
             
             has_data = s.closing_qty > 0
             row_bg = "rgba(37, 99, 235, 0.05)" if has_data else None
@@ -114,120 +256,143 @@ class StockView(QWidget):
             
             self._set_cell(row, 3, str(p.conversion), center=True, fg=AppColors.TEXT, bg=row_bg)
             
-            # Styles for inputs
-            input_css = f"""
-                QLineEdit {{
-                    border: 1px solid {AppColors.BORDER};
-                    border-radius: 4px;
-                    padding: 0px;
-                    font-weight: 700;
-                    font-size: 13px;
-                    background: white;
-                    color: {AppColors.TEXT};
-                }}
-                QLineEdit:focus {{ border: 2px solid {AppColors.PRIMARY}; }}
-            """
+            # --- Cột SL Lớn ---
+            max_large = s.handover_qty // p.conversion
+            w_large = create_stepper(
+                l_qty,
+                max_large,
+                lambda v, pid=p.id, c=p.conversion, sq=s_qty_val: self._on_large_change(pid, v, c, sq)
+            )
+            self.table.setCellWidget(row, 4, w_large)
             
-            # Large qty controls
-            l_container = QFrame()
-            l_layout = QHBoxLayout(l_container)
-            l_layout.setContentsMargins(0, 0, 0, 0) # Zero margins for container
-            l_layout.setSpacing(4)
-            l_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            # --- Cột SL Lẻ ---
+            max_small = p.conversion - 1
+            w_small = create_stepper(
+                s_qty_val,
+                max_small,
+                lambda v, pid=p.id, c=p.conversion, lq=l_qty: self._on_small_change(pid, lq, v, c)
+            )
+            self.table.setCellWidget(row, 5, w_small)
             
-            btn_m_l = QPushButton("➖")
-            btn_m_l.setObjectName("iconBtn")
-            btn_m_l.setFixedSize(28, 28) # Tăng size lên 28
-            btn_m_l.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_m_l.clicked.connect(lambda _, pid=p.id, c=p.conversion, sq=s_qty: 
-                                  self._adjust_qty(pid, c, sq, -1, True))
-            
-            edit_l = QLineEdit(str(l_qty))
-            edit_l.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            edit_l.setFixedSize(60, 28) # Fixed width & height MATCHING button
-            edit_l.setStyleSheet(input_css)
-            edit_l.editingFinished.connect(lambda w=edit_l, sq=s_qty, c=p.conversion, pid=p.id: 
-                                         self._on_direct_change(pid, w.text(), str(sq), c))
-            
-            btn_p_l = QPushButton("➕")
-            btn_p_l.setObjectName("iconBtn")
-            btn_p_l.setFixedSize(28, 28)
-            btn_p_l.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_p_l.clicked.connect(lambda _, pid=p.id, c=p.conversion, sq=s_qty: 
-                                  self._adjust_qty(pid, c, sq, 1, True))
-            
-            l_layout.addWidget(btn_m_l)
-            l_layout.addWidget(edit_l)
-            l_layout.addWidget(btn_p_l)
-            self.table.setCellWidget(row, 4, l_container)
-            
-            # Small qty controls
-            s_container = QFrame()
-            s_layout = QHBoxLayout(s_container)
-            s_layout.setContentsMargins(0, 0, 0, 0)
-            s_layout.setSpacing(4)
-            s_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            
-            btn_m_s = QPushButton("➖")
-            btn_m_s.setObjectName("iconBtn")
-            btn_m_s.setFixedSize(28, 28)
-            btn_m_s.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_m_s.clicked.connect(lambda _, pid=p.id, c=p.conversion, lq=l_qty: 
-                                  self._adjust_qty(pid, c, lq, -1, False))
-            
-            edit_s = QLineEdit(str(s_qty))
-            edit_s.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            edit_s.setFixedSize(60, 28) # Sync height
-            edit_s.setStyleSheet(input_css)
-            edit_s.editingFinished.connect(lambda w=edit_s, lq=l_qty, c=p.conversion, pid=p.id: 
-                                         self._on_direct_change(pid, str(lq), w.text(), c))
-            
-            btn_p_s = QPushButton("➕")
-            btn_p_s.setObjectName("iconBtn")
-            btn_p_s.setFixedSize(28, 28)
-            btn_p_s.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_p_s.clicked.connect(lambda _, pid=p.id, c=p.conversion, lq=l_qty: 
-                                  self._adjust_qty(pid, c, lq, 1, False))
-            
-            s_layout.addWidget(btn_m_s)
-            s_layout.addWidget(edit_s)
-            s_layout.addWidget(btn_p_s)
-            self.table.setCellWidget(row, 5, s_container)
-            
-            # Total - Tăng tương phản
+            # Total - Text màu nổi bật
             t_text = str(s.closing_qty)
-            fg = "white" if has_data else AppColors.TEXT
-            bg = AppColors.PRIMARY if has_data else "#e2e8f0"
+            if has_data:
+                fg = "white"
+                bg = AppColors.PRIMARY
+            else:
+                fg = AppColors.PRIMARY  # Màu xanh primary để nổi bật
+                bg = "#e0e7ff"  # Background xanh nhạt
             self._set_cell(row, 6, t_text, center=True, bold=True, fg=fg, bg=bg)
         
-    def _adjust_qty(self, pid, conv, o_qty, delta, is_l):
+    def _on_large_change(self, pid, new_large, conv, old_small):
         sessions = SessionRepository.get_all()
         sess = next((s for s in sessions if s.product.id == pid), None)
         if not sess: return
-        cur_l = sess.closing_qty // conv
-        cur_s = sess.closing_qty % conv
-        if is_l:
-            new_l = max(0, cur_l + delta)
-            new_c = new_l * conv + cur_s
-        else:
-            new_s = max(0, min(conv - 1, cur_s + delta))
-            new_c = cur_l * conv + new_s
-        new_c = min(new_c, sess.handover_qty)
+        old_qty = sess.closing_qty
+        new_c = min(new_large * conv + old_small, sess.handover_qty)
         SessionRepository.update_qty(pid, sess.handover_qty, new_c)
+        
+        # Log thay đổi
+        if old_qty != new_c:
+            StockChangeLogRepository.add_log(pid, sess.product.name, old_qty, new_c)
+        
         self.refresh_list()
+        self.refresh_history()
         if self.on_refresh_calc: self.on_refresh_calc()
+    
+    def _on_small_change(self, pid, old_large, new_small, conv):
+        sessions = SessionRepository.get_all()
+        sess = next((s for s in sessions if s.product.id == pid), None)
+        if not sess: return
+        old_qty = sess.closing_qty
+        new_c = min(old_large * conv + new_small, sess.handover_qty)
+        SessionRepository.update_qty(pid, sess.handover_qty, new_c)
+        
+        # Log thay đổi
+        if old_qty != new_c:
+            StockChangeLogRepository.add_log(pid, sess.product.name, old_qty, new_c)
+        
+        self.refresh_list()
+        self.refresh_history()
+        if self.on_refresh_calc: self.on_refresh_calc()
+    
+    def refresh_history(self):
+        """Refresh bảng lịch sử"""
+        logs = StockChangeLogRepository.get_all(50)
+        self.history_table.setRowCount(len(logs))
+        
+        for row, log in enumerate(logs):
+            # Product name
+            self._set_history_cell(row, 0, log.product_name)
+            
+            # Change
+            change = log.new_qty - log.old_qty
+            change_text = f"{change:+d}"
+            change_color = AppColors.SUCCESS if change > 0 else AppColors.ERROR
+            self._set_history_cell(row, 1, change_text, center=True, fg=change_color, bold=True)
+            
+            # Time
+            time_str = log.changed_at.strftime("%H:%M") if isinstance(log.changed_at, datetime) else str(log.changed_at)[-8:-3]
+            self._set_history_cell(row, 2, time_str, center=True, fg=AppColors.TEXT_SECONDARY)
+            
+            # Delete button
+            del_btn = QPushButton("×")
+            del_btn.setObjectName("iconBtn")
+            del_btn.setFixedSize(24, 24)
+            del_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: transparent;
+                    color: {AppColors.TEXT_SECONDARY};
+                    border: none;
+                    font-size: 18px;
+                    font-weight: bold;
+                }}
+                QPushButton:hover {{
+                    background: {AppColors.ERROR};
+                    color: white;
+                    border-radius: 4px;
+                }}
+            """)
+            del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            del_btn.clicked.connect(lambda _, log_id=log.id: self._delete_log(log_id))
+            
+            # Container để căn giữa button
+            container = QWidget()
+            layout = QHBoxLayout(container)
+            layout.setContentsMargins(4, 0, 4, 0)
+            layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(del_btn)
+            
+            self.history_table.setCellWidget(row, 3, container)
+    
+    def _set_history_cell(self, row, col, text, center=False, bold=False, fg=None):
+        from PyQt6.QtWidgets import QTableWidgetItem
+        item = QTableWidgetItem(text)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        if center:
+            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+        if bold:
+            font = item.font()
+            font.setBold(True)
+            item.setFont(font)
+        if fg:
+            item.setForeground(QColor(fg))
+        self.history_table.setItem(row, col, item)
+    
+    def _delete_log(self, log_id: int):
+        """Xóa một log cụ thể"""
+        StockChangeLogRepository.delete(log_id)
+        self.refresh_history()
+    
+    def _clear_history(self):
+        from PyQt6.QtWidgets import QMessageBox
+        reply = QMessageBox.question(
+            self, "Xác nhận", 
+            "Xóa toàn bộ lịch sử thay đổi?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            StockChangeLogRepository.clear_all()
+            self.refresh_history()
 
-    def _on_direct_change(self, pid, l_str, s_str, conv):
-        sessions = SessionRepository.get_all()
-        sess = next((s for s in sessions if s.product.id == pid), None)
-        if not sess: return
-        try:
-            l = int(l_str) if l_str else 0
-            s = int(s_str) if s_str else 0
-        except ValueError:
-            self.refresh_list()
-            return
-        new_c = min(l * conv + s, sess.handover_qty)
-        SessionRepository.update_qty(pid, sess.handover_qty, new_c)
-        self.refresh_list()
-        if self.on_refresh_calc: self.on_refresh_calc()
+
