@@ -1,0 +1,2948 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Audit Report - Warehouse Management System</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .summary { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .finding { border-left: 4px solid #ddd; padding: 10px; margin: 10px 0; }
+        .critical { border-left-color: #d32f2f; }
+        .high { border-left-color: #f57c00; }
+        .medium { border-left-color: #fbc02d; }
+        .low { border-left-color: #388e3c; }
+        .risk-badge { display: inline-block; padding: 3px 8px; border-radius: 3px; 
+                      font-size: 12px; font-weight: bold; }
+        .risk-critical { background: #d32f2f; color: white; }
+        .risk-high { background: #f57c00; color: white; }
+        .risk-medium { background: #fbc02d; color: black; }
+        .risk-low { background: #388e3c; color: white; }
+    </style>
+</head>
+<body>
+    <h1>Audit Report: Warehouse Management System</h1>
+    <p>Generated: 2026-02-06 02:21:18</p>
+    
+    <div class="summary">
+        <h2>Summary</h2>
+        <p>Total Findings: 364</p>
+        <p>Critical: 1 | High: 90 | 
+           Medium: 23 | Low: 250</p>
+    </div>
+    
+    <h2>Findings</h2>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>High cyclomatic complexity (12) in _do_show_notification</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to reduce complexity below 10</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>High cyclomatic complexity (11) in _has_input_validation</p>
+        <p><em>File: audit\security_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to reduce complexity below 10</p>
+    </div>
+
+    <div class="finding critical">
+        <span class="risk-badge risk-critical">Critical</span>
+        <strong>Code Quality</strong>
+        <p>High cyclomatic complexity (21) in parse_html_report</p>
+        <p><em>File: services\report_service.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to reduce complexity below 10</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (91 lines): TableButtonExample</p>
+        <p><em>File: fix_table_layout.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (130 lines): BankView</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (59 lines): NotificationHandler</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (58 lines): QuickBankPeek</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (352 lines): MainWindow</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (51 lines): _add_row_ui</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (119 lines): _setup_ui</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (64 lines): main</p>
+        <p><em>File: run_audit.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (114 lines): TestWindow</p>
+        <p><em>File: test_border.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (113 lines): __init__</p>
+        <p><em>File: test_border.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (66 lines): CodeAnalyzer</p>
+        <p><em>File: audit\analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (252 lines): ArchitectureAnalyzer</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (277 lines): QualityAnalyzer</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (55 lines): _detect_duplicate_code</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (177 lines): AuditReport</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (61 lines): to_html</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (271 lines): SecurityAnalyzer</p>
+        <p><em>File: audit\security_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (140 lines): init_db</p>
+        <p><em>File: database\connection.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (89 lines): ProductRepository</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (89 lines): HistoryRepository</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (85 lines): CalculatorService</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (129 lines): ExportService</p>
+        <p><em>File: services\exporter.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (103 lines): ReportService</p>
+        <p><em>File: services\report_service.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (86 lines): parse_html_report</p>
+        <p><em>File: services\report_service.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (75 lines): TestProductRepository</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (54 lines): TestFormatters</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (416 lines): AppTheme</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (394 lines): get_stylesheet</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (67 lines): SaveSessionDialog</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (515 lines): CalculationView</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (51 lines): _setup_ui</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (67 lines): _setup_calc_tab</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (99 lines): refresh_table</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (70 lines): refresh_product_list</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (81 lines): HistoryDetailDialog</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (128 lines): HistoryView</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (73 lines): _setup_ui</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (78 lines): ProductDialog</p>
+        <p><em>File: ui\qt_views\product_dialog.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (55 lines): _setup_ui</p>
+        <p><em>File: ui\qt_views\product_dialog.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (174 lines): ProductView</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (74 lines): refresh_list</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (271 lines): SettingsView</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (53 lines): _ui_config_content</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (383 lines): StockView</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (76 lines): _setup_ui</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long method (144 lines): refresh_list</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long method (87 lines): create_stepper</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor into smaller methods (target < 50 lines)</p>
+    </div>
+
+    <div class="finding medium">
+        <span class="risk-badge risk-medium">Medium</span>
+        <strong>Code Quality</strong>
+        <p>Long parameter list (9 params) in _set_cell_helper</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to use parameter object or reduce to < 5 params</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long parameter list (7 params) in _set_cell</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to use parameter object or reduce to < 5 params</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long parameter list (7 params) in _set_cell</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to use parameter object or reduce to < 5 params</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long parameter list (7 params) in _set_cell</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to use parameter object or reduce to < 5 params</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Long parameter list (6 params) in _set_history_cell</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Refactor to use parameter object or reduce to < 5 params</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: config.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: config.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: fix_table_layout.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: fix_table_layout.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: fix_table_layout.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: run_audit.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: run_audit.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: test_border.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: test_border.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: test_notification.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\architecture_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 4 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\quality_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: audit\security_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: audit\__init__.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\connection.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\connection.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\connection.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\models.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\models.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\models.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\models.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\models.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\exporter.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 4 locations</p>
+        <p><em>File: services\exporter.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\exporter.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\exporter.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\exporter.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\exporter.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\report_service.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: services\report_service.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_theme.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 4 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 4 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 3 locations</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_dialog.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_dialog.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding low">
+        <span class="risk-badge risk-low">Low</span>
+        <strong>Code Quality</strong>
+        <p>Duplicate code block found in 2 locations</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Extract duplicate code into a shared function or method</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: create_action_widget</p>
+        <p><em>File: fix_table_layout.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: load_history</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: add_notif</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _add_row_ui</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: clear_history</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: do_POST</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: do_GET</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: log_message</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: run</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: update_data</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_ui</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _start_bank_hold</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _stop_bank_hold</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _switch_view</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _create_views</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _start_notification_server</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _show_notification</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _extract_amount</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _apply_theme</p>
+        <p><em>File: main.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_file_content</p>
+        <p><em>File: audit\analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_findings_by_risk</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_findings_by_category</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: save_json</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: save_html</p>
+        <p><em>File: audit\reporters.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: audit\security_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: analyze</p>
+        <p><em>File: audit\security_analyzer.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_by_id</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: update</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: save_current_session</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_all</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_by_date_range</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: delete</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: update</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: delete</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_all</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: delete</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: get_all</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: delete</p>
+        <p><em>File: database\repositories.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: normalize_input</p>
+        <p><em>File: services\calculator.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: test_get_all_products</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: test_update_product</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: test_soft_delete</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: test_get_all_session_data</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: test_get_total_amount</p>
+        <p><em>File: tests\test_database.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: test_conversion_factor_1</p>
+        <p><em>File: tests\test_formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: normalize_input</p>
+        <p><em>File: utils\formatters.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_ui</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _save</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_ui</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_calc_tab</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_prod_tab</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_calc_table</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_prod_table</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _on_return_pressed</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _on_handover_change</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _on_closing_change</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _create_stat_card</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _hex_to_rgb</p>
+        <p><em>File: ui\qt_views\calculation_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_ui</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_table</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: refresh_list</p>
+        <p><em>File: ui\qt_views\history_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\product_dialog.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_ui</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_table</p>
+        <p><em>File: ui\qt_views\product_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_ui</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _ui_config_content</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _on_row_height_change</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _on_widget_height_change</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _reset_defaults</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _network_content</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _refresh_ip</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _create_section</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _backup_content</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _about_content</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _backup_database</p>
+        <p><em>File: ui\qt_views\settings_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: __init__</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_ui</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _setup_table</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: _delete_log</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+    <div class="finding high">
+        <span class="risk-badge risk-high">High</span>
+        <strong>Security</strong>
+        <p>Missing input validation in entry point: create_stepper</p>
+        <p><em>File: ui\qt_views\stock_view.py</em></p>
+        <p><strong>Recommendation:</strong> Add input validation before processing user data</p>
+    </div>
+
+</body>
+</html>

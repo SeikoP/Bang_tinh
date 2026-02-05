@@ -1,0 +1,5574 @@
+{
+  "project_name": "Warehouse Management System",
+  "timestamp": "2026-02-06T02:21:18.802108",
+  "summary": {
+    "total_findings": 364,
+    "critical": 1,
+    "high": 90,
+    "medium": 23,
+    "low": 250,
+    "categories": {
+      "Code Quality": 274,
+      "Security": 90
+    }
+  },
+  "findings": [
+    {
+      "category": "Code Quality",
+      "description": "High cyclomatic complexity (12) in _do_show_notification",
+      "risk_level": "Medium",
+      "file_path": "main.py",
+      "line_number": 567,
+      "recommendation": "Refactor to reduce complexity below 10",
+      "details": {
+        "complexity": 12,
+        "function": "_do_show_notification"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "High cyclomatic complexity (11) in _has_input_validation",
+      "risk_level": "Medium",
+      "file_path": "audit\\security_analyzer.py",
+      "line_number": 227,
+      "recommendation": "Refactor to reduce complexity below 10",
+      "details": {
+        "complexity": 11,
+        "function": "_has_input_validation"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "High cyclomatic complexity (21) in parse_html_report",
+      "risk_level": "Critical",
+      "file_path": "services\\report_service.py",
+      "line_number": 10,
+      "recommendation": "Refactor to reduce complexity below 10",
+      "details": {
+        "complexity": 21,
+        "function": "parse_html_report"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (91 lines): TableButtonExample",
+      "risk_level": "Low",
+      "file_path": "fix_table_layout.py",
+      "line_number": 8,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 91,
+        "name": "TableButtonExample",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (130 lines): BankView",
+      "risk_level": "Medium",
+      "file_path": "main.py",
+      "line_number": 33,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 130,
+        "name": "BankView",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (59 lines): NotificationHandler",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 167,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 59,
+        "name": "NotificationHandler",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (58 lines): QuickBankPeek",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 244,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 58,
+        "name": "QuickBankPeek",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (352 lines): MainWindow",
+      "risk_level": "Medium",
+      "file_path": "main.py",
+      "line_number": 303,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 352,
+        "name": "MainWindow",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (51 lines): _add_row_ui",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 93,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 51,
+        "name": "_add_row_ui",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (119 lines): _setup_ui",
+      "risk_level": "Medium",
+      "file_path": "main.py",
+      "line_number": 334,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 119,
+        "name": "_setup_ui",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (64 lines): main",
+      "risk_level": "Low",
+      "file_path": "run_audit.py",
+      "line_number": 12,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 64,
+        "name": "main",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (114 lines): TestWindow",
+      "risk_level": "Medium",
+      "file_path": "test_border.py",
+      "line_number": 9,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 114,
+        "name": "TestWindow",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (113 lines): __init__",
+      "risk_level": "Medium",
+      "file_path": "test_border.py",
+      "line_number": 10,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 113,
+        "name": "__init__",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (66 lines): CodeAnalyzer",
+      "risk_level": "Low",
+      "file_path": "audit\\analyzer.py",
+      "line_number": 10,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 66,
+        "name": "CodeAnalyzer",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (252 lines): ArchitectureAnalyzer",
+      "risk_level": "Medium",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 12,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 252,
+        "name": "ArchitectureAnalyzer",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (277 lines): QualityAnalyzer",
+      "risk_level": "Medium",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 19,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 277,
+        "name": "QualityAnalyzer",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (55 lines): _detect_duplicate_code",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 241,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 55,
+        "name": "_detect_duplicate_code",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (177 lines): AuditReport",
+      "risk_level": "Medium",
+      "file_path": "audit\\reporters.py",
+      "line_number": 44,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 177,
+        "name": "AuditReport",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (61 lines): to_html",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 140,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 61,
+        "name": "to_html",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (271 lines): SecurityAnalyzer",
+      "risk_level": "Medium",
+      "file_path": "audit\\security_analyzer.py",
+      "line_number": 13,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 271,
+        "name": "SecurityAnalyzer",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (140 lines): init_db",
+      "risk_level": "Medium",
+      "file_path": "database\\connection.py",
+      "line_number": 38,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 140,
+        "name": "init_db",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (89 lines): ProductRepository",
+      "risk_level": "Low",
+      "file_path": "database\\repositories.py",
+      "line_number": 10,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 89,
+        "name": "ProductRepository",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (89 lines): HistoryRepository",
+      "risk_level": "Low",
+      "file_path": "database\\repositories.py",
+      "line_number": 151,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 89,
+        "name": "HistoryRepository",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (85 lines): CalculatorService",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 9,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 85,
+        "name": "CalculatorService",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (129 lines): ExportService",
+      "risk_level": "Medium",
+      "file_path": "services\\exporter.py",
+      "line_number": 17,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 129,
+        "name": "ExportService",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (103 lines): ReportService",
+      "risk_level": "Medium",
+      "file_path": "services\\report_service.py",
+      "line_number": 6,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 103,
+        "name": "ReportService",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (86 lines): parse_html_report",
+      "risk_level": "Low",
+      "file_path": "services\\report_service.py",
+      "line_number": 10,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 86,
+        "name": "parse_html_report",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (75 lines): TestProductRepository",
+      "risk_level": "Low",
+      "file_path": "tests\\test_database.py",
+      "line_number": 20,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 75,
+        "name": "TestProductRepository",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (54 lines): TestFormatters",
+      "risk_level": "Low",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 12,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 54,
+        "name": "TestFormatters",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (416 lines): AppTheme",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 51,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 416,
+        "name": "AppTheme",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (394 lines): get_stylesheet",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 55,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 394,
+        "name": "get_stylesheet",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (67 lines): SaveSessionDialog",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 16,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 67,
+        "name": "SaveSessionDialog",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (515 lines): CalculationView",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 85,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 515,
+        "name": "CalculationView",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (51 lines): _setup_ui",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 25,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 51,
+        "name": "_setup_ui",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (67 lines): _setup_calc_tab",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 142,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 67,
+        "name": "_setup_calc_tab",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (99 lines): refresh_table",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 289,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 99,
+        "name": "refresh_table",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (70 lines): refresh_product_list",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 389,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 70,
+        "name": "refresh_product_list",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (81 lines): HistoryDetailDialog",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 17,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 81,
+        "name": "HistoryDetailDialog",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (128 lines): HistoryView",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 100,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 128,
+        "name": "HistoryView",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (73 lines): _setup_ui",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 25,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 73,
+        "name": "_setup_ui",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (78 lines): ProductDialog",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_dialog.py",
+      "line_number": 8,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 78,
+        "name": "ProductDialog",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (55 lines): _setup_ui",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_dialog.py",
+      "line_number": 17,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 55,
+        "name": "_setup_ui",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (174 lines): ProductView",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 60,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 174,
+        "name": "ProductView",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (74 lines): refresh_list",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 124,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 74,
+        "name": "refresh_list",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (271 lines): SettingsView",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 19,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 271,
+        "name": "SettingsView",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (53 lines): _ui_config_content",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 51,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 53,
+        "name": "_ui_config_content",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (383 lines): StockView",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 14,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 383,
+        "name": "StockView",
+        "type": "class"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (76 lines): _setup_ui",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 25,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 76,
+        "name": "_setup_ui",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (144 lines): refresh_list",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 142,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 144,
+        "name": "refresh_list",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long method (87 lines): create_stepper",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 147,
+      "recommendation": "Refactor into smaller methods (target < 50 lines)",
+      "details": {
+        "lines": 87,
+        "name": "create_stepper",
+        "type": "function"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long parameter list (9 params) in _set_cell_helper",
+      "risk_level": "Medium",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 485,
+      "recommendation": "Refactor to use parameter object or reduce to < 5 params",
+      "details": {
+        "parameter_count": 9,
+        "function": "_set_cell_helper"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long parameter list (7 params) in _set_cell",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 197,
+      "recommendation": "Refactor to use parameter object or reduce to < 5 params",
+      "details": {
+        "parameter_count": 7,
+        "function": "_set_cell"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long parameter list (7 params) in _set_cell",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 220,
+      "recommendation": "Refactor to use parameter object or reduce to < 5 params",
+      "details": {
+        "parameter_count": 7,
+        "function": "_set_cell"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long parameter list (7 params) in _set_cell",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 127,
+      "recommendation": "Refactor to use parameter object or reduce to < 5 params",
+      "details": {
+        "parameter_count": 7,
+        "function": "_set_cell"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Long parameter list (6 params) in _set_history_cell",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 368,
+      "recommendation": "Refactor to use parameter object or reduce to < 5 params",
+      "details": {
+        "parameter_count": 6,
+        "function": "_set_history_cell"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "config.py",
+      "line_number": 36,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "config.py:36",
+          "config.py:37"
+        ],
+        "preview": "    \n    SUCCESS = \"#4caf50\"\n    WARNING = \"#ff9800\"\n    ERROR = \"#f44336\"\n    INFO = \"#2196f3\""
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "config.py",
+      "line_number": 41,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "config.py:41",
+          "config.py:42"
+        ],
+        "preview": "    \n    TEXT_PRIMARY = \"#212121\"\n    TEXT_SECONDARY = \"#757575\"\n    TEXT_PRIMARY_DARK = \"#ffffff\"\n "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "fix_table_layout.py",
+      "line_number": 17,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "fix_table_layout.py:17",
+          "fix_table_layout.py:18"
+        ],
+        "preview": "        \n    def setup_table(self):\n        self.table.setColumnCount(3)\n        self.table.setHoriz"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "fix_table_layout.py",
+      "line_number": 49,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "fix_table_layout.py:49",
+          "fix_table_layout.py:50"
+        ],
+        "preview": "            \n    def create_action_widget(self, row_index):\n        # 1. T\u1ed1i \u01b0u layout trong cell b\u1eb1"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "fix_table_layout.py",
+      "line_number": 94,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "fix_table_layout.py:94",
+          "fix_table_layout.py:95"
+        ],
+        "preview": "        \n        layout.addWidget(btn_edit)\n        layout.addWidget(btn_delete)\n        \n        re"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 40,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:40",
+          "main.py:41"
+        ],
+        "preview": "        \n        header_layout = QHBoxLayout()\n        header = QLabel(\"\ud83c\udfe6 Qu\u1ea3n l\u00fd Giao d\u1ecbch \u0110i\u1ec7n tho"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 67,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:67",
+          "main.py:68"
+        ],
+        "preview": "        \n        self.table.setColumnWidth(0, 80)\n        self.table.setColumnWidth(1, 100)\n        "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 72,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:72",
+          "main.py:73"
+        ],
+        "preview": "        \n        self.table.setAlternatingRowColors(True)\n        self.table.verticalHeader().setVis"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 158,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:158",
+          "main.py:159"
+        ],
+        "preview": "\n    def clear_history(self):\n        \"\"\"X\u00f3a s\u1ea1ch b\u1ea3ng l\u1ecbch s\u1eed\"\"\"\n        BankRepository.clear_all()"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 164,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:164",
+          "main.py:165"
+        ],
+        "preview": "\nfrom urllib.parse import urlparse, parse_qs\n\nclass NotificationHandler(BaseHTTPRequestHandler):\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 221,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:221",
+          "main.py:222"
+        ],
+        "preview": "\n    def log_message(self, format, *args):\n        # Allow logging for debugging purposes if needed,"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 300,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:300",
+          "main.py:301"
+        ],
+        "preview": "            \n            self.table.setItem(r, 2, QTableWidgetItem(bank_view_table.item(r, 3).text()"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 317,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:317",
+          "main.py:318"
+        ],
+        "preview": "    \n    def _setup_window(self):\n        self.setWindowTitle(f\"{APP_NAME} v{APP_VERSION}\")\n        "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 328,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:328",
+          "main.py:329"
+        ],
+        "preview": "        \n        screen = QApplication.primaryScreen().geometry()\n        x = (screen.width() - WIND"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 363,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:363",
+          "main.py:364"
+        ],
+        "preview": "        \n        sidebar_layout.addStretch()\n        version = QLabel(f\"v{APP_VERSION}\")\n        ver"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 380,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:380",
+          "main.py:381"
+        ],
+        "preview": "        \n        main_content = QWidget()\n        content_layout = QVBoxLayout(main_content)\n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 491,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:491",
+          "main.py:513"
+        ],
+        "preview": "        if not hasattr(self, 'quick_peek'):\n            self.quick_peek = QuickBankPeek(self)\n      "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 522,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:522",
+          "main.py:523"
+        ],
+        "preview": "        \n    def _on_bank_hold_success(self):\n        \"\"\"Khi nh\u1ea5n gi\u1eef \u0111\u1ee7 l\u00e2u, hi\u1ec7n c\u1eeda s\u1ed5 xem nhanh\""
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 561,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:561",
+          "main.py:562"
+        ],
+        "preview": "        \n    def _show_notification(self, message):\n        \"\"\"Hi\u1ec3n th\u1ecb th\u00f4ng b\u00e1o an to\u00e0n (Safe UI T"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 590,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:590",
+          "main.py:591"
+        ],
+        "preview": "\n        if amount:\n            rich_text = f\"<b style='font-size:15px; color:white;'>{safe_amount}<"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 601,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:601",
+          "main.py:602"
+        ],
+        "preview": "\n    def _extract_amount(self, text):\n        pattern = r'(?:\\+|\\-)?\\d{1,3}(?:[.,]\\d{3})+(?:\\s?[\u0111VND"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 663,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:663",
+          "main.py:664"
+        ],
+        "preview": "    \n    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassTh"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 668,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:668",
+          "main.py:669"
+        ],
+        "preview": "    \n    icon_path = BASE_DIR / \"assets\" / \"icon.png\"\n    if icon_path.exists():\n        icon = QIco"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 676,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:676",
+          "main.py:677"
+        ],
+        "preview": "    \n    window = MainWindow()\n    window.show()\n    sys.exit(app.exec())\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "main.py",
+      "line_number": 680,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "main.py:680",
+          "run_audit.py:76"
+        ],
+        "preview": "\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "run_audit.py",
+      "line_number": 10,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "run_audit.py:10",
+          "run_audit.py:11"
+        ],
+        "preview": "\n\ndef main():\n    \"\"\"Run all analyzers and generate report.\"\"\"\n    project_root = Path(__file__).par"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "run_audit.py",
+      "line_number": 71,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "run_audit.py:71",
+          "run_audit.py:72"
+        ],
+        "preview": "    \n    print(f\"Reports saved:\")\n    print(f\"  - JSON: {json_path}\")\n    print(f\"  - HTML: {html_pa"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "test_border.py",
+      "line_number": 81,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "test_border.py:81",
+          "test_border.py:82"
+        ],
+        "preview": "        \n        container3 = QWidget()\n        layout3 = QVBoxLayout(container3)\n        layout3.se"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "test_border.py",
+      "line_number": 111,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "test_border.py:111",
+          "test_border.py:112"
+        ],
+        "preview": "        \n        inner_widget = QWidget()\n        inner_widget.setLayout(btn_layout)\n        layout3"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "test_notification.py",
+      "line_number": 31,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "test_notification.py:31",
+          "test_notification.py:32"
+        ],
+        "preview": "\n    print(\"\\n--- Test finished ---\")\n\nif __name__ == \"__main__\":\n    test_rich_notifications()"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\analyzer.py",
+      "line_number": 4,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\analyzer.py:4",
+          "audit\\analyzer.py:5"
+        ],
+        "preview": "\nfrom pathlib import Path\nfrom typing import List, Dict, Any\nfrom abc import ABC, abstractmethod\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\analyzer.py",
+      "line_number": 51,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\analyzer.py:51",
+          "audit\\analyzer.py:52"
+        ],
+        "preview": "    \n    @abstractmethod\n    def analyze(self) -> Dict[str, Any]:\n        \"\"\"\n        Perform analys"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\analyzer.py",
+      "line_number": 56,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\analyzer.py:56",
+          "audit\\analyzer.py:57"
+        ],
+        "preview": "        \n        Returns:\n            Dictionary containing analysis results\n        \"\"\"\n        pas"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 35,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "audit\\architecture_analyzer.py:35",
+          "audit\\quality_analyzer.py:38",
+          "audit\\security_analyzer.py:43"
+        ],
+        "preview": "        \n        Returns:\n            Dictionary with analysis results\n        \"\"\"\n        self.disc"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 98,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\architecture_analyzer.py:98",
+          "audit\\architecture_analyzer.py:99"
+        ],
+        "preview": "    \n    def _detect_layer_violations(self) -> None:\n        \"\"\"Detect violations of layer dependenc"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 144,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\architecture_analyzer.py:144",
+          "audit\\architecture_analyzer.py:145"
+        ],
+        "preview": "    \n    def _is_layer_violation(self, source: str, target: str) -> bool:\n        \"\"\"Check if import"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 161,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\architecture_analyzer.py:161",
+          "audit\\architecture_analyzer.py:162"
+        ],
+        "preview": "    \n    def _detect_circular_dependencies(self) -> None:\n        \"\"\"Detect circular dependencies be"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 172,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\architecture_analyzer.py:172",
+          "audit\\architecture_analyzer.py:173"
+        ],
+        "preview": "            \n            if file_path in self.imports_map:\n                for import_name in self.i"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 195,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\architecture_analyzer.py:195",
+          "audit\\architecture_analyzer.py:196"
+        ],
+        "preview": "    \n    def _find_file_for_import(self, import_name: str) -> str:\n        \"\"\"Find file path corresp"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\architecture_analyzer.py",
+      "line_number": 221,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\architecture_analyzer.py:221",
+          "audit\\architecture_analyzer.py:222"
+        ],
+        "preview": "    \n    def _detect_tight_coupling(self) -> None:\n        \"\"\"Detect tight coupling between UI and b"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 64,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\quality_analyzer.py:64",
+          "audit\\quality_analyzer.py:65"
+        ],
+        "preview": "        \n        for file_path in self.python_files:\n            try:\n                content = self"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 96,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "audit\\quality_analyzer.py:96",
+          "audit\\quality_analyzer.py:205",
+          "audit\\security_analyzer.py:192"
+        ],
+        "preview": "        for file_path in self.python_files:\n            try:\n                content = self.get_file"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 97,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "audit\\quality_analyzer.py:97",
+          "audit\\quality_analyzer.py:206",
+          "audit\\security_analyzer.py:193"
+        ],
+        "preview": "            try:\n                content = self.get_file_content(file_path)\n                tree = a"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 98,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "audit\\quality_analyzer.py:98",
+          "audit\\quality_analyzer.py:207",
+          "audit\\security_analyzer.py:194"
+        ],
+        "preview": "                content = self.get_file_content(file_path)\n                tree = ast.parse(content)"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 99,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\quality_analyzer.py:99",
+          "audit\\quality_analyzer.py:208"
+        ],
+        "preview": "                tree = ast.parse(content)\n                \n                rel_path = str(file_path."
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 100,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\quality_analyzer.py:100",
+          "audit\\quality_analyzer.py:209"
+        ],
+        "preview": "                \n                rel_path = str(file_path.relative_to(self.project_root))\n          "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 240,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\quality_analyzer.py:240",
+          "audit\\quality_analyzer.py:241"
+        ],
+        "preview": "    \n    def _detect_duplicate_code(self) -> None:\n        \"\"\"Detect duplicate code blocks.\"\"\"\n     "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 4 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 245,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 4,
+        "locations": [
+          "audit\\quality_analyzer.py:245",
+          "audit\\quality_analyzer.py:246",
+          "audit\\security_analyzer.py:63",
+          "audit\\security_analyzer.py:123"
+        ],
+        "preview": "        \n        for file_path in self.python_files:\n            try:\n                content = self"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 247,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "audit\\quality_analyzer.py:247",
+          "audit\\security_analyzer.py:64",
+          "audit\\security_analyzer.py:124"
+        ],
+        "preview": "            try:\n                content = self.get_file_content(file_path)\n                lines = "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 248,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "audit\\quality_analyzer.py:248",
+          "audit\\security_analyzer.py:65",
+          "audit\\security_analyzer.py:125"
+        ],
+        "preview": "                content = self.get_file_content(file_path)\n                lines = content.split('\\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 263,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\quality_analyzer.py:263",
+          "audit\\quality_analyzer.py:264"
+        ],
+        "preview": "                    \n                    block_hash = hash(normalized)\n                    \n        "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 265,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\quality_analyzer.py:265",
+          "audit\\quality_analyzer.py:266"
+        ],
+        "preview": "                    \n                    if block_hash not in code_blocks:\n                        c"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\quality_analyzer.py",
+      "line_number": 268,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\quality_analyzer.py:268",
+          "audit\\quality_analyzer.py:269"
+        ],
+        "preview": "                    \n                    code_blocks[block_hash].append((rel_path, i + 1, block))\n  "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 62,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:62",
+          "audit\\reporters.py:63"
+        ],
+        "preview": "        \n        Args:\n            finding: Finding object to add\n        \"\"\"\n        self.findings."
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 71,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:71",
+          "audit\\reporters.py:72"
+        ],
+        "preview": "        \n        Args:\n            findings: List of Finding objects to add\n        \"\"\"\n        self"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 83,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:83",
+          "audit\\reporters.py:84"
+        ],
+        "preview": "            \n        Returns:\n            List of findings with matching risk level\n        \"\"\"\n    "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 95,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:95",
+          "audit\\reporters.py:96"
+        ],
+        "preview": "            \n        Returns:\n            List of findings in matching category\n        \"\"\"\n        "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\reporters.py",
+      "line_number": 143,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\reporters.py:143",
+          "audit\\reporters.py:144"
+        ],
+        "preview": "        \n        Returns:\n            HTML formatted report\n        \"\"\"\n        summary = self.gener"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\security_analyzer.py",
+      "line_number": 69,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "audit\\security_analyzer.py:69",
+          "audit\\security_analyzer.py:70",
+          "audit\\security_analyzer.py:131"
+        ],
+        "preview": "                \n                for line_num, line in enumerate(lines, 1):\n                    # Sk"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "audit\\__init__.py",
+      "line_number": 4,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "audit\\__init__.py:4",
+          "audit\\__init__.py:5"
+        ],
+        "preview": "\nfrom .analyzer import CodeAnalyzer\nfrom .reporters import AuditReport\n\n__all__ = ['CodeAnalyzer', '"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\connection.py",
+      "line_number": 105,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\connection.py:105",
+          "database\\connection.py:106"
+        ],
+        "preview": "            \n        try:\n            cursor.execute(\"ALTER TABLE products ADD COLUMN created_at TIM"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\connection.py",
+      "line_number": 110,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\connection.py:110",
+          "database\\connection.py:111"
+        ],
+        "preview": "            \n        try:\n            cursor.execute(\"ALTER TABLE products ADD COLUMN updated_at TIM"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\connection.py",
+      "line_number": 125,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\connection.py:125",
+          "database\\connection.py:126"
+        ],
+        "preview": "            \n        try:\n            cursor.execute(\"ALTER TABLE products ADD COLUMN is_favorite IN"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\models.py",
+      "line_number": 39,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\models.py:39",
+          "database\\models.py:72"
+        ],
+        "preview": "            id=row['id'],\n            name=row['name'],\n            large_unit=row['large_unit'],\n  "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\models.py",
+      "line_number": 40,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\models.py:40",
+          "database\\models.py:73"
+        ],
+        "preview": "            name=row['name'],\n            large_unit=row['large_unit'],\n            conversion=row['"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\models.py",
+      "line_number": 41,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\models.py:41",
+          "database\\models.py:74"
+        ],
+        "preview": "            large_unit=row['large_unit'],\n            conversion=row['conversion'],\n            unit"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\models.py",
+      "line_number": 57,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\models.py:57",
+          "database\\models.py:58"
+        ],
+        "preview": "    \n    @property\n    def used_qty(self) -> int:\n        \"\"\"S\u1ed1 l\u01b0\u1ee3ng \u0111\u00e3 s\u1eed d\u1ee5ng\"\"\"\n        return m"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\models.py",
+      "line_number": 62,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\models.py:62",
+          "database\\models.py:63"
+        ],
+        "preview": "    \n    @property\n    def amount(self) -> float:\n        \"\"\"Th\u00e0nh ti\u1ec1n\"\"\"\n        return self.used_"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\repositories.py",
+      "line_number": 202,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\repositories.py:202",
+          "database\\repositories.py:203"
+        ],
+        "preview": "            \n            cursor.execute(\"SELECT * FROM session_history WHERE id = ?\", (history_id,))"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "database\\repositories.py",
+      "line_number": 271,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "database\\repositories.py:271",
+          "database\\repositories.py:303"
+        ],
+        "preview": "            \n    @staticmethod\n    def delete(id: int) -> bool:\n        with get_connection() as con"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 11,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:11",
+          "services\\calculator.py:12"
+        ],
+        "preview": "    \n    @staticmethod\n    def parse_to_small_units(value_str: str, conversion: int) -> int:\n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 21,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:21",
+          "utils\\formatters.py:24"
+        ],
+        "preview": "        \"\"\"\n        if not value_str:\n            return 0\n        \n        value_str = str(value_st"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 22,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:22",
+          "utils\\formatters.py:25"
+        ],
+        "preview": "        if not value_str:\n            return 0\n        \n        value_str = str(value_str).strip().l"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 24,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:24",
+          "services\\calculator.py:25"
+        ],
+        "preview": "        \n        value_str = str(value_str).strip().lower()\n        \n        # Thay th\u1ebf k\u00fd t\u1ef1 ch\u1eef b\u1eb1"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 28,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:28",
+          "utils\\formatters.py:31"
+        ],
+        "preview": "        normalized = re.sub(r'[a-z]', '.', value_str)\n        \n        try:\n            if \".\" in no"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 29,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:29",
+          "utils\\formatters.py:32"
+        ],
+        "preview": "        \n        try:\n            if \".\" in normalized:\n                parts = normalized.split(\".\""
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 30,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:30",
+          "utils\\formatters.py:33"
+        ],
+        "preview": "        try:\n            if \".\" in normalized:\n                parts = normalized.split(\".\")\n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 31,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:31",
+          "utils\\formatters.py:34"
+        ],
+        "preview": "            if \".\" in normalized:\n                parts = normalized.split(\".\")\n                larg"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 32,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:32",
+          "utils\\formatters.py:35"
+        ],
+        "preview": "                parts = normalized.split(\".\")\n                large = int(parts[0]) if parts[0] and "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 37,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:37",
+          "utils\\formatters.py:41"
+        ],
+        "preview": "                if normalized.isdigit():\n                    return int(normalized) * conversion\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 38,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:38",
+          "utils\\formatters.py:42"
+        ],
+        "preview": "                    return int(normalized) * conversion\n                return 0\n        except Valu"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 42,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:42",
+          "services\\calculator.py:43"
+        ],
+        "preview": "    \n    @staticmethod\n    def format_to_display(total_small_units: int, conversion: int, unit_char:"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 47,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:47",
+          "services\\calculator.py:48"
+        ],
+        "preview": "        \n        Example: 76, 24, 't' -> \"3t4\"\n        \"\"\"\n        if total_small_units < 0:\n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 49,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:49",
+          "utils\\formatters.py:61"
+        ],
+        "preview": "        \"\"\"\n        if total_small_units < 0:\n            return \"0\"\n        \n        large = total_"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 50,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:50",
+          "utils\\formatters.py:62"
+        ],
+        "preview": "        if total_small_units < 0:\n            return \"0\"\n        \n        large = total_small_units "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 51,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:51",
+          "utils\\formatters.py:63"
+        ],
+        "preview": "            return \"0\"\n        \n        large = total_small_units // conversion\n        small = tota"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 52,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:52",
+          "utils\\formatters.py:64"
+        ],
+        "preview": "        \n        large = total_small_units // conversion\n        small = total_small_units % convers"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 53,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:53",
+          "utils\\formatters.py:65"
+        ],
+        "preview": "        large = total_small_units // conversion\n        small = total_small_units % conversion\n     "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 54,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:54",
+          "utils\\formatters.py:66"
+        ],
+        "preview": "        small = total_small_units % conversion\n        \n        if small == 0:\n            return f\""
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 55,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "services\\calculator.py:55",
+          "utils\\formatters.py:67",
+          "utils\\formatters.py:68"
+        ],
+        "preview": "        \n        if small == 0:\n            return f\"{large}{unit_char}\"\n        return f\"{large}{un"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 59,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:59",
+          "services\\calculator.py:60"
+        ],
+        "preview": "    \n    @staticmethod\n    def calculate_used(handover: int, closing: int) -> int:\n        \"\"\"T\u00ednh s"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 64,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:64",
+          "services\\calculator.py:65"
+        ],
+        "preview": "    \n    @staticmethod\n    def calculate_amount(used_qty: int, unit_price: float) -> float:\n        "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\calculator.py",
+      "line_number": 69,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\calculator.py:69",
+          "services\\calculator.py:70"
+        ],
+        "preview": "    \n    @staticmethod\n    def get_session_total() -> float:\n        \"\"\"T\u00ednh t\u1ed5ng ti\u1ec1n phi\u00ean hi\u1ec7n t\u1ea1"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\exporter.py",
+      "line_number": 36,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\exporter.py:36",
+          "services\\exporter.py:37"
+        ],
+        "preview": "        \n        content = self._generate_text_report(sessions, total, \"Phi\u00ean hi\u1ec7n t\u1ea1i\")\n        \n  "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 4 locations",
+      "risk_level": "Low",
+      "file_path": "services\\exporter.py",
+      "line_number": 38,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 4,
+        "locations": [
+          "services\\exporter.py:38",
+          "services\\exporter.py:39",
+          "services\\exporter.py:60",
+          "services\\exporter.py:61"
+        ],
+        "preview": "        \n        with open(filepath, 'w', encoding='utf-8') as f:\n            f.write(content)\n     "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\exporter.py",
+      "line_number": 58,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\exporter.py:58",
+          "services\\exporter.py:59"
+        ],
+        "preview": "        \n        content = self._generate_history_text_report(history)\n        \n        with open(fi"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\exporter.py",
+      "line_number": 72,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\exporter.py:72",
+          "services\\exporter.py:97"
+        ],
+        "preview": "        lines.append(\"=\" * 60)\n        lines.append(\"\")\n        lines.append(f\"{'STT':<5} {'S\u1ea3n ph\u1ea9m"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\exporter.py",
+      "line_number": 126,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\exporter.py:126",
+          "services\\exporter.py:127"
+        ],
+        "preview": "        \n        filepath = EXPORT_DIR / filename\n        sessions = SessionRepository.get_all()\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\exporter.py",
+      "line_number": 141,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\exporter.py:141",
+          "services\\exporter.py:142"
+        ],
+        "preview": "        \n        with open(filepath, 'w', encoding='utf-8-sig') as f:\n            f.write(\"\\n\".join("
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\report_service.py",
+      "line_number": 8,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\report_service.py:8",
+          "services\\report_service.py:9"
+        ],
+        "preview": "    \n    @staticmethod\n    def parse_html_report(file_path: str) -> Dict[str, Any]:\n        \"\"\"\n    "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "services\\report_service.py",
+      "line_number": 41,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "services\\report_service.py:41",
+          "services\\report_service.py:42"
+        ],
+        "preview": "            \n            for table in tables:\n                rows = table.find_all('tr')\n          "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_database.py",
+      "line_number": 68,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_database.py:68",
+          "tests\\test_database.py:69"
+        ],
+        "preview": "    \n    def test_search_product(self):\n        \"\"\"Test t\u00ecm ki\u1ebfm s\u1ea3n ph\u1ea9m\"\"\"\n        ProductReposito"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_database.py",
+      "line_number": 105,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_database.py:105",
+          "tests\\test_database.py:106"
+        ],
+        "preview": "    \n    def test_get_all_session_data(self):\n        \"\"\"Test l\u1ea5y t\u1ea5t c\u1ea3 session data\"\"\"\n        ses"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_database.py",
+      "line_number": 125,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_database.py:125",
+          "tests\\test_database.py:126"
+        ],
+        "preview": "    \n    def test_reset_all(self):\n        \"\"\"Test reset t\u1ea5t c\u1ea3 s\u1ed1 l\u01b0\u1ee3ng\"\"\"\n        result = Session"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_database.py",
+      "line_number": 130,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_database.py:130",
+          "tests\\test_database.py:131"
+        ],
+        "preview": "        \n        sessions = SessionRepository.get_all()\n        for s in sessions:\n            self."
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_database.py",
+      "line_number": 141,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_database.py:141",
+          "tests\\test_formatters.py:82"
+        ],
+        "preview": "\n\nif __name__ == \"__main__\":\n    unittest.main()\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 20,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_formatters.py:20",
+          "tests\\test_formatters.py:21"
+        ],
+        "preview": "    \n    def test_parse_with_dot(self):\n        \"\"\"Test parse v\u1edbi d\u1ea5u ch\u1ea5m: 3.4 = 3 th\u00f9ng + 4 \u0111\u01a1n v\u1ecb"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 37,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_formatters.py:37",
+          "tests\\test_formatters.py:38"
+        ],
+        "preview": "    \n    def test_parse_only_small_units(self):\n        \"\"\"Test parse ch\u1ec9 c\u00f3 \u0111\u01a1n v\u1ecb nh\u1ecf\"\"\"\n        s"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 42,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_formatters.py:42",
+          "tests\\test_formatters.py:43"
+        ],
+        "preview": "    \n    def test_format_to_display_normal(self):\n        \"\"\"Test format hi\u1ec3n th\u1ecb b\u00ecnh th\u01b0\u1eddng\"\"\"\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 47,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_formatters.py:47",
+          "tests\\test_formatters.py:48"
+        ],
+        "preview": "    \n    def test_format_to_display_exact(self):\n        \"\"\"Test format khi chia h\u1ebft\"\"\"\n        self"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 70,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_formatters.py:70",
+          "tests\\test_formatters.py:71"
+        ],
+        "preview": "    \n    def test_large_numbers(self):\n        \"\"\"Test v\u1edbi s\u1ed1 l\u1edbn\"\"\"\n        result = parse_to_small"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 77,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "tests\\test_formatters.py:77",
+          "tests\\test_formatters.py:78"
+        ],
+        "preview": "    \n    def test_conversion_factor_1(self):\n        \"\"\"Test v\u1edbi h\u1ec7 s\u1ed1 quy \u0111\u1ed5i = 1\"\"\"\n        self.a"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 53,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:53",
+          "ui\\qt_theme.py:54"
+        ],
+        "preview": "    \n    @staticmethod\n    def get_stylesheet() -> str:\n        \"\"\"Main application stylesheet with "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 71,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:71",
+          "ui\\qt_theme.py:72"
+        ],
+        "preview": "        \n        QDialog {{\n            background-color: {c.SURFACE};\n            border-radius: 12"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 108,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:108",
+          "ui\\qt_theme.py:109"
+        ],
+        "preview": "        \n        QPushButton:hover {{\n            background: qlineargradient(x1:0, y1:0, x2:0, y2:1"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 113,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:113",
+          "ui\\qt_theme.py:114"
+        ],
+        "preview": "        \n        QPushButton:pressed {{\n            background-color: {c.PRIMARY_DARK};\n            "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 118,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:118",
+          "ui\\qt_theme.py:119"
+        ],
+        "preview": "        \n        QPushButton:disabled {{\n            background-color: {c.BORDER};\n            color"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 129,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:129",
+          "ui\\qt_theme.py:130"
+        ],
+        "preview": "        \n        QPushButton#secondary:hover {{\n            background-color: {c.SURFACE_HOVER};\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 158,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:158",
+          "ui\\qt_theme.py:159"
+        ],
+        "preview": "        \n        QPushButton#navItem:hover {{\n            background-color: {c.SIDEBAR_ITEM_HOVER};\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 220,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:220",
+          "ui\\qt_theme.py:221"
+        ],
+        "preview": "        \n        QLineEdit:focus {{\n            border: 2px solid {c.PRIMARY};\n            backgroun"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 301,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:301",
+          "ui\\qt_theme.py:302"
+        ],
+        "preview": "        \n        QComboBox QAbstractItemView::item {{\n            padding: 8px 12px;\n            bor"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 317,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:317",
+          "ui\\qt_theme.py:318"
+        ],
+        "preview": "        \n        QTabBar {{\n            background-color: {c.SURFACE};\n            border-bottom: 2p"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 332,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:332",
+          "ui\\qt_theme.py:333"
+        ],
+        "preview": "        \n        QTabBar::tab:selected {{\n            color: {c.PRIMARY};\n            border-bottom-"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 353,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:353",
+          "ui\\qt_theme.py:354"
+        ],
+        "preview": "        \n        QTableWidget::item {{\n            padding: 4px;\n            border: none;\n        }"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 358,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:358",
+          "ui\\qt_theme.py:359"
+        ],
+        "preview": "        \n        QTableWidget::item:selected {{\n            background-color: rgba(37, 99, 235, 0.1)"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 384,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:384",
+          "ui\\qt_theme.py:385"
+        ],
+        "preview": "        \n        QTableWidget QTableCornerButton::section {{\n            background-color: {c.SURFAC"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 439,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:439",
+          "ui\\qt_theme.py:440"
+        ],
+        "preview": "        \n        /* ===== Message Box ===== */\n        QMessageBox {{\n            background-color: "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_theme.py",
+      "line_number": 444,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_theme.py:444",
+          "ui\\qt_theme.py:445"
+        ],
+        "preview": "        \n        QMessageBox QLabel {{\n            color: {c.TEXT};\n        }}\n        \"\"\""
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 7,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:7",
+          "utils\\formatters.py:8"
+        ],
+        "preview": "\n\ndef parse_to_small_units(value_str: str, conversion: int) -> int:\n    \"\"\"\n    Parse chu\u1ed7i input th"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 12,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:12",
+          "utils\\formatters.py:13"
+        ],
+        "preview": "    \n    H\u1ed7 tr\u1ee3 nhi\u1ec1u \u0111\u1ecbnh d\u1ea1ng:\n    - \"3.4\" -> 3 \u0111\u01a1n v\u1ecb l\u1edbn + 4 \u0111\u01a1n v\u1ecb nh\u1ecf\n    - \"3t4\" -> t\u01b0\u01a1ng t\u1ef1 "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 27,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:27",
+          "utils\\formatters.py:28"
+        ],
+        "preview": "    \n    value_str = str(value_str).strip().lower()\n    \n    # Thay th\u1ebf c\u00e1c k\u00fd t\u1ef1 ch\u1eef c\u00e1i b\u1eb1ng d\u1ea5u c"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 46,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:46",
+          "utils\\formatters.py:47"
+        ],
+        "preview": "\n\ndef format_to_display(total_small_units: int, conversion: int, unit_char: str) -> str:\n    \"\"\"\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 53,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:53",
+          "utils\\formatters.py:54"
+        ],
+        "preview": "    \n    Args:\n        total_small_units: T\u1ed5ng s\u1ed1 \u0111\u01a1n v\u1ecb nh\u1ecf\n        conversion: S\u1ed1 \u0111\u01a1n v\u1ecb nh\u1ecf trong"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 72,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:72",
+          "utils\\formatters.py:73"
+        ],
+        "preview": "\ndef normalize_input(value_str: str, conversion: int) -> int:\n    \"\"\"\n    Chu\u1ea9n h\u00f3a input t\u1eeb ng\u01b0\u1eddi d"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 81,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:81",
+          "utils\\formatters.py:82"
+        ],
+        "preview": "        \n    Returns:\n        S\u1ed1 \u0111\u01a1n v\u1ecb nh\u1ecf\n    \"\"\"\n    return parse_to_small_units(value_str, conve"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 86,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:86",
+          "utils\\formatters.py:87"
+        ],
+        "preview": "\n\ndef format_currency(amount: Union[int, float], symbol: str = \"\u0111\") -> str:\n    \"\"\"\n    Format s\u1ed1 ti"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 97,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:97",
+          "utils\\formatters.py:98"
+        ],
+        "preview": "        \n    Returns:\n        Chu\u1ed7i s\u1ed1 ti\u1ec1n \u0111\u00e3 format\n    \"\"\"\n    return f\"{amount:,.0f} {symbol}\""
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 102,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:102",
+          "utils\\formatters.py:103"
+        ],
+        "preview": "\n\ndef format_date(d: Union[date, datetime, str]) -> str:\n    \"\"\"\n    Format ng\u00e0y theo \u0111\u1ecbnh d\u1ea1ng dd/m"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "utils\\formatters.py",
+      "line_number": 119,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "utils\\formatters.py:119",
+          "utils\\formatters.py:120"
+        ],
+        "preview": "\n\ndef format_datetime(dt: Union[datetime, str]) -> str:\n    \"\"\"\n    Format datetime theo \u0111\u1ecbnh d\u1ea1ng d"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 6,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:6",
+          "ui\\qt_views\\history_view.py:9",
+          "ui\\qt_views\\product_view.py:6"
+        ],
+        "preview": ")\nfrom PyQt6.QtCore import Qt\nfrom PyQt6.QtGui import QColor\n\nfrom ui.qt_theme import AppColors"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 9,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:9",
+          "ui\\qt_views\\calculation_view.py:10"
+        ],
+        "preview": "\nfrom ui.qt_theme import AppColors\nfrom database import SessionRepository, HistoryRepository, Produc"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 27,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:27",
+          "ui\\qt_views\\product_dialog.py:19"
+        ],
+        "preview": "        self.setFixedWidth(420)\n        \n        layout = QVBoxLayout(self)\n        layout.setSpacin"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 28,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:28",
+          "ui\\qt_views\\product_dialog.py:20"
+        ],
+        "preview": "        \n        layout = QVBoxLayout(self)\n        layout.setSpacing(20)\n        layout.setContents"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 54,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:54",
+          "ui\\qt_views\\calculation_view.py:55"
+        ],
+        "preview": "        \n        self.notes_input = QTextEdit()\n        self.notes_input.setPlaceholderText(\"Ghi ch\u00fa"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 63,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:63",
+          "ui\\qt_views\\product_dialog.py:59"
+        ],
+        "preview": "        btn_layout = QHBoxLayout()\n        btn_layout.setSpacing(12)\n        \n        cancel_btn = Q"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 64,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:64",
+          "ui\\qt_views\\product_dialog.py:60"
+        ],
+        "preview": "        btn_layout.setSpacing(12)\n        \n        cancel_btn = QPushButton(\"H\u1ee7y\")\n        cancel_bt"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 4 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 65,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 4,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:65",
+          "ui\\qt_views\\calculation_view.py:66",
+          "ui\\qt_views\\product_dialog.py:61",
+          "ui\\qt_views\\product_dialog.py:62"
+        ],
+        "preview": "        \n        cancel_btn = QPushButton(\"H\u1ee7y\")\n        cancel_btn.setObjectName(\"secondary\")\n     "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 67,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:67",
+          "ui\\qt_views\\product_dialog.py:63"
+        ],
+        "preview": "        cancel_btn.setObjectName(\"secondary\")\n        cancel_btn.clicked.connect(self.reject)\n      "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 68,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:68",
+          "ui\\qt_views\\product_dialog.py:64"
+        ],
+        "preview": "        cancel_btn.clicked.connect(self.reject)\n        btn_layout.addWidget(cancel_btn)\n        \n  "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 69,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:69",
+          "ui\\qt_views\\product_dialog.py:65"
+        ],
+        "preview": "        btn_layout.addWidget(cancel_btn)\n        \n        save_btn = QPushButton(\"\ud83d\udcbe L\u01b0u\")\n        sa"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 70,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:70",
+          "ui\\qt_views\\product_dialog.py:66"
+        ],
+        "preview": "        \n        save_btn = QPushButton(\"\ud83d\udcbe L\u01b0u\")\n        save_btn.clicked.connect(self._save)\n      "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 71,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:71",
+          "ui\\qt_views\\product_dialog.py:67"
+        ],
+        "preview": "        save_btn = QPushButton(\"\ud83d\udcbe L\u01b0u\")\n        save_btn.clicked.connect(self._save)\n        btn_lay"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 72,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:72",
+          "ui\\qt_views\\product_dialog.py:68"
+        ],
+        "preview": "        save_btn.clicked.connect(self._save)\n        btn_layout.addWidget(save_btn)\n        \n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 73,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:73",
+          "ui\\qt_views\\product_dialog.py:69"
+        ],
+        "preview": "        btn_layout.addWidget(save_btn)\n        \n        layout.addLayout(btn_layout)\n    \n    def _s"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 98,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:98",
+          "ui\\qt_views\\calculation_view.py:99"
+        ],
+        "preview": "    \n    def _setup_ui(self):\n        layout = QVBoxLayout(self)\n        layout.setContentsMargins(0"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 141,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:141",
+          "ui\\qt_views\\calculation_view.py:142"
+        ],
+        "preview": "\n    def _setup_calc_tab(self):\n        layout = QVBoxLayout(self.calc_tab)\n        layout.setConten"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 209,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:209",
+          "ui\\qt_views\\calculation_view.py:210"
+        ],
+        "preview": "\n    def _setup_prod_tab(self):\n        layout = QVBoxLayout(self.prod_tab)\n        layout.setConten"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 212,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:212",
+          "ui\\qt_views\\history_view.py:110"
+        ],
+        "preview": "        layout.setContentsMargins(20, 16, 20, 20)\n        layout.setSpacing(16)\n        \n        # T"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 213,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:213",
+          "ui\\qt_views\\history_view.py:111"
+        ],
+        "preview": "        layout.setSpacing(16)\n        \n        # Toolbar\n        toolbar = QHBoxLayout()\n        too"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 216,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:216",
+          "ui\\qt_views\\product_view.py:80"
+        ],
+        "preview": "        toolbar = QHBoxLayout()\n        toolbar.setContentsMargins(0, 0, 0, 0)\n        toolbar.setSp"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 245,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:245",
+          "ui\\qt_views\\history_view.py:135"
+        ],
+        "preview": "        ])\n        \n        header = self.table.horizontalHeader()\n        header.setSectionResizeMo"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 246,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:246",
+          "ui\\qt_views\\history_view.py:136"
+        ],
+        "preview": "        \n        header = self.table.horizontalHeader()\n        header.setSectionResizeMode(0, QHead"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 261,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:261",
+          "ui\\qt_views\\history_view.py:149",
+          "ui\\qt_views\\stock_view.py:120"
+        ],
+        "preview": "        \n        self.table.setAlternatingRowColors(True)\n        self.table.setSelectionBehavior(QT"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 283,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:283",
+          "ui\\qt_views\\calculation_view.py:284"
+        ],
+        "preview": "        \n        self.prod_table.setAlternatingRowColors(True)\n        self.prod_table.setSelectionB"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 320,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:320",
+          "ui\\qt_views\\calculation_view.py:346"
+        ],
+        "preview": "                QLineEdit {{\n                    border: 2px solid {AppColors.BORDER};\n             "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 321,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:321",
+          "ui\\qt_views\\calculation_view.py:347"
+        ],
+        "preview": "                    border: 2px solid {AppColors.BORDER};\n                    border-radius: 5px;\n  "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 322,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:322",
+          "ui\\qt_views\\calculation_view.py:348"
+        ],
+        "preview": "                    border-radius: 5px;\n                    padding: 2px 6px;\n                    fo"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 323,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:323",
+          "ui\\qt_views\\calculation_view.py:349"
+        ],
+        "preview": "                    padding: 2px 6px;\n                    font-weight: 700;\n                    font"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 324,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:324",
+          "ui\\qt_views\\calculation_view.py:350"
+        ],
+        "preview": "                    font-weight: 700;\n                    font-size: 13px;\n                    backg"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 422,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\calculation_view.py:422",
+          "ui\\qt_views\\calculation_view.py:435"
+        ],
+        "preview": "                    font-size: 12px;\n                    font-weight: 600;\n                    paddi"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 19,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:19",
+          "ui\\qt_views\\history_view.py:20"
+        ],
+        "preview": "    \n    def __init__(self, history, parent=None):\n        super().__init__(parent)\n        self.his"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 76,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:76",
+          "ui\\qt_views\\history_view.py:77"
+        ],
+        "preview": "                \n                amount = QTableWidgetItem(f\"{item.amount:,.0f}\")\n                am"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 102,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:102",
+          "ui\\qt_views\\history_view.py:103"
+        ],
+        "preview": "    \n    def __init__(self):\n        super().__init__()\n        self._setup_ui()\n        self.refres"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 105,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:105",
+          "ui\\qt_views\\product_view.py:66"
+        ],
+        "preview": "        self._setup_ui()\n        self.refresh_list()\n    \n    def _setup_ui(self):\n        layout = "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 106,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:106",
+          "ui\\qt_views\\product_view.py:67"
+        ],
+        "preview": "        self.refresh_list()\n    \n    def _setup_ui(self):\n        layout = QVBoxLayout(self)\n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 4 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 107,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 4,
+        "locations": [
+          "ui\\qt_views\\history_view.py:107",
+          "ui\\qt_views\\history_view.py:108",
+          "ui\\qt_views\\product_view.py:68",
+          "ui\\qt_views\\product_view.py:69"
+        ],
+        "preview": "    \n    def _setup_ui(self):\n        layout = QVBoxLayout(self)\n        layout.setContentsMargins(2"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 127,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:127",
+          "ui\\qt_views\\product_view.py:100"
+        ],
+        "preview": "        self.table = QTableWidget()\n        self._setup_table()\n        layout.addWidget(self.table,"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 144,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:144",
+          "ui\\qt_views\\history_view.py:145"
+        ],
+        "preview": "        \n        self.table.setColumnWidth(0, 50)\n        self.table.setColumnWidth(1, 100)\n        "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 165,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:165",
+          "ui\\qt_views\\history_view.py:166"
+        ],
+        "preview": "            \n            notes_text = h.notes[:25] + \"...\" if h.notes and len(h.notes) > 25 else (h."
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 170,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:170",
+          "ui\\qt_views\\product_view.py:139"
+        ],
+        "preview": "            \n            actions_v_layout = QVBoxLayout(actions)\n            actions_v_layout.setCon"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 174,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\history_view.py:174",
+          "ui\\qt_views\\history_view.py:175"
+        ],
+        "preview": "            \n            actions_h_widget = QWidget()\n            actions_layout = QHBoxLayout(actio"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 196,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:196",
+          "ui\\qt_views\\product_view.py:219",
+          "ui\\qt_views\\stock_view.py:126"
+        ],
+        "preview": "    \n    def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):\n        it"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 197,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:197",
+          "ui\\qt_views\\product_view.py:220",
+          "ui\\qt_views\\stock_view.py:127"
+        ],
+        "preview": "    def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):\n        item = "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 198,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:198",
+          "ui\\qt_views\\product_view.py:221",
+          "ui\\qt_views\\stock_view.py:128"
+        ],
+        "preview": "        item = QTableWidgetItem(text)\n        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditab"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 199,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:199",
+          "ui\\qt_views\\product_view.py:222",
+          "ui\\qt_views\\stock_view.py:129"
+        ],
+        "preview": "        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)\n        if center:\n            ite"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 200,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:200",
+          "ui\\qt_views\\product_view.py:223",
+          "ui\\qt_views\\stock_view.py:130"
+        ],
+        "preview": "        if center:\n            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 201,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:201",
+          "ui\\qt_views\\product_view.py:224",
+          "ui\\qt_views\\stock_view.py:131"
+        ],
+        "preview": "            item.setTextAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)\n    "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 202,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:202",
+          "ui\\qt_views\\product_view.py:225",
+          "ui\\qt_views\\stock_view.py:132"
+        ],
+        "preview": "        else:\n            item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignV"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 3 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 203,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 3,
+        "locations": [
+          "ui\\qt_views\\history_view.py:203",
+          "ui\\qt_views\\product_view.py:226",
+          "ui\\qt_views\\stock_view.py:133"
+        ],
+        "preview": "            item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)\n      "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_dialog.py",
+      "line_number": 43,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_dialog.py:43",
+          "ui\\qt_views\\product_dialog.py:44"
+        ],
+        "preview": "        \n        self.conversion_spin = QSpinBox()\n        self.conversion_spin.setRange(1, 100)\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_dialog.py",
+      "line_number": 56,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_dialog.py:56",
+          "ui\\qt_views\\product_dialog.py:57"
+        ],
+        "preview": "        \n        layout.addLayout(form)\n        \n        btn_layout = QHBoxLayout()\n        btn_layo"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 30,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:30",
+          "ui\\qt_views\\product_view.py:31"
+        ],
+        "preview": "        \n        form = QFormLayout()\n        self.name_input = QLineEdit()\n        if self.item: se"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 103,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:103",
+          "ui\\qt_views\\product_view.py:104"
+        ],
+        "preview": "\n    def _setup_table(self):\n        self.table.setColumnCount(4)\n        self.table.setHorizontalHe"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 118,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:118",
+          "ui\\qt_views\\product_view.py:119"
+        ],
+        "preview": "        \n        self.table.setAlternatingRowColors(True)\n        self.table.setSelectionBehavior(QT"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 214,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:214",
+          "ui\\qt_views\\product_view.py:215"
+        ],
+        "preview": "            \n    def _delete_quick_price(self, item_id):\n        QuickPriceRepository.delete(item_id"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 227,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:227",
+          "ui\\qt_views\\stock_view.py:134"
+        ],
+        "preview": "        if bold:\n            font = item.font()\n            font.setBold(True)\n            item.setF"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 228,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:228",
+          "ui\\qt_views\\stock_view.py:135"
+        ],
+        "preview": "            font = item.font()\n            font.setBold(True)\n            item.setFont(font)\n       "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 229,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:229",
+          "ui\\qt_views\\stock_view.py:136"
+        ],
+        "preview": "            font.setBold(True)\n            item.setFont(font)\n        if bg: item.setBackground(QCol"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 230,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\product_view.py:230",
+          "ui\\qt_views\\stock_view.py:137"
+        ],
+        "preview": "            item.setFont(font)\n        if bg: item.setBackground(QColor(bg))\n        if fg: item.set"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 31,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:31",
+          "ui\\qt_views\\settings_view.py:32"
+        ],
+        "preview": "    \n    def _setup_ui(self):\n        layout = QVBoxLayout(self)\n        layout.setContentsMargins(2"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 104,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:104",
+          "ui\\qt_views\\settings_view.py:105"
+        ],
+        "preview": "    \n    def _on_row_height_change(self, value: int, label: QLabel):\n        self.current_row_height"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 109,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:109",
+          "ui\\qt_views\\settings_view.py:110"
+        ],
+        "preview": "    \n    def _on_widget_height_change(self, value: int, label: QLabel):\n        self.current_widget_"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 120,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:120",
+          "ui\\qt_views\\settings_view.py:190"
+        ],
+        "preview": "        content = QWidget()\n        layout = QVBoxLayout(content)\n        layout.setContentsMargins("
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 198,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:198",
+          "ui\\qt_views\\settings_view.py:199"
+        ],
+        "preview": "        \n        backup_label = QLabel(\"T\u1ea1o b\u1ea3n sao l\u01b0u database\")\n        backup_label.setObjectNam"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 203,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:203",
+          "ui\\qt_views\\settings_view.py:204"
+        ],
+        "preview": "        \n        backup_btn = QPushButton(\"Sao l\u01b0u\")\n        backup_btn.setObjectName(\"success\")\n   "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 214,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:214",
+          "ui\\qt_views\\settings_view.py:215"
+        ],
+        "preview": "        \n        restore_label = QLabel(\"Kh\u00f4i ph\u1ee5c t\u1eeb file backup\")\n        restore_label.setObjectN"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 219,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:219",
+          "ui\\qt_views\\settings_view.py:220"
+        ],
+        "preview": "        \n        restore_btn = QPushButton(\"Ch\u1ecdn file\")\n        restore_btn.setObjectName(\"secondary"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 234,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:234",
+          "ui\\qt_views\\settings_view.py:235"
+        ],
+        "preview": "        \n        layout.addLayout(self._info_row(\"T\u00ean \u1ee9ng d\u1ee5ng\", APP_NAME))\n        layout.addLayout"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 239,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:239",
+          "ui\\qt_views\\settings_view.py:240"
+        ],
+        "preview": "        \n        return content\n    \n    def _info_row(self, label: str, value: str, color: str = No"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 250,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\settings_view.py:250",
+          "ui\\qt_views\\settings_view.py:251"
+        ],
+        "preview": "        \n        val = QLabel(value)\n        if color:\n            val.setStyleSheet(f\"color: {color"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 8,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:8",
+          "ui\\qt_views\\stock_view.py:9"
+        ],
+        "preview": "\nfrom ui.qt_theme import AppColors\nfrom database import SessionRepository, StockChangeLogRepository\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 24,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:24",
+          "ui\\qt_views\\stock_view.py:25"
+        ],
+        "preview": "    \n    def _setup_ui(self):\n        main_layout = QHBoxLayout(self)\n        main_layout.setContent"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 234,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:234",
+          "ui\\qt_views\\stock_view.py:235"
+        ],
+        "preview": "\n        for row, s in enumerate(sessions):\n            p = s.product\n            l_qty = s.closing_"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 293,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:293",
+          "ui\\qt_views\\stock_view.py:309"
+        ],
+        "preview": "        SessionRepository.update_qty(pid, sess.handover_qty, new_c)\n        \n        # Log thay \u0111\u1ed5i\n"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 296,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:296",
+          "ui\\qt_views\\stock_view.py:312"
+        ],
+        "preview": "        if old_qty != new_c:\n            StockChangeLogRepository.add_log(pid, sess.product.name, ol"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 297,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:297",
+          "ui\\qt_views\\stock_view.py:313"
+        ],
+        "preview": "            StockChangeLogRepository.add_log(pid, sess.product.name, old_qty, new_c)\n        \n      "
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 298,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:298",
+          "ui\\qt_views\\stock_view.py:314"
+        ],
+        "preview": "        \n        self.refresh_list()\n        self.refresh_history()\n        if self.on_refresh_calc:"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 318,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:318",
+          "ui\\qt_views\\stock_view.py:319"
+        ],
+        "preview": "    \n    def refresh_history(self):\n        \"\"\"Refresh b\u1ea3ng l\u1ecbch s\u1eed\"\"\"\n        logs = StockChangeLog"
+      }
+    },
+    {
+      "category": "Code Quality",
+      "description": "Duplicate code block found in 2 locations",
+      "risk_level": "Low",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 381,
+      "recommendation": "Extract duplicate code into a shared function or method",
+      "details": {
+        "occurrences": 2,
+        "locations": [
+          "ui\\qt_views\\stock_view.py:381",
+          "ui\\qt_views\\stock_view.py:382"
+        ],
+        "preview": "    \n    def _delete_log(self, log_id: int):\n        \"\"\"X\u00f3a m\u1ed9t log c\u1ee5 th\u1ec3\"\"\"\n        StockChangeLog"
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: create_action_widget",
+      "risk_level": "High",
+      "file_path": "fix_table_layout.py",
+      "line_number": 50,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "create_action_widget",
+        "parameters": [
+          "self",
+          "row_index"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 35,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: load_history",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 80,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "load_history",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: add_notif",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 86,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "add_notif",
+        "parameters": [
+          "self",
+          "time_str",
+          "source",
+          "amount",
+          "raw_message"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _add_row_ui",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 93,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_add_row_ui",
+        "parameters": [
+          "self",
+          "db_id",
+          "time_str",
+          "source",
+          "amount",
+          "raw_message"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: clear_history",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 159,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "clear_history",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: do_POST",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 216,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "do_POST",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: do_GET",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 219,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "do_GET",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: log_message",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 222,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "log_message",
+        "parameters": [
+          "self",
+          "format"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: run",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 231,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "run",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 246,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "parent"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: update_data",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 288,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "update_data",
+        "parameters": [
+          "self",
+          "bank_view_table"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 306,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_ui",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 334,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_ui",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _start_bank_hold",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 505,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_start_bank_hold",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _stop_bank_hold",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 508,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_stop_bank_hold",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _switch_view",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 535,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_switch_view",
+        "parameters": [
+          "self",
+          "index"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _create_views",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 544,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_create_views",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _start_notification_server",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 556,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_start_notification_server",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _show_notification",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 562,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_show_notification",
+        "parameters": [
+          "self",
+          "message"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _extract_amount",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 602,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_extract_amount",
+        "parameters": [
+          "self",
+          "text"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _apply_theme",
+      "risk_level": "High",
+      "file_path": "main.py",
+      "line_number": 653,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_apply_theme",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_file_content",
+      "risk_level": "High",
+      "file_path": "audit\\analyzer.py",
+      "line_number": 62,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_file_content",
+        "parameters": [
+          "self",
+          "file_path"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_findings_by_risk",
+      "risk_level": "High",
+      "file_path": "audit\\reporters.py",
+      "line_number": 77,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_findings_by_risk",
+        "parameters": [
+          "self",
+          "risk_level"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_findings_by_category",
+      "risk_level": "High",
+      "file_path": "audit\\reporters.py",
+      "line_number": 89,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_findings_by_category",
+        "parameters": [
+          "self",
+          "category"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: save_json",
+      "risk_level": "High",
+      "file_path": "audit\\reporters.py",
+      "line_number": 202,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "save_json",
+        "parameters": [
+          "self",
+          "output_path"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: save_html",
+      "risk_level": "High",
+      "file_path": "audit\\reporters.py",
+      "line_number": 212,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "save_html",
+        "parameters": [
+          "self",
+          "output_path"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "audit\\security_analyzer.py",
+      "line_number": 16,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "project_root"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: analyze",
+      "risk_level": "High",
+      "file_path": "audit\\security_analyzer.py",
+      "line_number": 40,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "analyze",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_by_id",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 25,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_by_id",
+        "parameters": [
+          "product_id"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: update",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 64,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "update",
+        "parameters": [
+          "product_id",
+          "name",
+          "large_unit",
+          "conversion",
+          "unit_price"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: save_current_session",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 155,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "save_current_session",
+        "parameters": [
+          "shift_name",
+          "notes"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_all",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 186,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_all",
+        "parameters": [
+          "limit"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_by_date_range",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 220,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_by_date_range",
+        "parameters": [
+          "start_date",
+          "end_date"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: delete",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 233,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "delete",
+        "parameters": [
+          "history_id"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: update",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 263,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "update",
+        "parameters": [
+          "id",
+          "name",
+          "price"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: delete",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 273,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "delete",
+        "parameters": [
+          "id"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_all",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 295,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_all",
+        "parameters": [
+          "limit"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: delete",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 305,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "delete",
+        "parameters": [
+          "id"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: get_all",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 337,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "get_all",
+        "parameters": [
+          "limit"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: delete",
+      "risk_level": "High",
+      "file_path": "database\\repositories.py",
+      "line_number": 349,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "delete",
+        "parameters": [
+          "log_id"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: normalize_input",
+      "risk_level": "High",
+      "file_path": "services\\calculator.py",
+      "line_number": 88,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "normalize_input",
+        "parameters": [
+          "value_str",
+          "conversion"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: test_get_all_products",
+      "risk_level": "High",
+      "file_path": "tests\\test_database.py",
+      "line_number": 43,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "test_get_all_products",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: test_update_product",
+      "risk_level": "High",
+      "file_path": "tests\\test_database.py",
+      "line_number": 57,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "test_update_product",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: test_soft_delete",
+      "risk_level": "High",
+      "file_path": "tests\\test_database.py",
+      "line_number": 80,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "test_soft_delete",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: test_get_all_session_data",
+      "risk_level": "High",
+      "file_path": "tests\\test_database.py",
+      "line_number": 106,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "test_get_all_session_data",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: test_get_total_amount",
+      "risk_level": "High",
+      "file_path": "tests\\test_database.py",
+      "line_number": 136,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "test_get_total_amount",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: test_conversion_factor_1",
+      "risk_level": "High",
+      "file_path": "tests\\test_formatters.py",
+      "line_number": 78,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "test_conversion_factor_1",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: normalize_input",
+      "risk_level": "High",
+      "file_path": "utils\\formatters.py",
+      "line_number": 73,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "normalize_input",
+        "parameters": [
+          "value_str",
+          "conversion"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 19,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "total_amount",
+          "parent"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_ui",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 25,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_ui",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _save",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 77,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_save",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 88,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "on_refresh_stock"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_ui",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 99,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_ui",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_calc_tab",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 142,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_calc_tab",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_prod_tab",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 210,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_prod_tab",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_calc_table",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 240,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_calc_table",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_prod_table",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 268,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_prod_table",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _on_return_pressed",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 460,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_on_return_pressed",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _on_handover_change",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 464,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_on_handover_change",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _on_closing_change",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 468,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_on_closing_change",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _create_stat_card",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 573,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_create_stat_card",
+        "parameters": [
+          "self",
+          "label",
+          "value",
+          "color"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _hex_to_rgb",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\calculation_view.py",
+      "line_number": 587,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_hex_to_rgb",
+        "parameters": [
+          "self",
+          "h"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 20,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "history",
+          "parent"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 103,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_ui",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 108,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_ui",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_table",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 131,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_table",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: refresh_list",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\history_view.py",
+      "line_number": 156,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "refresh_list",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\product_dialog.py",
+      "line_number": 11,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "product",
+          "parent"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 17,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "item",
+          "parent"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 63,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "on_refresh_calc"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_ui",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 69,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_ui",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_table",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\product_view.py",
+      "line_number": 104,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_table",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 26,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_ui",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 32,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_ui",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _ui_config_content",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 51,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_ui_config_content",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _on_row_height_change",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 105,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_on_row_height_change",
+        "parameters": [
+          "self",
+          "value",
+          "label"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _on_widget_height_change",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 110,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_on_widget_height_change",
+        "parameters": [
+          "self",
+          "value",
+          "label"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _reset_defaults",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 115,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_reset_defaults",
+        "parameters": [
+          "self",
+          "row_slider",
+          "widget_slider",
+          "row_label",
+          "widget_label"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _network_content",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 119,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_network_content",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _refresh_ip",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 157,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_refresh_ip",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _create_section",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 169,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_create_section",
+        "parameters": [
+          "self",
+          "title",
+          "content"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _backup_content",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 189,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_backup_content",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _about_content",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 229,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_about_content",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _backup_database",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\settings_view.py",
+      "line_number": 258,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_backup_database",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: __init__",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 17,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "__init__",
+        "parameters": [
+          "self",
+          "on_refresh_calc"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_ui",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 25,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_ui",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _setup_table",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 102,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_setup_table",
+        "parameters": [
+          "self"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: _delete_log",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 382,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "_delete_log",
+        "parameters": [
+          "self",
+          "log_id"
+        ]
+      }
+    },
+    {
+      "category": "Security",
+      "description": "Missing input validation in entry point: create_stepper",
+      "risk_level": "High",
+      "file_path": "ui\\qt_views\\stock_view.py",
+      "line_number": 147,
+      "recommendation": "Add input validation before processing user data",
+      "details": {
+        "function": "create_stepper",
+        "parameters": [
+          "value",
+          "max_val",
+          "on_change"
+        ]
+      }
+    }
+  ]
+}
