@@ -11,19 +11,19 @@ Handles the initialization sequence for the application:
 7. Start the UI
 """
 
-import sys
 import logging
-from pathlib import Path
+import sys
 from typing import Optional
+
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.config import Config
 from core.container import Container
-from core.exceptions import ConfigurationError, AppException, ValidationError
-from core.license import LicenseValidator, LicenseManager
+from core.exceptions import ConfigurationError
+from core.license import LicenseManager, LicenseValidator
 from database.connection import init_db
-from utils.logging import LoggerFactory
 from runtime.crash_handler import CrashHandler
+from utils.logging import LoggerFactory
 
 
 class ApplicationBootstrap:
@@ -104,7 +104,7 @@ class ApplicationBootstrap:
         errors = self.config.validate()
         if errors:
             raise ConfigurationError(
-                f"Configuration validation failed:\n"
+                "Configuration validation failed:\n"
                 + "\n".join(f"  - {e}" for e in errors)
             )
 
@@ -138,6 +138,7 @@ class ApplicationBootstrap:
 
             # Run migrations
             from database.migrations import MigrationManager
+
             migration_manager = MigrationManager(self.config.db_path)
             migration_manager.migrate(logger=self.logger)
 
@@ -196,9 +197,7 @@ class ApplicationBootstrap:
             )
 
             if not is_valid:
-                self.logger.warning(
-                    "License validation failed. Running in trial mode."
-                )
+                self.logger.warning("License validation failed. Running in trial mode.")
                 return
 
             # Store license manager in container for later use

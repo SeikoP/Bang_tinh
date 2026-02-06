@@ -4,13 +4,13 @@ Property-based tests for test coverage.
 **Validates: Requirements 6.1, 6.2, 6.3**
 """
 
-import pytest
 import ast
 import tempfile
 from pathlib import Path
-from hypothesis import given, settings, strategies as st, assume
-from hypothesis import HealthCheck
 
+import pytest
+from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import strategies as st
 
 # Strategies
 
@@ -127,7 +127,7 @@ def test_property_18_test_coverage_for_business_logic(class_code):
             test_code += f"    def test_{method}(self):\n"
             test_code += f"        obj = {class_name}()\n"
             test_code += f"        result = obj.{method}()\n"
-            test_code += f"        assert result is not None\n\n"
+            test_code += "        assert result is not None\n\n"
 
         test_file.write_text(test_code)
 
@@ -144,12 +144,12 @@ def test_property_18_test_coverage_for_business_logic(class_code):
                 if node.name.startswith("test_"):
                     test_method_count += 1
 
-        assert test_method_count > 0, f"Test file should have at least one test method"
+        assert test_method_count > 0, "Test file should have at least one test method"
 
         # Property: Each business method should have a corresponding test
         assert test_method_count >= len(
             methods
-        ), f"Should have at least one test per business method"
+        ), "Should have at least one test per business method"
 
 
 @pytest.mark.property
@@ -195,7 +195,7 @@ def test_property_19_property_test_coverage_for_transformations(func_code):
         # Property: Property test file should exist
         assert (
             test_file.exists()
-        ), f"Property test file should exist for transformation function"
+        ), "Property test file should exist for transformation function"
 
         # Property: Test should use Hypothesis
         test_content = test_file.read_text()

@@ -4,12 +4,12 @@ Global Crash Handler
 Handles uncaught exceptions and provides crash reporting.
 """
 
+import logging
 import sys
 import traceback
-import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.config import Config

@@ -4,15 +4,13 @@ Property-based tests for security.
 **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.9**
 """
 
-import pytest
 import os
 import re
-import tempfile
-from pathlib import Path
-from hypothesis import given, settings, strategies as st, assume
-from hypothesis import HealthCheck
 from unittest.mock import patch
 
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
 
 # Strategies
 
@@ -395,7 +393,7 @@ def test_property_25_license_key_validation(license_key):
     # Property: Validation result should match expected format validity
     assert (
         validation_result == is_valid_format
-    ), f"License key validation should match format validity"
+    ), "License key validation should match format validity"
 
 
 @pytest.mark.property

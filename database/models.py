@@ -3,8 +3,8 @@ Data models - Dataclasses đại diện cho các entity trong database
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime, date
-from typing import Optional, List
+from datetime import date, datetime
+from typing import List, Optional
 
 
 @dataclass

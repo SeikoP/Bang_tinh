@@ -13,11 +13,11 @@ Conventional Commit Format:
 - chore: Maintenance tasks (no version bump)
 """
 
-import subprocess
 import re
-from pathlib import Path
+import subprocess
 from datetime import datetime
-from typing import List, Tuple, Dict
+from pathlib import Path
+from typing import Dict, List
 
 
 class Version:
@@ -282,13 +282,13 @@ def main():
         print(f"Updated version in {config_path}")
 
     print(f"\n✅ Version {new_version} ready!")
-    print(f"\nNext steps:")
-    print(f"1. Review CHANGELOG.md")
+    print("\nNext steps:")
+    print("1. Review CHANGELOG.md")
     print(
         f"2. Commit changes: git add . && git commit -m 'chore: bump version to {new_version}'"
     )
     print(f"3. Create tag: git tag -a v{new_version} -m 'Release {new_version}'")
-    print(f"4. Push: git push && git push --tags")
+    print("4. Push: git push && git push --tags")
 
 
 if __name__ == "__main__":

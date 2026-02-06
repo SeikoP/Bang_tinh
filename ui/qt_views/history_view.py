@@ -3,24 +3,14 @@ History View - Lịch sử phiên làm việc
 Modern Premium Design
 """
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QDialog,
-    QTextEdit,
-    QMessageBox,
-)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import (QDialog, QHBoxLayout, QHeaderView, QLabel,
+                             QMessageBox, QPushButton, QTableWidget,
+                             QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget)
 
-from ui.qt_theme import AppColors
 from database import HistoryRepository
+from ui.qt_theme import AppColors
 
 
 class HistoryDetailDialog(QDialog):
@@ -47,16 +37,14 @@ class HistoryDetailDialog(QDialog):
         info.addWidget(QLabel(f"⏰ Ca: <b>{self.history.shift_name or 'N/A'}</b>"))
 
         total = QLabel(f"💰 Tổng: <b>{self.history.total_amount:,.0f} VNĐ</b>")
-        total.setStyleSheet(
-            f"""
+        total.setStyleSheet(f"""
             color: white;
             font-size: 15px;
             font-weight: 700;
             padding: 8px 16px;
             background: {AppColors.SUCCESS};
             border-radius: 6px;
-        """
-        )
+        """)
         info.addWidget(total)
 
         info.addStretch()
@@ -190,7 +178,9 @@ class HistoryView(QWidget):
                 if h.notes and len(h.notes) > 25
                 else (h.notes or "—")
             )
-            self._set_cell(row, 4, notes_text, center=False, fg=AppColors.TEXT_SECONDARY)
+            self._set_cell(
+                row, 4, notes_text, center=False, fg=AppColors.TEXT_SECONDARY
+            )
 
             actions = QWidget()
             actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)

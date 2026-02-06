@@ -1,8 +1,8 @@
 """Dependency injection container"""
 
 from typing import Any, Dict, Optional
+
 from core.config import Config
-import logging
 
 
 class Container:
@@ -16,12 +16,10 @@ class Container:
 
     def _register_services(self):
         """Register all application services"""
-        from database.repositories import (
-            ProductRepository,
-            SessionRepository,
-            HistoryRepository,
-            QuickPriceRepository,
-        )
+        from database.repositories import (HistoryRepository,
+                                           ProductRepository,
+                                           QuickPriceRepository,
+                                           SessionRepository)
         from services.calculator import CalculatorService
         from services.exporter import ExportService
         from services.notification_service import NotificationService

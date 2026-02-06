@@ -1,27 +1,14 @@
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QFrame,
-    QLineEdit,
-    QFileDialog,
-    QMessageBox,
-    QDialog,
-    QFormLayout,
-    QTextEdit,
-    QTabWidget,
-)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QFrame,
+                             QHBoxLayout, QHeaderView, QLabel, QLineEdit,
+                             QMessageBox, QPushButton, QTableWidget,
+                             QTableWidgetItem, QTabWidget, QTextEdit,
+                             QVBoxLayout, QWidget)
 
-from ui.qt_theme import AppColors
-from database import SessionRepository, HistoryRepository, ProductRepository
+from database import HistoryRepository, ProductRepository, SessionRepository
 from services import CalculatorService, ReportService
+from ui.qt_theme import AppColors
 from ui.qt_views.product_dialog import ProductDialog
 
 
@@ -44,16 +31,14 @@ class SaveSessionDialog(QDialog):
 
         # Total
         total_label = QLabel(f"💰 Tổng cộng: {self.total_amount:,.0f} VNĐ")
-        total_label.setStyleSheet(
-            f"""
+        total_label.setStyleSheet(f"""
             font-size: 18px;
             font-weight: 700;
             color: white;
             padding: 16px;
             background: {AppColors.SUCCESS};
             border-radius: 10px;
-        """
-        )
+        """)
         total_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(total_label)
 
@@ -143,8 +128,7 @@ class CalculationView(QWidget):
 
         # Sub Tabs
         self.tabs = QTabWidget()
-        self.tabs.setStyleSheet(
-            f"""
+        self.tabs.setStyleSheet(f"""
             QTabWidget::pane {{
                 border: none;
                 background: transparent;
@@ -166,8 +150,7 @@ class CalculationView(QWidget):
                 color: {AppColors.TEXT};
                 background: rgba(15, 23, 42, 0.05);
             }}
-        """
-        )
+        """)
 
         # 1. Calculation Tab
         self.calc_tab = QWidget()
@@ -237,16 +220,14 @@ class CalculationView(QWidget):
         footer.addStretch()
 
         self.total_label = QLabel("TỔNG TIỀN: 0 VNĐ")
-        self.total_label.setStyleSheet(
-            f"""
+        self.total_label.setStyleSheet(f"""
             color: white;
             font-size: 18px;
             font-weight: 800;
             padding: 10px 32px;
             background: {AppColors.SUCCESS};
             border-radius: 10px;
-        """
-        )
+        """)
         footer.addWidget(self.total_label)
 
         layout.addLayout(footer)
@@ -303,12 +284,12 @@ class CalculationView(QWidget):
         for i in [3, 4, 5, 6, 7]:
             header.setSectionResizeMode(i, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 60)   # Đ.Vị - giảm từ 70
-        self.table.setColumnWidth(1, 65)   # Quy đổi - giảm từ 75
-        self.table.setColumnWidth(3, 80)   # Giao ca - giảm từ 120
-        self.table.setColumnWidth(4, 80)   # Chốt ca - giảm từ 120
-        self.table.setColumnWidth(5, 75)   # Đã dùng - giảm từ 85
-        self.table.setColumnWidth(6, 90)   # Đơn giá - giảm từ 105
+        self.table.setColumnWidth(0, 60)  # Đ.Vị - giảm từ 70
+        self.table.setColumnWidth(1, 65)  # Quy đổi - giảm từ 75
+        self.table.setColumnWidth(3, 80)  # Giao ca - giảm từ 120
+        self.table.setColumnWidth(4, 80)  # Chốt ca - giảm từ 120
+        self.table.setColumnWidth(5, 75)  # Đã dùng - giảm từ 85
+        self.table.setColumnWidth(6, 90)  # Đơn giá - giảm từ 105
         self.table.setColumnWidth(7, 100)  # Thành tiền - giảm từ 120
 
         self.table.setAlternatingRowColors(True)
@@ -404,8 +385,7 @@ class CalculationView(QWidget):
                 handover_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 handover_edit.setFixedHeight(self._widget_height)
                 # Set stylesheet trực tiếp với specificity cao
-                handover_edit.setStyleSheet(
-                    f"""
+                handover_edit.setStyleSheet(f"""
                     QLineEdit {{
                         border: 2px solid {AppColors.BORDER};
                         border-radius: 5px;
@@ -414,8 +394,7 @@ class CalculationView(QWidget):
                         font-size: 13px;
                         background: white;
                     }}
-                """
-                )
+                """)
                 handover_edit.setProperty("product_id", p.id)
                 handover_edit.setProperty("conversion", p.conversion)
                 handover_edit.setProperty("row", row)
@@ -435,8 +414,7 @@ class CalculationView(QWidget):
                 closing_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 closing_edit.setFixedHeight(self._widget_height)
                 # Set stylesheet trực tiếp với specificity cao
-                closing_edit.setStyleSheet(
-                    f"""
+                closing_edit.setStyleSheet(f"""
                     QLineEdit {{
                         border: 2px solid {AppColors.BORDER};
                         border-radius: 5px;
@@ -445,8 +423,7 @@ class CalculationView(QWidget):
                         font-size: 13px;
                         background: white;
                     }}
-                """
-                )
+                """)
                 closing_edit.setProperty("product_id", p.id)
                 closing_edit.setProperty("conversion", p.conversion)
                 closing_edit.setProperty("row", row)
@@ -545,7 +522,9 @@ class CalculationView(QWidget):
                 self._set_cell_helper(
                     self.prod_table, row, 0, str(row + 1), center=True
                 )
-                self._set_cell_helper(self.prod_table, row, 1, p.name, center=False, bold=True)
+                self._set_cell_helper(
+                    self.prod_table, row, 1, p.name, center=False, bold=True
+                )
                 self._set_cell_helper(
                     self.prod_table,
                     row,

@@ -7,23 +7,13 @@ import os
 import shutil
 from datetime import datetime
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QFrame,
-    QFileDialog,
-    QMessageBox,
-    QSlider,
-    QSpinBox,
-    QScrollArea,
-)
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (QFileDialog, QFrame, QHBoxLayout, QLabel,
+                             QMessageBox, QPushButton, QScrollArea, QSlider,
+                             QVBoxLayout, QWidget)
 
+from config import APP_NAME, APP_VERSION, BACKUP_DIR, DB_PATH
 from ui.qt_theme import AppColors
-from config import DB_PATH, BACKUP_DIR, APP_NAME, APP_VERSION
 
 
 class SettingsView(QWidget):
@@ -45,13 +35,13 @@ class SettingsView(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
-        
+
         # Scroll area
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        
+
         # Content widget inside scroll
         content_widget = QWidget()
         layout = QVBoxLayout(content_widget)
@@ -79,7 +69,7 @@ class SettingsView(QWidget):
         )
 
         layout.addStretch()
-        
+
         scroll.setWidget(content_widget)
         main_layout.addWidget(scroll)
 
@@ -179,58 +169,58 @@ class SettingsView(QWidget):
 
         # QR Code Display
         qr_layout = QHBoxLayout()
-        
+
         # QR Code Image
         self.qr_label = QLabel()
         self.qr_label.setFixedSize(200, 200)
-        self.qr_label.setStyleSheet(f"background: white; border: 2px solid {AppColors.BORDER}; border-radius: 8px;")
+        self.qr_label.setStyleSheet(
+            f"background: white; border: 2px solid {AppColors.BORDER}; border-radius: 8px;"
+        )
         self.qr_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         qr_layout.addWidget(self.qr_label)
-        
+
         # Info column
         info_layout = QVBoxLayout()
         info_layout.setSpacing(8)
-        
+
         # IP Display
         self.ip_label = QLabel("Đang lấy địa chỉ IP...")
-        self.ip_label.setStyleSheet(
-            f"""
+        self.ip_label.setStyleSheet(f"""
             font-size: 16px; 
             font-weight: 700; 
             color: {AppColors.PRIMARY};
             background: {AppColors.BG};
             padding: 8px 12px;
             border-radius: 6px;
-        """
-        )
+        """)
         info_layout.addWidget(self.ip_label)
-        
+
         # Port info
         port = 5005  # default
         if self.container:
             config = self.container.get("config")
             if config:
                 port = config.notification_port
-        
+
         self.port_label = QLabel(f"Port: {port}")
-        self.port_label.setStyleSheet(f"font-size: 14px; color: {AppColors.TEXT_SECONDARY};")
+        self.port_label.setStyleSheet(
+            f"font-size: 14px; color: {AppColors.TEXT_SECONDARY};"
+        )
         info_layout.addWidget(self.port_label)
-        
+
         # Refresh button
         refresh_btn = QPushButton("🔄 Làm mới")
         refresh_btn.setFixedWidth(120)
         refresh_btn.clicked.connect(self._refresh_ip)
         info_layout.addWidget(refresh_btn)
-        
+
         info_layout.addStretch()
         qr_layout.addLayout(info_layout)
-        
+
         layout.addLayout(qr_layout)
 
         # Manual URL guide
-        guide = QLabel(
-            f"💡 Hoặc nhập thủ công: http://[IP]:{port}"
-        )
+        guide = QLabel(f"💡 Hoặc nhập thủ công: http://[IP]:{port}")
         guide.setStyleSheet(
             f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 11px;"
         )
@@ -241,8 +231,9 @@ class SettingsView(QWidget):
 
     def _refresh_ip(self):
         import socket
-        import qrcode
         from io import BytesIO
+
+        import qrcode
         from PyQt6.QtGui import QPixmap
 
         try:
@@ -252,14 +243,14 @@ class SettingsView(QWidget):
             ip = s.getsockname()[0]
             s.close()
             self.ip_label.setText(ip)
-            
+
             # Get port from config
             port = 5005
             if self.container:
                 config = self.container.get("config")
                 if config:
                     port = config.notification_port
-            
+
             # Generate QR code with URL
             url = f"http://{ip}:{port}"
             qr = qrcode.QRCode(
@@ -270,27 +261,28 @@ class SettingsView(QWidget):
             )
             qr.add_data(url)
             qr.make(fit=True)
-            
+
             # Create QR image
             img = qr.make_image(fill_color="black", back_color="white")
-            
+
             # Convert PIL image to QPixmap
             buffer = BytesIO()
-            img.save(buffer, format='PNG')
+            img.save(buffer, format="PNG")
             buffer.seek(0)
-            
+
             pixmap = QPixmap()
             pixmap.loadFromData(buffer.read())
-            
+
             # Scale to fit label
             scaled_pixmap = pixmap.scaled(
-                190, 190,
+                190,
+                190,
                 Qt.AspectRatioMode.KeepAspectRatio,
-                Qt.TransformationMode.SmoothTransformation
+                Qt.TransformationMode.SmoothTransformation,
             )
             self.qr_label.setPixmap(scaled_pixmap)
-            
-        except Exception as e:
+
+        except Exception:
             self.ip_label.setText("127.0.0.1 (Chưa kết nối mạng)")
             self.qr_label.setText("❌\nKhông thể\ntạo QR")
             self.qr_label.setStyleSheet(
@@ -307,13 +299,11 @@ class SettingsView(QWidget):
         section_layout.setSpacing(16)
 
         title_label = QLabel(title)
-        title_label.setStyleSheet(
-            f"""
+        title_label.setStyleSheet(f"""
             font-weight: 700;
             font-size: 16px;
             color: {AppColors.TEXT};
-        """
-        )
+        """)
         section_layout.addWidget(title_label)
 
         section_layout.addWidget(content)

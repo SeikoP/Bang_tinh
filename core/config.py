@@ -1,8 +1,8 @@
 """Application configuration management"""
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
-import os
 from typing import Optional
 
 

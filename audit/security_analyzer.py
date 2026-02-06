@@ -2,10 +2,11 @@
 Security analysis for detecting vulnerabilities and security issues.
 """
 
-import re
 import ast
+import re
 from pathlib import Path
-from typing import List, Dict, Any, Pattern
+from typing import Any, Dict, List
+
 from .analyzer import CodeAnalyzer
 from .reporters import Finding, RiskLevel
 

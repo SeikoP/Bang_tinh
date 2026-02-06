@@ -4,7 +4,8 @@ Architecture analysis for detecting layer violations and coupling issues.
 
 import ast
 from pathlib import Path
-from typing import List, Dict, Any, Set, Tuple
+from typing import Any, Dict, List
+
 from .analyzer import CodeAnalyzer
 from .reporters import Finding, RiskLevel
 
@@ -63,7 +64,7 @@ class ArchitectureAnalyzer(CodeAnalyzer):
                 # Store relative path as key
                 rel_path = str(file_path.relative_to(self.project_root))
                 self.imports_map[rel_path] = imports
-            except Exception as e:
+            except Exception:
                 # Skip files that can't be parsed
                 pass
 
@@ -120,7 +121,7 @@ class ArchitectureAnalyzer(CodeAnalyzer):
                         description=f"Layer violation: {source_layer} layer importing from {target_layer} layer",
                         risk_level=RiskLevel.HIGH,
                         file_path=file_path,
-                        recommendation=f"Refactor to use dependency injection or move code to appropriate layer",
+                        recommendation="Refactor to use dependency injection or move code to appropriate layer",
                         details={
                             "source_layer": source_layer,
                             "target_layer": target_layer,
@@ -235,7 +236,7 @@ class ArchitectureAnalyzer(CodeAnalyzer):
                     if target_layer == "database":
                         finding = Finding(
                             category="Architecture",
-                            description=f"Tight coupling: UI directly accessing database layer",
+                            description="Tight coupling: UI directly accessing database layer",
                             risk_level=RiskLevel.HIGH,
                             file_path=file_path,
                             recommendation="Use service layer or repository pattern to decouple UI from database",
@@ -255,7 +256,7 @@ class ArchitectureAnalyzer(CodeAnalyzer):
                     if "sqlite3.connect" in content or "cursor.execute" in content:
                         finding = Finding(
                             category="Architecture",
-                            description=f"Direct database access in UI layer",
+                            description="Direct database access in UI layer",
                             risk_level=RiskLevel.CRITICAL,
                             file_path=file_path,
                             recommendation="Move database access to repository layer",

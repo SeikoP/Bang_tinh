@@ -4,7 +4,8 @@ Code quality analysis for detecting code smells and complexity issues.
 
 import ast
 from pathlib import Path
-from typing import List, Dict, Any, Set
+from typing import Any, Dict, List
+
 from .analyzer import CodeAnalyzer
 from .reporters import Finding, RiskLevel
 
@@ -92,7 +93,7 @@ class QualityAnalyzer(CodeAnalyzer):
                             },
                         )
                         self.complexity_issues.append(finding)
-            except Exception as e:
+            except Exception:
                 # Skip files that can't be analyzed
                 pass
 

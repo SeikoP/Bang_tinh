@@ -1,24 +1,12 @@
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QSizePolicy,
-    QDialog,
-    QFormLayout,
-    QLineEdit,
-    QDoubleSpinBox,
-    QFrame,
-)
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import (QDialog, QDoubleSpinBox, QFormLayout, QHBoxLayout,
+                             QHeaderView, QLabel, QLineEdit, QPushButton,
+                             QSizePolicy, QTableWidget, QTableWidgetItem,
+                             QVBoxLayout, QWidget)
 
-from ui.qt_theme import AppColors
 from database import QuickPriceRepository
+from ui.qt_theme import AppColors
 
 
 class QuickPriceDialog(QDialog):

@@ -1,23 +1,14 @@
-from PyQt6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QTableWidget,
-    QTableWidgetItem,
-    QHeaderView,
-    QLineEdit,
-    QFrame,
-    QMessageBox,
-)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
 from datetime import datetime
 
-from ui.qt_theme import AppColors
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import (QFrame, QHBoxLayout, QHeaderView, QLabel,
+                             QLineEdit, QMessageBox, QPushButton, QTableWidget,
+                             QTableWidgetItem, QVBoxLayout, QWidget)
+
 from database import SessionRepository, StockChangeLogRepository
 from services import CalculatorService
+from ui.qt_theme import AppColors
 
 
 class StockView(QWidget):
@@ -181,15 +172,13 @@ class StockView(QWidget):
             # Container box
             container = QFrame()
             container.setFixedHeight(36)
-            container.setStyleSheet(
-                f"""
+            container.setStyleSheet(f"""
                 QFrame {{
                     border: 2px solid {AppColors.BORDER};
                     border-radius: 6px;
                     background: white;
                 }}
-            """
-            )
+            """)
 
             box_layout = QHBoxLayout(container)
             box_layout.setContentsMargins(0, 0, 0, 0)
@@ -201,8 +190,7 @@ class StockView(QWidget):
             btn_sub = QPushButton("▼")
             btn_sub.setFixedSize(40, 40)
             btn_sub.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_sub.setStyleSheet(
-                f"""
+            btn_sub.setStyleSheet(f"""
                 QPushButton {{
                     border: none;
                     border-right: 1px solid {AppColors.BORDER};
@@ -221,8 +209,7 @@ class StockView(QWidget):
                     background-color: #ef4444;
                     color: white;
                 }}
-            """
-            )
+            """)
             btn_sub.clicked.connect(lambda: on_change(max(0, value - 1)))
 
             # Ô hiển thị số - Chỉ đọc
@@ -230,8 +217,7 @@ class StockView(QWidget):
             display.setReadOnly(True)
             display.setFixedWidth(60)
             display.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            display.setStyleSheet(
-                f"""
+            display.setStyleSheet(f"""
                 QLineEdit {{
                     border: none;
                     background: white;
@@ -240,15 +226,13 @@ class StockView(QWidget):
                     font-size: 16px;
                     font-family: 'Roboto', 'Segoe UI', sans-serif;
                 }}
-            """
-            )
+            """)
 
             # Nút Cộng
             btn_add = QPushButton("▲")
             btn_add.setFixedSize(40, 40)
             btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
-            btn_add.setStyleSheet(
-                f"""
+            btn_add.setStyleSheet(f"""
                 QPushButton {{
                     border: none;
                     border-left: 1px solid {AppColors.BORDER};
@@ -267,8 +251,7 @@ class StockView(QWidget):
                     background-color: #10b981;
                     color: white;
                 }}
-            """
-            )
+            """)
             btn_add.clicked.connect(lambda: on_change(min(max_val, value + 1)))
 
             box_layout.addWidget(btn_sub)
@@ -286,10 +269,10 @@ class StockView(QWidget):
             has_data = s.closing_qty > 0
             row_bg = "rgba(37, 99, 235, 0.05)" if has_data else None
 
+            self._set_cell(row, 0, str(row + 1), fg=AppColors.TEXT, bg=row_bg)
             self._set_cell(
-                row, 0, str(row + 1), fg=AppColors.TEXT, bg=row_bg
+                row, 1, p.name, center=False, bold=True, fg=AppColors.TEXT, bg=row_bg
             )
-            self._set_cell(row, 1, p.name, center=False, bold=True, fg=AppColors.TEXT, bg=row_bg)
 
             # Unit
             u_item = QTableWidgetItem(p.large_unit)
@@ -304,9 +287,7 @@ class StockView(QWidget):
             u_item.setFont(font)
             self.table.setItem(row, 2, u_item)
 
-            self._set_cell(
-                row, 3, str(p.conversion), fg=AppColors.TEXT, bg=row_bg
-            )
+            self._set_cell(row, 3, str(p.conversion), fg=AppColors.TEXT, bg=row_bg)
 
             # --- Cột SL Lớn ---
             max_large = s.handover_qty // p.conversion
@@ -407,8 +388,7 @@ class StockView(QWidget):
             del_btn = QPushButton("×")
             del_btn.setObjectName("iconBtn")
             del_btn.setFixedSize(24, 24)
-            del_btn.setStyleSheet(
-                f"""
+            del_btn.setStyleSheet(f"""
                 QPushButton {{
                     background: transparent;
                     color: {AppColors.TEXT_SECONDARY};
@@ -421,8 +401,7 @@ class StockView(QWidget):
                     color: white;
                     border-radius: 4px;
                 }}
-            """
-            )
+            """)
             del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             del_btn.clicked.connect(lambda _, log_id=log.id: self._delete_log(log_id))
 
@@ -458,7 +437,6 @@ class StockView(QWidget):
         self.refresh_history()
 
     def _clear_history(self):
-        from PyQt6.QtWidgets import QMessageBox
 
         reply = QMessageBox.question(
             self,

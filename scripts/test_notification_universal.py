@@ -8,24 +8,25 @@ Automatically detects if running against local dev or built executable.
 Usage:
     # Test local development
     python scripts/test_notification_universal.py
-    
+
     # Test built executable
     python scripts/test_notification_universal.py --build
-    
+
     # Send multiple notifications
     python scripts/test_notification_universal.py --batch
-    
+
     # Custom host/port
     python scripts/test_notification_universal.py --host 192.168.1.100 --port 5005
 """
 
-import requests
+import argparse
 import json
 import sys
 import time
-import argparse
 from datetime import datetime
 from pathlib import Path
+
+import requests
 
 
 class NotificationTester:
@@ -194,23 +195,29 @@ Examples:
     )
 
     parser.add_argument(
-        "--host", default="localhost", help="Notification server host (default: localhost)"
+        "--host",
+        default="localhost",
+        help="Notification server host (default: localhost)",
     )
     parser.add_argument(
-        "--port", type=int, default=5005, help="Notification server port (default: 5005)"
+        "--port",
+        type=int,
+        default=5005,
+        help="Notification server port (default: 5005)",
     )
     parser.add_argument(
         "--batch", action="store_true", help="Send multiple test notifications"
     )
     parser.add_argument(
-        "--count", type=int, default=5, help="Number of notifications in batch mode (default: 5)"
+        "--count",
+        type=int,
+        default=5,
+        help="Number of notifications in batch mode (default: 5)",
     )
     parser.add_argument(
         "--build", action="store_true", help="Indicate testing against built executable"
     )
-    parser.add_argument(
-        "--quiet", action="store_true", help="Minimal output"
-    )
+    parser.add_argument("--quiet", action="store_true", help="Minimal output")
 
     args = parser.parse_args()
 
@@ -228,9 +235,7 @@ Examples:
         print()
 
     # Create tester
-    tester = NotificationTester(
-        host=args.host, port=args.port, verbose=not args.quiet
-    )
+    tester = NotificationTester(host=args.host, port=args.port, verbose=not args.quiet)
 
     # Check connection first
     if not args.quiet:

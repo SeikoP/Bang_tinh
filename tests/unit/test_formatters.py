@@ -2,12 +2,13 @@
 Unit tests cho utils/formatters.py
 """
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.formatters import parse_to_small_units, format_to_display, format_currency
+from utils.formatters import (format_currency, format_to_display,
+                              parse_to_small_units)
 
 
 class TestFormatters(unittest.TestCase):

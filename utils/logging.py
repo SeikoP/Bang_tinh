@@ -3,7 +3,6 @@
 import logging
 from logging.handlers import RotatingFileHandler, TimedRotatingFileHandler
 from pathlib import Path
-from typing import Optional
 
 
 class LoggerFactory:

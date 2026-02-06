@@ -2,11 +2,11 @@
 Database connection management với context manager
 """
 
+import os
 import sqlite3
+import sys
 from contextlib import contextmanager
 from typing import Generator
-import sys
-import os
 
 # Thêm parent directory vào path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -45,8 +45,7 @@ def init_db():
         cursor = conn.cursor()
 
         # Bảng products
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -57,24 +56,20 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Bảng session_data (dữ liệu phiên hiện tại)
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS session_data (
                 product_id INTEGER PRIMARY KEY,
                 handover_qty INTEGER DEFAULT 0,
                 closing_qty INTEGER DEFAULT 0,
                 FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
             )
-        """
-        )
+        """)
 
         # Bảng session_history (lịch sử các phiên)
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS session_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_date DATE NOT NULL,
@@ -83,12 +78,10 @@ def init_db():
                 notes TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Bảng session_history_items (chi tiết từng phiên)
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS session_history_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 history_id INTEGER NOT NULL,
@@ -103,8 +96,7 @@ def init_db():
                 amount REAL DEFAULT 0,
                 FOREIGN KEY (history_id) REFERENCES session_history (id) ON DELETE CASCADE
             )
-        """
-        )
+        """)
 
         # Migration: thêm cột mới nếu chưa có
         try:
@@ -129,16 +121,14 @@ def init_db():
             pass
 
         # Bảng quick_prices cho Bảng giá nhanh (nhập tay)
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS quick_prices (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 price REAL NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         try:
             cursor.execute(
@@ -148,8 +138,7 @@ def init_db():
             pass
 
         # Bảng bank_history (lưu lịch sử thông báo ngân hàng)
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS bank_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 time_str TEXT,
@@ -159,18 +148,16 @@ def init_db():
                 sender_name TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
 
         # Migration: Add sender_name column if not exists
         cursor.execute("PRAGMA table_info(bank_history)")
         columns = [col[1] for col in cursor.fetchall()]
-        if 'sender_name' not in columns:
+        if "sender_name" not in columns:
             cursor.execute("ALTER TABLE bank_history ADD COLUMN sender_name TEXT")
 
         # Bảng stock_change_logs (lịch sử thay đổi số lượng kho)
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS stock_change_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 product_id INTEGER NOT NULL,
@@ -181,8 +168,7 @@ def init_db():
                 changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
             )
-        """
-        )
+        """)
 
         # Sample data removed for production build
         # Database will start empty

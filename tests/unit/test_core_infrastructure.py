@@ -1,24 +1,18 @@
 """Unit tests for core infrastructure components"""
 
-import pytest
+import logging
 import os
 import tempfile
 from pathlib import Path
-import logging
 from unittest.mock import Mock, patch
 
 from core.config import Config
 from core.container import Container
-from core.exceptions import (
-    AppException,
-    ValidationError,
-    DatabaseError,
-    ConfigurationError,
-    BusinessRuleError,
-    SecurityError,
-)
-from utils.logging import LoggerFactory
+from core.exceptions import (AppException, BusinessRuleError,
+                             ConfigurationError, DatabaseError, SecurityError,
+                             ValidationError)
 from utils.error_handler import ErrorHandler
+from utils.logging import LoggerFactory
 
 
 class TestConfig:

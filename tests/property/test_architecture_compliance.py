@@ -4,16 +4,14 @@ Property-based tests for architecture compliance.
 **Validates: Requirements 2.2, 2.5, 2.7, 2.8**
 """
 
-import pytest
 import ast
-import tempfile
-from pathlib import Path
-from hypothesis import given, settings, strategies as st, assume
-from hypothesis import HealthCheck
+
+import pytest
+from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import strategies as st
 
 from core.config import Config
 from core.container import Container
-
 
 # Strategies
 

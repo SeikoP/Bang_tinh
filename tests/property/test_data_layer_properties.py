@@ -4,13 +4,13 @@ Property-based tests for data layer.
 **Validates: Requirements 3.2**
 """
 
-import pytest
 import sqlite3
 import tempfile
 from pathlib import Path
-from hypothesis import given, settings, strategies as st
-from hypothesis import HealthCheck
 
+import pytest
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 # Strategies
 
@@ -143,25 +143,21 @@ def test_property_foreign_key_cascade_delete(parent_id, child_count):
         cursor = conn.cursor()
 
         # Create tables with FK constraint
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE parent (
                 id INTEGER PRIMARY KEY,
                 name TEXT
             )
-        """
-        )
+        """)
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE child (
                 id INTEGER PRIMARY KEY,
                 parent_id INTEGER,
                 data TEXT,
                 FOREIGN KEY (parent_id) REFERENCES parent(id) ON DELETE CASCADE
             )
-        """
-        )
+        """)
 
         # Insert parent record
         cursor.execute(
@@ -220,25 +216,21 @@ def test_property_foreign_key_constraint_enforcement(
         cursor = conn.cursor()
 
         # Create tables with FK constraint
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE parent (
                 id INTEGER PRIMARY KEY,
                 name TEXT
             )
-        """
-        )
+        """)
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE child (
                 id INTEGER PRIMARY KEY,
                 parent_id INTEGER NOT NULL,
                 data TEXT,
                 FOREIGN KEY (parent_id) REFERENCES parent(id)
             )
-        """
-        )
+        """)
 
         # Insert valid parent
         cursor.execute(
@@ -300,36 +292,30 @@ def test_property_relationship_documentation(table_name, has_fk):
         cursor = conn.cursor()
 
         # Create parent table
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE parent (
                 id INTEGER PRIMARY KEY,
                 name TEXT
             )
-        """
-        )
+        """)
 
         # Create table with or without FK
         if has_fk:
-            cursor.execute(
-                f"""
+            cursor.execute(f"""
                 CREATE TABLE {table_name} (
                     id INTEGER PRIMARY KEY,
                     parent_id INTEGER,
                     data TEXT,
                     FOREIGN KEY (parent_id) REFERENCES parent(id)
                 )
-            """
-            )
+            """)
         else:
-            cursor.execute(
-                f"""
+            cursor.execute(f"""
                 CREATE TABLE {table_name} (
                     id INTEGER PRIMARY KEY,
                     data TEXT
                 )
-            """
-            )
+            """)
 
         # Query foreign keys
         cursor.execute(f"PRAGMA foreign_key_list({table_name})")

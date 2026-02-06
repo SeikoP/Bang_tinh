@@ -1,8 +1,8 @@
 """Input validation framework for security"""
 
 import re
-from typing import Any, List, Optional
 from html import escape
+from typing import Any, List, Optional
 
 
 class ValidationError(Exception):

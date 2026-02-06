@@ -2,10 +2,9 @@
 Unit tests cho database repositories
 """
 
-import unittest
-import sys
 import os
-import sqlite3
+import sys
+import unittest
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,7 +14,7 @@ import config
 
 config.DB_PATH = Path(__file__).parent / "test_storage.db"
 
-from database.connection import init_db, get_connection
+from database.connection import init_db
 from database.repositories import ProductRepository, SessionRepository
 
 

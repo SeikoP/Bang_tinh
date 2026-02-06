@@ -1,7 +1,8 @@
-import re
 import os
+import re
+from typing import Any, Dict
+
 from bs4 import BeautifulSoup
-from typing import Dict, Any, Optional
 
 
 class ReportService:

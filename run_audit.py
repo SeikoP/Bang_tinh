@@ -3,10 +3,11 @@ Script to run comprehensive code audit on the project.
 """
 
 from pathlib import Path
+
 from audit.architecture_analyzer import ArchitectureAnalyzer
 from audit.quality_analyzer import QualityAnalyzer
-from audit.security_analyzer import SecurityAnalyzer
 from audit.reporters import AuditReport
+from audit.security_analyzer import SecurityAnalyzer
 
 
 def main():
@@ -73,7 +74,7 @@ def main():
     report.save_json(str(json_path))
     report.save_html(str(html_path))
 
-    print(f"Reports saved:")
+    print("Reports saved:")
     print(f"  - JSON: {json_path}")
     print(f"  - HTML: {html_path}")
     print("\nAudit complete!")

@@ -1,16 +1,8 @@
-from PyQt6.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QFormLayout,
-    QLineEdit,
-    QComboBox,
-    QSpinBox,
-    QDoubleSpinBox,
-    QPushButton,
-    QMessageBox,
-)
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
+                             QHBoxLayout, QLineEdit, QMessageBox, QPushButton,
+                             QSpinBox, QVBoxLayout)
+
 from config import DEFAULT_UNITS
 
 

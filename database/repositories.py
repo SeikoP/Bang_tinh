@@ -3,27 +3,21 @@ Repositories - CRUD operations cho database
 Implements core interfaces with proper error handling and transaction management
 """
 
-from typing import List, Optional
-from datetime import date, datetime
-from decimal import Decimal
-import sys
 import os
+import sys
+from datetime import date
+from typing import List, Optional
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from .connection import get_connection
-from core.models import (
-    Product,
-    SessionData,
-    SessionHistory,
-    SessionHistoryItem,
-    QuickPrice,
-    BankNotification,
-    StockChangeLog,
-)
-from core.interfaces import IProductRepository, ISessionRepository, IHistoryRepository
 from core.exceptions import DatabaseError, ValidationError
+from core.interfaces import (IHistoryRepository, IProductRepository,
+                             ISessionRepository)
+from core.models import (BankNotification, Product, QuickPrice, SessionData,
+                         SessionHistory, SessionHistoryItem, StockChangeLog)
+
+from .connection import get_connection
 
 
 class ProductRepository(IProductRepository):
@@ -181,8 +175,7 @@ class SessionRepository(ISessionRepository):
         try:
             with get_connection() as conn:
                 cursor = conn.cursor()
-                cursor.execute(
-                    """
+                cursor.execute("""
                     SELECT p.id, p.name, p.large_unit, p.conversion, p.unit_price, p.is_active, p.is_favorite,
                            COALESCE(s.handover_qty, 0) as handover_qty, 
                            COALESCE(s.closing_qty, 0) as closing_qty
@@ -190,8 +183,7 @@ class SessionRepository(ISessionRepository):
                     LEFT JOIN session_data s ON p.id = s.product_id
                     WHERE p.is_active = 1
                     ORDER BY p.name
-                """
-                )
+                """)
                 return [SessionData.from_row(row) for row in cursor.fetchall()]
         except Exception as e:
             raise DatabaseError(f"Failed to get session data: {str(e)}", "get_all")
@@ -424,7 +416,9 @@ class BankRepository:
     """Repository cho lịch sử thông báo ngân hàng"""
 
     @staticmethod
-    def add(time_str: str, source: str, amount: str, content: str, sender_name: str = "") -> int:
+    def add(
+        time_str: str, source: str, amount: str, content: str, sender_name: str = ""
+    ) -> int:
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(

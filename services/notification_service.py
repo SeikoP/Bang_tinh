@@ -4,13 +4,12 @@ Notification Service - HTTP server for receiving bank notifications with securit
 
 import json
 import logging
-import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, parse_qs
-from typing import Callable, Optional, Dict
-from threading import Thread, Lock
 from collections import defaultdict
 from datetime import datetime, timedelta
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from threading import Lock, Thread
+from typing import Callable, Dict, Optional
+from urllib.parse import parse_qs, urlparse
 
 from core.exceptions import AppException, ValidationError
 
@@ -108,7 +107,7 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     if "application/json" in content_type:
                         try:
                             data = json.loads(post_data)
-                            
+
                             # Check if it's structured notification (with time, source, amount, content)
                             if isinstance(data, dict) and "content" in data:
                                 # Pass the whole JSON object as string for parsing
@@ -142,19 +141,24 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b'{"status":"success"}')
 
                 # Process message
-                if hasattr(self.server, "message_handler") and self.server.message_handler:
+                if (
+                    hasattr(self.server, "message_handler")
+                    and self.server.message_handler
+                ):
                     try:
                         self.server.message_handler(str(msg))
                     except Exception as handler_error:
                         if hasattr(self.server, "logger"):
-                            self.server.logger.error(f"Error in message handler: {handler_error}")
+                            self.server.logger.error(
+                                f"Error in message handler: {handler_error}"
+                            )
                 else:
                     if hasattr(self.server, "logger"):
                         self.server.logger.warning("No message handler registered!")
 
                 if hasattr(self.server, "logger"):
                     # Safe logging with ASCII encoding to avoid Unicode errors
-                    safe_msg = msg[:50].encode('ascii', 'replace').decode('ascii')
+                    safe_msg = msg[:50].encode("ascii", "replace").decode("ascii")
                     self.server.logger.info(f"Notification received: {safe_msg}...")
             else:
                 self.send_error(400, "Missing content parameter")

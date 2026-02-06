@@ -2,11 +2,11 @@
 Audit report generation and formatting.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Any
-from enum import Enum
-from datetime import datetime
 import json
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List
 
 
 class RiskLevel(Enum):

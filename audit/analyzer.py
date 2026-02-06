@@ -2,9 +2,9 @@
 Base analyzer class for code analysis.
 """
 
-from pathlib import Path
-from typing import List, Dict, Any
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Any, Dict, List
 
 
 class CodeAnalyzer(ABC):

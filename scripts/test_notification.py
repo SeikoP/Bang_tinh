@@ -8,10 +8,11 @@ Usage:
     python scripts/test_notification.py
 """
 
-import requests
 import json
 import sys
 from datetime import datetime
+
+import requests
 
 
 def send_test_notification(port=5005, host="localhost"):

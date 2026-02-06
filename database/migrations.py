@@ -3,12 +3,11 @@ Database migration system for schema changes.
 Implements Migration base class and MigrationManager for applying migrations.
 """
 
-from abc import ABC, abstractmethod
-from typing import List
-import sqlite3
 import logging
+import sqlite3
+from abc import ABC, abstractmethod
 from pathlib import Path
-from datetime import datetime
+from typing import List
 
 
 class Migration(ABC):
@@ -53,44 +52,34 @@ class Migration001AddIndexes(Migration):
         cursor = conn.cursor()
 
         # Index on products.name for search operations
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_products_name 
             ON products(name)
-        """
-        )
+        """)
 
         # Index on products.is_active for filtering
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_products_active 
             ON products(is_active)
-        """
-        )
+        """)
 
         # Index on session_history.session_date for date range queries
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_session_history_date 
             ON session_history(session_date)
-        """
-        )
+        """)
 
         # Index on bank_history.created_at for sorting
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_bank_history_created 
             ON bank_history(created_at)
-        """
-        )
+        """)
 
         # Index on stock_change_logs.changed_at for sorting
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_stock_change_logs_changed 
             ON stock_change_logs(changed_at)
-        """
-        )
+        """)
 
         conn.commit()
 
@@ -219,9 +208,13 @@ class Migration004AddSenderName(Migration):
         cursor = conn.cursor()
 
         try:
-            cursor.execute("ALTER TABLE bank_history ADD COLUMN sender_name TEXT DEFAULT ''")
+            cursor.execute(
+                "ALTER TABLE bank_history ADD COLUMN sender_name TEXT DEFAULT ''"
+            )
             # Update existing rows to have empty string
-            cursor.execute("UPDATE bank_history SET sender_name = '' WHERE sender_name IS NULL")
+            cursor.execute(
+                "UPDATE bank_history SET sender_name = '' WHERE sender_name IS NULL"
+            )
         except sqlite3.OperationalError:
             pass  # Column already exists
 
@@ -256,15 +249,13 @@ class MigrationManager:
     def _ensure_schema_version_table(self, conn: sqlite3.Connection) -> None:
         """Ensure schema_version table exists"""
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS schema_version (
                 version INTEGER PRIMARY KEY,
                 description TEXT,
                 applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """
-        )
+        """)
         conn.commit()
 
     def get_current_version(self) -> int:

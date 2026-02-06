@@ -4,12 +4,12 @@ import base64
 import json
 import logging
 from datetime import datetime
-from typing import Optional, Tuple, Dict, Any
+from typing import Any, Dict, Optional, Tuple
 
 try:
+    from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding, rsa
-    from cryptography.exceptions import InvalidSignature
 
     CRYPTO_AVAILABLE = True
 except ImportError:

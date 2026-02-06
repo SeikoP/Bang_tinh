@@ -3,18 +3,17 @@
 import hashlib
 import json
 import logging
-import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Optional, Dict, Any, Tuple
-from urllib.request import urlopen, Request
-from urllib.error import URLError, HTTPError
+from typing import Any, Dict, Optional
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 try:
+    from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import padding
-    from cryptography.exceptions import InvalidSignature
 
     CRYPTO_AVAILABLE = True
 except ImportError:
@@ -243,7 +242,7 @@ tmIYsqONpzKJ7WTktrqnOfKf1/+WK8DXv3xKCQIDAQAB
             self.logger.info("Update verified successfully")
             return update_file
 
-        except Exception as e:
+        except Exception:
             # Clean up on failure
             if update_file.exists():
                 update_file.unlink()

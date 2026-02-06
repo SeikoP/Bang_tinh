@@ -4,19 +4,17 @@ Property-based tests for audit module.
 **Validates: Requirements 1.1, 1.2, 1.3, 1.4, 1.6**
 """
 
-import pytest
 import tempfile
-import shutil
 from pathlib import Path
-from hypothesis import given, settings, strategies as st, assume
-from hypothesis import HealthCheck
 
-from audit.analyzer import CodeAnalyzer
+import pytest
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
+
 from audit.architecture_analyzer import ArchitectureAnalyzer
 from audit.quality_analyzer import QualityAnalyzer
-from audit.security_analyzer import SecurityAnalyzer
 from audit.reporters import RiskLevel
-
+from audit.security_analyzer import SecurityAnalyzer
 
 # Strategies for generating test code
 

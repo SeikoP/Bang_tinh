@@ -3,18 +3,17 @@ Shared test fixtures and utilities for pytest.
 Provides database fixtures, sample data, and Hypothesis strategies.
 """
 
-import pytest
 import sqlite3
 import tempfile
-from pathlib import Path
 from decimal import Decimal
-from datetime import datetime, date
+from pathlib import Path
 from typing import Generator
+
+import pytest
 from hypothesis import strategies as st
 
 # Import models
 from core.models import Product, SessionData
-from database.connection import init_db
 
 
 @pytest.fixture
@@ -38,8 +37,7 @@ def test_db() -> Generator[Path, None, None]:
     cursor = conn.cursor()
 
     # Create tables
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -51,22 +49,18 @@ def test_db() -> Generator[Path, None, None]:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """
-    )
+    """)
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS session_data (
             product_id INTEGER PRIMARY KEY,
             handover_qty INTEGER DEFAULT 0,
             closing_qty INTEGER DEFAULT 0,
             FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
         )
-    """
-    )
+    """)
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS session_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_date DATE NOT NULL,
@@ -75,11 +69,9 @@ def test_db() -> Generator[Path, None, None]:
             notes TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """
-    )
+    """)
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS session_history_items (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             history_id INTEGER NOT NULL,
@@ -94,11 +86,9 @@ def test_db() -> Generator[Path, None, None]:
             amount REAL DEFAULT 0,
             FOREIGN KEY (history_id) REFERENCES session_history (id) ON DELETE CASCADE
         )
-    """
-    )
+    """)
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS bank_history (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             time_str TEXT,
@@ -107,11 +97,9 @@ def test_db() -> Generator[Path, None, None]:
             content TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """
-    )
+    """)
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS stock_change_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER NOT NULL,
@@ -122,8 +110,7 @@ def test_db() -> Generator[Path, None, None]:
             changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
         )
-    """
-    )
+    """)
 
     conn.commit()
     conn.close()

@@ -8,12 +8,12 @@ Handles the application lifecycle:
 - Cleanup
 """
 
-import sys
-import signal
 import logging
-from typing import Optional, Callable
+import signal
+import sys
+from typing import Callable, Optional
+
 from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.QtCore import QTimer
 
 from core.config import Config
 from core.container import Container
@@ -112,7 +112,7 @@ class ApplicationLifecycle:
 
             return exit_code
 
-        except Exception as e:
+        except Exception:
             self.logger.exception("Error during application execution")
             self.shutdown()
             return 1
@@ -186,7 +186,7 @@ class ApplicationLifecycle:
             self.logger.info("Shutdown complete")
             logging.shutdown()
 
-        except Exception as e:
+        except Exception:
             self.logger.exception("Error during shutdown")
 
     def _stop_notification_server(self):
