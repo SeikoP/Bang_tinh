@@ -110,8 +110,21 @@ class ProductView(QWidget):
 
         toolbar.addStretch()
 
+        # Import/Export buttons
+        import_btn = QPushButton("📥 Nhập CSV")
+        import_btn.setObjectName("secondary")
+        import_btn.setFixedWidth(140)
+        import_btn.clicked.connect(self._import_prices)
+        toolbar.addWidget(import_btn)
+
+        export_btn = QPushButton("📤 Xuất CSV")
+        export_btn.setObjectName("secondary")
+        export_btn.setFixedWidth(140)
+        export_btn.clicked.connect(self._export_prices)
+        toolbar.addWidget(export_btn)
+
         add_btn = QPushButton("➕ Thêm giá nhanh")
-        add_btn.setObjectName("secondary")
+        add_btn.setObjectName("primary")
         add_btn.setFixedWidth(180)
         add_btn.clicked.connect(self._add_quick_price)
         toolbar.addWidget(add_btn)
@@ -335,3 +348,120 @@ class ProductView(QWidget):
         if fg:
             item.setForeground(QColor(fg))
         self.table.setItem(row, col, item)
+
+    def _import_prices(self):
+        """Import quick prices from CSV"""
+        try:
+            from PyQt6.QtWidgets import QFileDialog, QMessageBox
+            import csv
+            
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Chọn file CSV để nhập",
+                "",
+                "CSV Files (*.csv);;All Files (*.*)"
+            )
+            if not path:
+                return
+
+            # Read CSV file
+            with open(path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                
+                # Validate columns
+                required_cols = ['Tên dịch vụ', 'Đơn giá']
+                if not all(col in reader.fieldnames for col in required_cols):
+                    QMessageBox.warning(
+                        self,
+                        "Lỗi",
+                        f"File CSV phải có các cột: {', '.join(required_cols)}"
+                    )
+                    return
+                
+                # Import prices
+                imported = 0
+                for row in reader:
+                    try:
+                        name = str(row['Tên dịch vụ']).strip()
+                        price = float(row['Đơn giá'])
+                        
+                        if name and price >= 0:
+                            if self.container:
+                                self.quick_price_repo.add(name, price)
+                            else:
+                                QuickPriceRepository.add(name, price)
+                            imported += 1
+                    except Exception as e:
+                        if self.logger:
+                            self.logger.warning(f"Skip row: {e}")
+                        continue
+            
+            self.refresh_list()
+            if self.on_refresh_calc:
+                self.on_refresh_calc()
+            
+            QMessageBox.information(
+                self,
+                "Thành công",
+                f"Đã nhập {imported} giá nhanh!"
+            )
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error importing prices: {str(e)}", exc_info=True)
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.critical(
+                self,
+                "Lỗi",
+                f"Không thể nhập file: {str(e)}"
+            )
+
+    def _export_prices(self):
+        """Export quick prices to CSV"""
+        try:
+            from PyQt6.QtWidgets import QFileDialog, QMessageBox
+            import csv
+            
+            path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Lưu file CSV",
+                "bang_gia_nhanh.csv",
+                "CSV Files (*.csv)"
+            )
+            if not path:
+                return
+
+            # Get all prices
+            if self.container:
+                prices = self.quick_price_repo.get_all()
+            else:
+                prices = QuickPriceRepository.get_all()
+            
+            # Write CSV file
+            with open(path, 'w', encoding='utf-8-sig', newline='') as f:
+                fieldnames = ['STT', 'Tên dịch vụ', 'Đơn giá']
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                
+                writer.writeheader()
+                for idx, p in enumerate(prices, 1):
+                    writer.writerow({
+                        'STT': idx,
+                        'Tên dịch vụ': p.name,
+                        'Đơn giá': p.price
+                    })
+            
+            QMessageBox.information(
+                self,
+                "Thành công",
+                f"Đã xuất {len(prices)} giá nhanh!"
+            )
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error exporting prices: {str(e)}", exc_info=True)
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.critical(
+                self,
+                "Lỗi",
+                f"Không thể xuất file: {str(e)}"
+            )
