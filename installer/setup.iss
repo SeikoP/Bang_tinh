@@ -1,11 +1,11 @@
 ; Inno Setup Script for Warehouse Management Application
 ; This script creates a professional Windows installer with proper configuration
 
-#define MyAppName "Warehouse Management"
+#define MyAppName "Bảng Tính"
 #define MyAppVersion "2.0.0"
 #define MyAppPublisher "Bangla Team"
-#define MyAppURL "https://github.com/bangla-team/warehouse-management"
-#define MyAppExeName "WarehouseManagement.exe"
+#define MyAppURL "https://github.com/SeikoP/Bang_tinh"
+#define MyAppExeName "Warehouse Management.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -18,91 +18,59 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={autopf}\{#MyAppName}
+DefaultDirName={autopf}\BangTinh
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=..\LICENSE.txt
-InfoBeforeFile=..\installer\info_before.txt
-OutputDir=..\dist
-OutputBaseFilename=WarehouseManagement-Setup-{#MyAppVersion}
-SetupIconFile=..\assets\icon.png
-Compression=lzma2
+InfoBeforeFile=info_before.txt
+OutputDir=..\Output
+OutputBaseFilename=BangTinhSetup
+Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-ArchitecturesInstallIn64BitMode=x64
-PrivilegesRequired=admin
+ArchitecturesInstallIn64BitMode=x64compatible
+PrivilegesRequired=lowest
 UninstallDisplayIcon={app}\{#MyAppExeName}
+DisableProgramGroupPage=yes
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "vietnamese"; MessagesFile: "compiler:Languages\Vietnamese.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
-Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-; Main executable
+; Main executable from PyInstaller output
 Source: "..\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Assets directory
 Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Configuration template
-Source: "..\.env.example"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist confirmoverwrite
+Source: "..\.env.example"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist
 
 ; Create necessary directories
-Source: "..\exports\.gitkeep"; DestDir: "{app}\exports"; Flags: ignoreversion
-Source: "..\logs\.gitkeep"; DestDir: "{app}\logs"; Flags: ignoreversion
-
-; Documentation (if exists)
-Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
-Source: "..\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\exports\.gitkeep"; DestDir: "{app}\exports"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\logs\.gitkeep"; DestDir: "{app}\logs"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]
 ; Start Menu shortcuts
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+Name: "{group}\Gỡ cài đặt {#MyAppName}"; Filename: "{uninstallexe}"
 
-; Desktop shortcut (optional)
+; Desktop shortcut
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-
-; Quick Launch shortcut (optional, for older Windows)
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Run]
 ; Option to launch application after installation
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "Khởi chạy {#MyAppName}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
-; Clean up user data on uninstall (optional - commented out for safety)
-; Type: filesandordirs; Name: "{app}\logs"
-; Type: filesandordirs; Name: "{app}\exports"
-; Type: files; Name: "{app}\storage.db"
-; Type: files; Name: "{app}\.env"
+; Clean up logs on uninstall
+Type: filesandordirs; Name: "{app}\logs"
 
 [Code]
-// Custom Pascal Script code for advanced installer behavior
-
-function InitializeSetup(): Boolean;
-var
-  ResultCode: Integer;
-begin
-  Result := True;
-  
-  // Check if .NET Framework or other prerequisites are needed
-  // Add custom checks here if required
-end;
-
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep = ssPostInstall then
-  begin
-    // Perform post-installation tasks
-    // For example: create initial database, set permissions, etc.
-  end;
-end;
-
 function InitializeUninstall(): Boolean;
 var
   Response: Integer;
@@ -110,21 +78,14 @@ begin
   Result := True;
   
   // Ask user if they want to keep their data
-  Response := MsgBox('Do you want to keep your database and configuration files?', 
+  Response := MsgBox('Bạn có muốn giữ lại dữ liệu và cấu hình không?', 
                      mbConfirmation, MB_YESNO);
   
-  if Response = IDYES then
-  begin
-    // Keep user data - don't delete database and config
-    Result := True;
-  end
-  else
+  if Response = IDNO then
   begin
     // Delete all user data
     DelTree(ExpandConstant('{app}\storage.db'), False, True, False);
     DelTree(ExpandConstant('{app}\.env'), False, True, False);
-    DelTree(ExpandConstant('{app}\logs'), True, True, True);
     DelTree(ExpandConstant('{app}\exports'), True, True, True);
-    Result := True;
   end;
 end;
