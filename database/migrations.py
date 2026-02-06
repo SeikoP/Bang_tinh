@@ -226,6 +226,53 @@ class Migration004AddSenderName(Migration):
         pass
 
 
+class Migration005AddDisplayOrder(Migration):
+    """Add display_order column to products and quick_prices"""
+
+    @property
+    def version(self) -> int:
+        return 5
+
+    @property
+    def description(self) -> str:
+        return "Add display_order column for custom sorting"
+
+    def up(self, conn: sqlite3.Connection) -> None:
+        """Add display_order column"""
+        cursor = conn.cursor()
+
+        # Add display_order to products
+        try:
+            cursor.execute(
+                "ALTER TABLE products ADD COLUMN display_order INTEGER DEFAULT 0"
+            )
+            # Set initial order based on current ID
+            cursor.execute(
+                "UPDATE products SET display_order = id WHERE display_order = 0"
+            )
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        # Add display_order to quick_prices
+        try:
+            cursor.execute(
+                "ALTER TABLE quick_prices ADD COLUMN display_order INTEGER DEFAULT 0"
+            )
+            # Set initial order based on current ID
+            cursor.execute(
+                "UPDATE quick_prices SET display_order = id WHERE display_order = 0"
+            )
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        conn.commit()
+
+    def down(self, conn: sqlite3.Connection) -> None:
+        """Remove display_order column"""
+        # SQLite doesn't support DROP COLUMN easily
+        pass
+
+
 class MigrationManager:
     """Manages database migrations"""
 
@@ -239,6 +286,7 @@ class MigrationManager:
                 Migration002AddForeignKeys(),
                 Migration003AddAuditColumns(),
                 Migration004AddSenderName(),
+                Migration005AddDisplayOrder(),
             ]
         else:
             self.migrations = migrations

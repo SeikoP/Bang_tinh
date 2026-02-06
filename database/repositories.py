@@ -30,10 +30,10 @@ class ProductRepository(IProductRepository):
             with get_connection() as conn:
                 cursor = conn.cursor()
                 if include_inactive:
-                    cursor.execute("SELECT * FROM products ORDER BY name")
+                    cursor.execute("SELECT * FROM products ORDER BY display_order, name")
                 else:
                     cursor.execute(
-                        "SELECT * FROM products WHERE is_active = 1 ORDER BY name"
+                        "SELECT * FROM products WHERE is_active = 1 ORDER BY display_order, name"
                     )
                 return [Product.from_row(row) for row in cursor.fetchall()]
         except Exception as e:
@@ -182,7 +182,7 @@ class SessionRepository(ISessionRepository):
                     FROM products p
                     LEFT JOIN session_data s ON p.id = s.product_id
                     WHERE p.is_active = 1
-                    ORDER BY p.name
+                    ORDER BY p.display_order, p.name
                 """)
                 return [SessionData.from_row(row) for row in cursor.fetchall()]
         except Exception as e:

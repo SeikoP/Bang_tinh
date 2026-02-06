@@ -18,6 +18,7 @@ class Product:
     unit_price: float
     is_active: bool = True
     is_favorite: bool = False
+    display_order: int = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -49,6 +50,7 @@ class Product:
             is_favorite=(
                 bool(row["is_favorite"]) if "is_favorite" in row.keys() else False
             ),
+            display_order=row["display_order"] if "display_order" in row.keys() else 0,
             created_at=row["created_at"] if "created_at" in row.keys() else None,
             updated_at=row["updated_at"] if "updated_at" in row.keys() else None,
         )

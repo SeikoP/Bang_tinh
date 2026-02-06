@@ -29,6 +29,7 @@ class CalculatorService:
             - "3.4" với conversion=24 -> 3*24 + 4 = 76
             - "3t4" với conversion=24 -> 76
             - "3" với conversion=24 -> 72 (tự hiểu là 3 đơn vị lớn)
+            - "4.21" với conversion=20 -> 5*20 + 1 = 101 (tự động normalize)
 
         Args:
             value_str: Input string to parse
@@ -62,12 +63,12 @@ class CalculatorService:
                     else 0
                 )
 
-                # Validate small units don't exceed conversion
+                # Auto-normalize if small units exceed conversion
+                # Example: 4.21 with conversion=20 -> 5.1 (5*20 + 1 = 101)
                 if small >= conversion:
-                    raise ValidationError(
-                        f"Small units ({small}) cannot exceed conversion factor ({conversion})",
-                        "value_str",
-                    )
+                    extra_large = small // conversion
+                    small = small % conversion
+                    large += extra_large
 
                 return (large * conversion) + small
             else:

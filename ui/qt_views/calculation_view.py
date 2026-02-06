@@ -7,9 +7,24 @@ from PyQt6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QFrame,
                              QVBoxLayout, QWidget)
 
 from database import HistoryRepository, ProductRepository, SessionRepository
+from database.connection import get_connection
 from services import CalculatorService, ReportService
 from ui.qt_theme import AppColors
 from ui.qt_views.product_dialog import ProductDialog
+
+
+class DragDropTableWidget(QTableWidget):
+    """Custom QTableWidget with drag & drop support"""
+    
+    def __init__(self, parent=None, on_drop_callback=None):
+        super().__init__(parent)
+        self.on_drop_callback = on_drop_callback
+        
+    def dropEvent(self, event):
+        """Handle drop event to save new order"""
+        super().dropEvent(event)
+        if self.on_drop_callback:
+            self.on_drop_callback()
 
 
 class SaveSessionDialog(QDialog):
@@ -250,6 +265,19 @@ class CalculationView(QWidget):
 
         toolbar.addStretch()
 
+        # Import/Export buttons
+        import_btn = QPushButton("📥 Nhập CSV")
+        import_btn.setObjectName("secondary")
+        import_btn.setFixedWidth(140)
+        import_btn.clicked.connect(self._import_products)
+        toolbar.addWidget(import_btn)
+
+        export_btn = QPushButton("📤 Xuất CSV")
+        export_btn.setObjectName("secondary")
+        export_btn.setFixedWidth(140)
+        export_btn.clicked.connect(self._export_products)
+        toolbar.addWidget(export_btn)
+
         add_btn = QPushButton("➕ Thêm sản phẩm")
         add_btn.setObjectName("primary")
         add_btn.setFixedWidth(180)
@@ -258,7 +286,7 @@ class CalculationView(QWidget):
 
         layout.addLayout(toolbar)
 
-        self.prod_table = QTableWidget()
+        self.prod_table = DragDropTableWidget(on_drop_callback=self._save_product_order)
         self._setup_prod_table()
         layout.addWidget(self.prod_table, 1)
 
@@ -320,6 +348,12 @@ class CalculationView(QWidget):
         self.prod_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.prod_table.verticalHeader().setVisible(False)
         self.prod_table.verticalHeader().setDefaultSectionSize(64)
+        
+        # Enable drag & drop
+        self.prod_table.setDragEnabled(True)
+        self.prod_table.setAcceptDrops(True)
+        self.prod_table.setDragDropMode(QTableWidget.DragDropMode.InternalMove)
+        self.prod_table.setDefaultDropAction(Qt.DropAction.MoveAction)
 
     def refresh_table(self):
         # Prevent duplicate refresh operations
@@ -921,3 +955,156 @@ class CalculationView(QWidget):
             if save_btn:
                 save_btn.setEnabled(True)
                 save_btn.setText("💾 Lưu toàn bộ phiên")
+
+    def _import_products(self):
+        """Import products from CSV"""
+        try:
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Chọn file CSV để nhập",
+                "",
+                "CSV Files (*.csv);;All Files (*.*)"
+            )
+            if not path:
+                return
+
+            import csv
+            
+            # Read CSV file
+            with open(path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                
+                # Validate columns
+                required_cols = ['Tên sản phẩm', 'Đơn vị', 'Quy đổi', 'Đơn giá']
+                if not all(col in reader.fieldnames for col in required_cols):
+                    QMessageBox.warning(
+                        self,
+                        "Lỗi",
+                        f"File CSV phải có các cột: {', '.join(required_cols)}"
+                    )
+                    return
+                
+                # Import products
+                imported = 0
+                for row in reader:
+                    try:
+                        name = str(row['Tên sản phẩm']).strip()
+                        large_unit = str(row['Đơn vị']).strip()
+                        conversion = int(row['Quy đổi'])
+                        unit_price = float(row['Đơn giá'])
+                        
+                        if name and large_unit and conversion > 0 and unit_price >= 0:
+                            if self.container:
+                                self.product_repo.add(name, large_unit, conversion, unit_price)
+                            else:
+                                ProductRepository.add(name, large_unit, conversion, unit_price)
+                            imported += 1
+                    except Exception as e:
+                        if self.logger:
+                            self.logger.warning(f"Skip row: {e}")
+                        continue
+            
+            self.refresh_product_list()
+            self.refresh_table()
+            if self.on_refresh_stock:
+                self.on_refresh_stock()
+            
+            QMessageBox.information(
+                self,
+                "Thành công",
+                f"Đã nhập {imported} sản phẩm!"
+            )
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error importing products: {str(e)}", exc_info=True)
+            QMessageBox.critical(
+                self,
+                "Lỗi",
+                f"Không thể nhập file: {str(e)}"
+            )
+
+    def _export_products(self):
+        """Export products to CSV"""
+        try:
+            path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Lưu file CSV",
+                "danh_sach_san_pham.csv",
+                "CSV Files (*.csv)"
+            )
+            if not path:
+                return
+
+            import csv
+            
+            # Get all products
+            if self.container:
+                products = self.product_repo.get_all()
+            else:
+                products = ProductRepository.get_all()
+            
+            # Write CSV file
+            with open(path, 'w', encoding='utf-8-sig', newline='') as f:
+                fieldnames = ['STT', 'Tên sản phẩm', 'Đơn vị', 'Quy đổi', 'Đơn giá']
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                
+                writer.writeheader()
+                for idx, p in enumerate(products, 1):
+                    writer.writerow({
+                        'STT': idx,
+                        'Tên sản phẩm': p.name,
+                        'Đơn vị': p.large_unit,
+                        'Quy đổi': p.conversion,
+                        'Đơn giá': p.unit_price
+                    })
+            
+            QMessageBox.information(
+                self,
+                "Thành công",
+                f"Đã xuất {len(products)} sản phẩm!"
+            )
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error exporting products: {str(e)}", exc_info=True)
+            QMessageBox.critical(
+                self,
+                "Lỗi",
+                f"Không thể xuất file: {str(e)}"
+            )
+
+    def _save_product_order(self):
+        """Save product order after drag & drop"""
+        try:
+            # Get all products
+            if self.container:
+                products = self.product_repo.get_all()
+            else:
+                products = ProductRepository.get_all()
+            
+            # Update display_order in database based on current table order
+            with get_connection() as conn:
+                cursor = conn.cursor()
+                for idx in range(self.prod_table.rowCount()):
+                    name_item = self.prod_table.item(idx, 1)
+                    if name_item:
+                        product_name = name_item.text()
+                        # Find product by name
+                        product = next((p for p in products if p.name == product_name), None)
+                        if product:
+                            cursor.execute(
+                                "UPDATE products SET display_order = ? WHERE id = ?",
+                                (idx, product.id)
+                            )
+                conn.commit()
+            
+            # Refresh all tables to reflect new order
+            self.refresh_product_list()  # Refresh product list table
+            self.refresh_table()  # Refresh calculation table
+            if self.on_refresh_stock:
+                self.on_refresh_stock()  # Refresh stock view
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error saving product order: {str(e)}", exc_info=True)

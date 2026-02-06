@@ -184,8 +184,6 @@ class StockView(QWidget):
             box_layout.setContentsMargins(0, 0, 0, 0)
             box_layout.setSpacing(0)
 
-            # Nút Trừ - Chiều cao bằng box
-            btn_sub = QPushButton("−")
             # Nút Trừ
             btn_sub = QPushButton("▼")
             btn_sub.setFixedSize(40, 40)
@@ -210,7 +208,7 @@ class StockView(QWidget):
                     color: white;
                 }}
             """)
-            btn_sub.clicked.connect(lambda: on_change(max(0, value - 1)))
+            btn_sub.clicked.connect(lambda: on_change(value - 1))
 
             # Ô hiển thị số - Chỉ đọc
             display = QLineEdit(str(value))
@@ -252,7 +250,7 @@ class StockView(QWidget):
                     color: white;
                 }}
             """)
-            btn_add.clicked.connect(lambda: on_change(min(max_val, value + 1)))
+            btn_add.clicked.connect(lambda: on_change(value + 1))
 
             box_layout.addWidget(btn_sub)
             box_layout.addWidget(display)
@@ -327,7 +325,14 @@ class StockView(QWidget):
         if not sess:
             return
         old_qty = sess.closing_qty
-        new_c = min(new_large * conv + old_small, sess.handover_qty)
+        
+        # Đảm bảo new_large không âm
+        new_large = max(0, new_large)
+            
+        new_c = new_large * conv + old_small
+        
+        # Đảm bảo không âm và không vượt quá handover_qty
+        new_c = max(0, min(new_c, sess.handover_qty))
         SessionRepository.update_qty(pid, sess.handover_qty, new_c)
 
         # Log thay đổi
@@ -345,7 +350,22 @@ class StockView(QWidget):
         if not sess:
             return
         old_qty = sess.closing_qty
-        new_c = min(old_large * conv + new_small, sess.handover_qty)
+        
+        # Nếu giảm xuống dưới 0, tự động giảm SL Lớn
+        if new_small < 0 and old_large > 0:
+            new_large = old_large - 1
+            new_small = conv - 1
+            new_c = new_large * conv + new_small
+        # Nếu tăng vượt quá max, tự động tăng SL Lớn
+        elif new_small >= conv:
+            new_large = old_large + 1
+            new_small = 0
+            new_c = new_large * conv + new_small
+        else:
+            new_c = old_large * conv + new_small
+        
+        # Đảm bảo không âm và không vượt quá handover_qty
+        new_c = max(0, min(new_c, sess.handover_qty))
         SessionRepository.update_qty(pid, sess.handover_qty, new_c)
 
         # Log thay đổi
