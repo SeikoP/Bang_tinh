@@ -71,7 +71,6 @@ build_*.log
 ############################
 *.manifest
 *.toc
-warehouse_app.spec
 
 ############################
 # Database (Local)
