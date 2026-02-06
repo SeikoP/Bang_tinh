@@ -147,9 +147,9 @@ class ProductView(QWidget):
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 45)
-        self.table.setColumnWidth(2, 120)
-        self.table.setColumnWidth(3, 160)
+        self.table.setColumnWidth(0, 55)
+        self.table.setColumnWidth(2, 130)
+        self.table.setColumnWidth(3, 170)
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -179,7 +179,7 @@ class ProductView(QWidget):
             self.table.setRowCount(len(items))
             for row, item in enumerate(items):
                 self._set_cell(row, 0, str(row + 1), center=True)
-                self._set_cell(row, 1, item.name, bold=True)
+                self._set_cell(row, 1, item.name, center=False, bold=True)
                 self._set_cell(
                     row,
                     2,
@@ -327,7 +327,7 @@ class ProductView(QWidget):
             if self.error_handler:
                 self.error_handler.handle(e, self)
 
-    def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):
+    def _set_cell(self, row, col, text, center=True, bold=False, bg=None, fg=None):
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         if center:

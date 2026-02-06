@@ -18,6 +18,7 @@ from PyQt6.QtWidgets import (
     QMessageBox,
     QSlider,
     QSpinBox,
+    QScrollArea,
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 
@@ -40,7 +41,20 @@ class SettingsView(QWidget):
         self._setup_ui()
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
+        # Main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        
+        # Scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        
+        # Content widget inside scroll
+        content_widget = QWidget()
+        layout = QVBoxLayout(content_widget)
         layout.setContentsMargins(20, 16, 20, 20)
         layout.setSpacing(20)
 
@@ -65,6 +79,9 @@ class SettingsView(QWidget):
         )
 
         layout.addStretch()
+        
+        scroll.setWidget(content_widget)
+        main_layout.addWidget(scroll)
 
     def _ui_config_content(self) -> QWidget:
         content = QWidget()
@@ -156,44 +173,66 @@ class SettingsView(QWidget):
         layout.setSpacing(10)
 
         # Title/Description
-        desc = QLabel("Địa chỉ dùng để thiết lập trong MacroDroid:")
+        desc = QLabel("Quét QR code để cấu hình tự động cho app Android:")
         desc.setObjectName("subtitle")
         layout.addWidget(desc)
 
+        # QR Code Display
+        qr_layout = QHBoxLayout()
+        
+        # QR Code Image
+        self.qr_label = QLabel()
+        self.qr_label.setFixedSize(200, 200)
+        self.qr_label.setStyleSheet(f"background: white; border: 2px solid {AppColors.BORDER}; border-radius: 8px;")
+        self.qr_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        qr_layout.addWidget(self.qr_label)
+        
+        # Info column
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(8)
+        
         # IP Display
-        self.ip_box = QHBoxLayout()
         self.ip_label = QLabel("Đang lấy địa chỉ IP...")
         self.ip_label.setStyleSheet(
             f"""
-            font-size: 18px; 
-            font-weight: 800; 
+            font-size: 16px; 
+            font-weight: 700; 
             color: {AppColors.PRIMARY};
             background: {AppColors.BG};
-            padding: 10px;
+            padding: 8px 12px;
             border-radius: 6px;
         """
         )
-        self.ip_box.addWidget(self.ip_label)
-
-        refresh_btn = QPushButton("🔄 Làm mới")
-        refresh_btn.setFixedWidth(100)
-        refresh_btn.clicked.connect(self._refresh_ip)
-        self.ip_box.addWidget(refresh_btn)
-        layout.addLayout(self.ip_box)
-
-        # Guide
-        # Get port from config if available
+        info_layout.addWidget(self.ip_label)
+        
+        # Port info
         port = 5005  # default
         if self.container:
             config = self.container.get("config")
             if config:
                 port = config.notification_port
+        
+        self.port_label = QLabel(f"Port: {port}")
+        self.port_label.setStyleSheet(f"font-size: 14px; color: {AppColors.TEXT_SECONDARY};")
+        info_layout.addWidget(self.port_label)
+        
+        # Refresh button
+        refresh_btn = QPushButton("🔄 Làm mới")
+        refresh_btn.setFixedWidth(120)
+        refresh_btn.clicked.connect(self._refresh_ip)
+        info_layout.addWidget(refresh_btn)
+        
+        info_layout.addStretch()
+        qr_layout.addLayout(info_layout)
+        
+        layout.addLayout(qr_layout)
 
+        # Manual URL guide
         guide = QLabel(
-            f"Gợi ý URL: http://[Địa chỉ IP trên]:{port}?content={{not_text}}"
+            f"💡 Hoặc nhập thủ công: http://[IP]:{port}"
         )
         guide.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 12px;"
+            f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 11px;"
         )
         layout.addWidget(guide)
 
@@ -202,16 +241,62 @@ class SettingsView(QWidget):
 
     def _refresh_ip(self):
         import socket
+        import qrcode
+        from io import BytesIO
+        from PyQt6.QtGui import QPixmap
 
         try:
-            # Cách lấy IP nội bộ thực sự của máy
+            # Get local IP
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             s.connect(("8.8.8.8", 80))
             ip = s.getsockname()[0]
             s.close()
             self.ip_label.setText(ip)
-        except Exception:
+            
+            # Get port from config
+            port = 5005
+            if self.container:
+                config = self.container.get("config")
+                if config:
+                    port = config.notification_port
+            
+            # Generate QR code with URL
+            url = f"http://{ip}:{port}"
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=2,
+            )
+            qr.add_data(url)
+            qr.make(fit=True)
+            
+            # Create QR image
+            img = qr.make_image(fill_color="black", back_color="white")
+            
+            # Convert PIL image to QPixmap
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            
+            pixmap = QPixmap()
+            pixmap.loadFromData(buffer.read())
+            
+            # Scale to fit label
+            scaled_pixmap = pixmap.scaled(
+                190, 190,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation
+            )
+            self.qr_label.setPixmap(scaled_pixmap)
+            
+        except Exception as e:
             self.ip_label.setText("127.0.0.1 (Chưa kết nối mạng)")
+            self.qr_label.setText("❌\nKhông thể\ntạo QR")
+            self.qr_label.setStyleSheet(
+                f"background: {AppColors.BG}; border: 2px solid {AppColors.BORDER}; "
+                f"border-radius: 8px; color: {AppColors.TEXT_SECONDARY}; font-size: 12px;"
+            )
 
     def _create_section(self, title: str, content: QWidget) -> QFrame:
         section = QFrame()

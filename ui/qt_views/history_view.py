@@ -157,10 +157,10 @@ class HistoryView(QWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 50)
-        self.table.setColumnWidth(1, 100)
-        self.table.setColumnWidth(3, 110)
-        self.table.setColumnWidth(5, 110)  # Tăng lên 110px cho 2 icon buttons
+        self.table.setColumnWidth(0, 60)
+        self.table.setColumnWidth(1, 110)
+        self.table.setColumnWidth(3, 120)
+        self.table.setColumnWidth(5, 120)
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -190,15 +190,17 @@ class HistoryView(QWidget):
                 if h.notes and len(h.notes) > 25
                 else (h.notes or "—")
             )
-            self._set_cell(row, 4, notes_text, fg=AppColors.TEXT_SECONDARY)
+            self._set_cell(row, 4, notes_text, center=False, fg=AppColors.TEXT_SECONDARY)
 
             actions = QWidget()
+            actions.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
             actions_v_layout = QVBoxLayout(actions)
             actions_v_layout.setContentsMargins(0, 0, 0, 0)
             actions_v_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             actions_h_widget = QWidget()
+            actions_h_widget.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             actions_layout = QHBoxLayout(actions_h_widget)
             actions_layout.setContentsMargins(8, 0, 8, 0)
             actions_layout.setSpacing(8)
@@ -220,7 +222,7 @@ class HistoryView(QWidget):
             actions_v_layout.addWidget(actions_h_widget)
             self.table.setCellWidget(row, 5, actions)
 
-    def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):
+    def _set_cell(self, row, col, text, center=True, bold=False, bg=None, fg=None):
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         if center:

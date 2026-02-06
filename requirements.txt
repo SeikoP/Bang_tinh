@@ -1,5 +1,8 @@
 # Production Dependencies for Warehouse Management Application
 # Python 3.11+
+# 
+# Install with: pip install -r requirements.txt
+# For reproducible builds, all versions are pinned
 
 # GUI Framework
 PyQt6==6.10.2
@@ -23,6 +26,11 @@ six==1.17.0
 sortedcontainers==2.4.0
 typing_extensions==4.15.0
 charset-normalizer==3.4.4
+psutil==6.1.1
+
+# QR Code Generation
+qrcode==8.0
+pillow==11.1.0
 
 # Security and Cryptography (for license validation)
 cryptography==46.0.4
@@ -30,3 +38,6 @@ cffi==2.0.0
 
 # Database
 # SQLite is included in Python standard library
+
+# Environment Variables
+python-dotenv==1.0.0

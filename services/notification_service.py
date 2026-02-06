@@ -108,12 +108,17 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     if "application/json" in content_type:
                         try:
                             data = json.loads(post_data)
-                            msg = data.get("content", "")
-
-                            # Validate JSON structure
-                            if not isinstance(msg, str):
-                                self.send_error(400, "Invalid content format")
-                                return
+                            
+                            # Check if it's structured notification (with time, source, amount, content)
+                            if isinstance(data, dict) and "content" in data:
+                                # Pass the whole JSON object as string for parsing
+                                msg = json.dumps(data, ensure_ascii=False)
+                            else:
+                                # Fallback to content field only
+                                msg = data.get("content", "")
+                                if not isinstance(msg, str):
+                                    self.send_error(400, "Invalid content format")
+                                    return
                         except json.JSONDecodeError:
                             self.send_error(400, "Invalid JSON")
                             return
@@ -137,11 +142,20 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                 self.wfile.write(b'{"status":"success"}')
 
                 # Process message
-                if hasattr(self.server, "message_handler"):
-                    self.server.message_handler(str(msg))
+                if hasattr(self.server, "message_handler") and self.server.message_handler:
+                    try:
+                        self.server.message_handler(str(msg))
+                    except Exception as handler_error:
+                        if hasattr(self.server, "logger"):
+                            self.server.logger.error(f"Error in message handler: {handler_error}")
+                else:
+                    if hasattr(self.server, "logger"):
+                        self.server.logger.warning("No message handler registered!")
 
                 if hasattr(self.server, "logger"):
-                    self.server.logger.info(f"Notification received: {msg[:50]}...")
+                    # Safe logging with ASCII encoding to avoid Unicode errors
+                    safe_msg = msg[:50].encode('ascii', 'replace').decode('ascii')
+                    self.server.logger.info(f"Notification received: {safe_msg}...")
             else:
                 self.send_error(400, "Missing content parameter")
 
@@ -163,12 +177,19 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
         Returns:
             Sanitized message
         """
-        # Remove potentially dangerous characters
-        dangerous_chars = ["<", ">", '"', "'", "&"]
-        sanitized = message
-        for char in dangerous_chars:
-            sanitized = sanitized.replace(char, "")
-        return sanitized
+        # Check if message is JSON - if so, don't sanitize (it's structured data)
+        try:
+            json.loads(message)
+            # Valid JSON, return as-is
+            return message
+        except (json.JSONDecodeError, TypeError):
+            # Not JSON, sanitize plain text
+            # Remove potentially dangerous characters for HTML display
+            dangerous_chars = ["<", ">"]
+            sanitized = message
+            for char in dangerous_chars:
+                sanitized = sanitized.replace(char, "")
+            return sanitized
 
     def do_POST(self):
         """Handle POST requests"""

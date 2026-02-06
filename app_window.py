@@ -50,7 +50,7 @@ from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
 
 
 class BankView(QWidget):
-    """View hiển thị lịch sử thông báo ngân hàng chuyên nghiệp"""
+    """View hiển thị lịch sử thông báo ngân hàng với sub-tabs"""
 
     def __init__(self):
         super().__init__()
@@ -58,71 +58,212 @@ class BankView(QWidget):
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(15)
 
+        # Header
         header_layout = QHBoxLayout()
         header = QLabel("🏦 Quản lý Giao dịch Điện thoại")
         header.setStyleSheet(
             f"font-size: 20px; font-weight: 800; color: {AppColors.TEXT};"
         )
         header_layout.addWidget(header)
-
         header_layout.addStretch()
-
-        self.clear_btn = QPushButton("🗑️ Xóa lịch sử")
-        self.clear_btn.setObjectName("secondary")
-        self.clear_btn.setFixedWidth(150)  # Tăng độ rộng để không mất chữ
-        self.clear_btn.setStyleSheet(
-            f"color: {AppColors.ERROR}; border-color: {AppColors.ERROR};"
-        )
-        self.clear_btn.clicked.connect(self.clear_history)
-        header_layout.addWidget(self.clear_btn)
-
         layout.addLayout(header_layout)
 
+        # Sub-tabs
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                background: white;
+            }
+            QTabBar::tab {
+                padding: 10px 20px;
+                margin-right: 4px;
+                background: #f5f5f5;
+                border: 1px solid #e0e0e0;
+                border-bottom: none;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+            QTabBar::tab:selected {
+                background: white;
+                border-bottom: 2px solid #2196F3;
+            }
+            QTabBar::tab:hover {
+                background: #e8f5e9;
+            }
+        """)
+
+        # Tab 1: Bank Transactions
+        self.transactions_widget = QWidget()
+        trans_layout = QVBoxLayout(self.transactions_widget)
+        trans_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Filter and clear button row
+        filter_layout = QHBoxLayout()
+        
+        # Source filter
+        filter_label = QLabel("Lọc theo nguồn:")
+        filter_label.setStyleSheet("font-weight: bold;")
+        filter_layout.addWidget(filter_label)
+        
+        from PyQt6.QtWidgets import QComboBox
+        self.source_filter = QComboBox()
+        self.source_filter.addItems(["Tất cả", "MoMo", "VietinBank", "Vietcombank", "MB Bank", "BIDV", "ACB", "TPBank", "Techcombank", "VNPay"])
+        self.source_filter.setFixedWidth(150)
+        self.source_filter.currentTextChanged.connect(self.apply_filter)
+        filter_layout.addWidget(self.source_filter)
+        
+        filter_layout.addStretch()
+        
+        self.clear_trans_btn = QPushButton("🗑️ Xóa lịch sử")
+        self.clear_trans_btn.setObjectName("secondary")
+        self.clear_trans_btn.setFixedWidth(150)
+        self.clear_trans_btn.setStyleSheet(
+            f"color: {AppColors.ERROR}; border-color: {AppColors.ERROR};"
+        )
+        self.clear_trans_btn.clicked.connect(self.clear_history)
+        filter_layout.addWidget(self.clear_trans_btn)
+        trans_layout.addLayout(filter_layout)
+
+        # Transactions table
         self.table = QTableWidget()
-        self.table.setColumnCount(5)
+        self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(
-            ["Giờ", "Nguồn", "Số tiền", "Chi tiết tin nhắn", ""]
+            ["Giờ", "Nguồn", "Số tiền", "Người chuyển", "Chi tiết", ""]
         )
 
         h = self.table.horizontalHeader()
         h.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         h.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         h.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        h.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        h.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        h.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        h.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        h.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 80)
-        self.table.setColumnWidth(1, 100)
-        self.table.setColumnWidth(2, 120)
-        self.table.setColumnWidth(4, 50)
+        self.table.setColumnWidth(0, 70)
+        self.table.setColumnWidth(1, 90)
+        self.table.setColumnWidth(2, 110)
+        self.table.setColumnWidth(3, 150)
+        self.table.setColumnWidth(5, 50)
 
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(
-            45
-        )  # Tăng chiều cao hàng để tránh mất chữ
-        layout.addWidget(self.table)
+        self.table.verticalHeader().setDefaultSectionSize(45)
+        trans_layout.addWidget(self.table)
+
+        # Tab 2: Raw Logs
+        self.logs_widget = QWidget()
+        logs_layout = QVBoxLayout(self.logs_widget)
+        logs_layout.setContentsMargins(10, 10, 10, 10)
+
+        # Clear button for logs
+        log_btn_layout = QHBoxLayout()
+        log_btn_layout.addStretch()
+        self.clear_logs_btn = QPushButton("🗑️ Xóa logs")
+        self.clear_logs_btn.setObjectName("secondary")
+        self.clear_logs_btn.setFixedWidth(150)
+        self.clear_logs_btn.setStyleSheet(
+            f"color: {AppColors.ERROR}; border-color: {AppColors.ERROR};"
+        )
+        self.clear_logs_btn.clicked.connect(self.clear_logs)
+        log_btn_layout.addWidget(self.clear_logs_btn)
+        logs_layout.addLayout(log_btn_layout)
+
+        # Logs table
+        self.logs_table = QTableWidget()
+        self.logs_table.setColumnCount(3)
+        self.logs_table.setHorizontalHeaderLabels(["Thời gian", "Package", "Raw Message"])
+
+        lh = self.logs_table.horizontalHeader()
+        lh.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        lh.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        lh.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+
+        self.logs_table.setColumnWidth(0, 150)
+        self.logs_table.setColumnWidth(1, 200)
+
+        self.logs_table.setAlternatingRowColors(True)
+        self.logs_table.verticalHeader().setVisible(False)
+        self.logs_table.verticalHeader().setDefaultSectionSize(40)
+        logs_layout.addWidget(self.logs_table)
+
+        # Add tabs
+        self.tabs.addTab(self.transactions_widget, "💰 Giao dịch")
+        self.tabs.addTab(self.logs_widget, "📋 Raw Logs")
+
+        layout.addWidget(self.tabs)
 
         self.load_history()
 
     def load_history(self):
         """Tải lại lịch sử từ database"""
         notifs = BankRepository.get_all()
-        for n in reversed(
-            notifs
-        ):  # Đảo ngược để thêm theo thứ tự cũ -> mới (vì add_row thêm lên đầu)
-            self._add_row_ui(n.id, n.time_str, n.source, n.amount, n.content)
+        for n in reversed(notifs):
+            self._add_row_ui(n.id, n.time_str, n.source, n.amount, n.sender_name or "", n.content)
 
-    def add_notif(self, time_str, source, amount, raw_message):
-        # 1. Lưu vào database trước
-        new_id = BankRepository.add(time_str, source, amount, raw_message)
+    def apply_filter(self):
+        """Apply source filter to transactions table"""
+        filter_text = self.source_filter.currentText()
+        
+        for row in range(self.table.rowCount()):
+            source_item = self.table.item(row, 1)
+            if source_item:
+                source = source_item.text()
+                if filter_text == "Tất cả" or source == filter_text:
+                    self.table.setRowHidden(row, False)
+                else:
+                    self.table.setRowHidden(row, True)
 
-        # 2. Hiển thị lên UI
-        self._add_row_ui(new_id, time_str, source, amount, raw_message)
+    def add_notif(self, time_str, source, amount, sender_name, raw_message):
+        try:
+            # 1. Lưu vào database trước
+            new_id = BankRepository.add(time_str, source, amount, raw_message, sender_name)
+            
+            # 2. Hiển thị lên UI (transactions tab)
+            self._add_row_ui(new_id, time_str, source, amount, sender_name, raw_message)
+        except Exception as e:
+            # Log error silently
+            import logging
+            logging.error(f"Error in add_notif: {e}")
 
-    def _add_row_ui(self, db_id, time_str, source, amount, raw_message):
+    def add_raw_log(self, time_str, package, raw_message):
+        """Add to raw logs tab only"""
+        self._add_log_row(time_str, package, raw_message)
+
+    def _add_log_row(self, time_str, package, raw_message):
+        """Thêm raw log vào logs table"""
         row = 0
-        self.table.insertRow(row)  # Thêm vào đầu bảng
+        self.logs_table.insertRow(row)
+        
+        # Timestamp
+        time_item = QTableWidgetItem(time_str)
+        time_item.setFont(QFont("Roboto", 9))
+        self.logs_table.setItem(row, 0, time_item)
+        
+        # Package name
+        pkg_item = QTableWidgetItem(package)
+        pkg_item.setFont(QFont("Roboto", 9))
+        pkg_item.setForeground(QColor("#666"))
+        self.logs_table.setItem(row, 1, pkg_item)
+        
+        # Raw message
+        msg_item = QTableWidgetItem(raw_message)
+        msg_item.setFont(QFont("Courier New", 8))
+        msg_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
+        self.logs_table.setItem(row, 2, msg_item)
+        
+        # Limit logs to 100 rows
+        if self.logs_table.rowCount() > 100:
+            self.logs_table.removeRow(100)
+
+    def clear_logs(self):
+        """Xóa tất cả raw logs"""
+        self.logs_table.setRowCount(0)
+
+    def _add_row_ui(self, db_id, time_str, source, amount, sender_name, raw_message):
+        row = 0
+        self.table.insertRow(row)
 
         self.table.setItem(row, 0, QTableWidgetItem(time_str))
 
@@ -131,14 +272,31 @@ class BankView(QWidget):
         self.table.setItem(row, 1, src_item)
 
         amt_item = QTableWidgetItem(amount if amount else "---")
-        amt_item.setForeground(QColor(AppColors.SUCCESS))
-        amt_item.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        
+        # Set color based on transaction type (+ green, - red)
+        if amount and amount.startswith('+'):
+            amt_item.setForeground(QColor(AppColors.SUCCESS))  # Green for incoming
+        elif amount and amount.startswith('-'):
+            amt_item.setForeground(QColor(AppColors.ERROR))  # Red for outgoing
+        else:
+            amt_item.setForeground(QColor(AppColors.SUCCESS))  # Default green
+        
+        amt_item.setFont(QFont("Roboto", 9, QFont.Weight.Bold))
         amt_item.setTextAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
         self.table.setItem(row, 2, amt_item)
 
-        self.table.setItem(row, 3, QTableWidgetItem(raw_message))
+        # Cột người chuyển
+        sender_item = QTableWidgetItem(sender_name if sender_name else "---")
+        sender_item.setFont(QFont("Roboto", 9))
+        self.table.setItem(row, 3, sender_item)
+
+        # Cột chi tiết - font nhỏ hơn
+        detail_item = QTableWidgetItem(raw_message)
+        detail_item.setFont(QFont("Roboto", 8))
+        detail_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
+        self.table.setItem(row, 4, detail_item)
 
         # Nút xóa từng dòng (Centered Layout & Force Style)
         del_container = QWidget()
@@ -171,7 +329,7 @@ class BankView(QWidget):
         del_btn.clicked.connect(lambda: self._delete_row(db_id))
 
         del_layout.addWidget(del_btn)
-        self.table.setCellWidget(row, 4, del_container)
+        self.table.setCellWidget(row, 5, del_container)
 
         # Lưu ID vào item ẩn để tham chiếu nếu cần
         self.table.item(row, 0).setData(Qt.ItemDataRole.UserRole, db_id)
@@ -200,59 +358,150 @@ from urllib.parse import urlparse, parse_qs
 
 
 class NotificationHandler(BaseHTTPRequestHandler):
-    """Server xử lý thông báo từ app Android linh hoạt hơn (POST/GET, Body/Query)"""
+    """Server xử lý thông báo từ app Android - Filter tại PC"""
+    
+    # Danh sách package name của các app ngân hàng Việt Nam + test packages
+    BANK_PACKAGES = {
+        "com.vnpay.wallet",           # VNPay
+        "com.vietcombank.mobile",     # Vietcombank
+        "com.techcombank.bb.app",     # Techcombank
+        "com.mbmobile",               # MB Bank
+        "com.vnpay.bidv",             # BIDV
+        "com.acb.acbmobile",          # ACB
+        "com.tpb.mb.gprsandroid",     # TPBank
+        "com.msb.mbanking",           # MSB
+        "com.vietinbank.ipay",        # VietinBank
+        "com.agribank.mobilebanking", # Agribank
+        "com.sacombank.mbanking",     # Sacombank
+        "com.hdbank.mobilebanking",   # HDBank
+        "com.vpbank.mobilebanking",   # VPBank
+        "com.ocb.mobilebanking",      # OCB
+        "com.shb.mobilebanking",      # SHB
+        "com.scb.mobilebanking",      # SCB
+        "com.seabank.mobilebanking",  # SeaBank
+        "com.vib.mobilebanking",      # VIB
+        "com.lienvietpostbank.mobilebanking", # LienVietPostBank
+        "com.bvbank.mobilebanking",   # BaoVietBank
+        "com.pvcombank.mobilebanking", # PVcomBank
+        "com.mservice.momotransfer",  # MoMo
+        # Test packages ONLY for adb testing - remove in production
+        "android",                    # For adb test notifications
+        "com.android.shell"           # For adb test notifications
+    }
 
     def handle_request(self):
         try:
             msg = None
             # Log incoming request
             if hasattr(self.server, "logger") and self.server.logger:
-                self.server.logger.debug(
-                    f"Received {self.command} request to {self.path}"
+                self.server.logger.info(
+                    f"=== Received {self.command} request to {self.path} ==="
                 )
+                self.server.logger.info(f"Headers: {dict(self.headers)}")
 
             # 1. Thử lấy từ URL Query (?content=...)
             parsed_url = urlparse(self.path)
             query_params = parse_qs(parsed_url.query)
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.info(f"Query params: {query_params}")
+            
             if "content" in query_params:
                 msg = query_params["content"][0]
                 if hasattr(self.server, "logger") and self.server.logger:
-                    self.server.logger.debug(f"Found content in query: {msg}")
+                    self.server.logger.info(f"Found content in query: {msg}")
 
             # 2. Nếu URL không có, thử lấy từ Body
             if not msg:
                 content_length = self.headers.get("Content-Length")
+                content_type = self.headers.get("Content-Type", "")
+                if hasattr(self.server, "logger") and self.server.logger:
+                    self.server.logger.info(f"Content-Length: {content_length}, Content-Type: {content_type}")
+                
                 if content_length and int(content_length) > 0:
                     post_data = self.rfile.read(int(content_length)).decode("utf-8")
                     if hasattr(self.server, "logger") and self.server.logger:
-                        self.server.logger.debug(f"Received body: {post_data}")
+                        self.server.logger.info(f"Received body: {post_data}")
+                    
+                    # Try JSON first
                     try:
                         data = json.loads(post_data)
                         msg = data.get("content", post_data)
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.info(f"Parsed JSON, content: {msg}")
                     except json.JSONDecodeError:
-                        msg = post_data
+                        # Try form data (application/x-www-form-urlencoded)
+                        if "application/x-www-form-urlencoded" in content_type:
+                            form_params = parse_qs(post_data)
+                            if "content" in form_params:
+                                msg = form_params["content"][0]
+                                if hasattr(self.server, "logger") and self.server.logger:
+                                    self.server.logger.info(f"Parsed form data, content: {msg}")
+                            else:
+                                msg = post_data
+                        else:
+                            msg = post_data
+                            if hasattr(self.server, "logger") and self.server.logger:
+                                self.server.logger.info(f"Not JSON/form, using raw body: {msg}")
 
+            # Luôn phản hồi success để Android biết đã nhận
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            
             if msg:
-                # Phản hồi cho client trước để giải phóng kết nối
-                self.send_response(200)
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(b'{"status":"success"}')
-
-                # Sau đó mới đẩy lên giao diện
+                # Try to parse as JSON to get package info
+                package_name = None
+                content = msg
+                try:
+                    data = json.loads(msg)
+                    if isinstance(data, dict):
+                        package_name = data.get("package")
+                        # Get content - might be nested JSON string
+                        raw_content = data.get("content", msg)
+                        
+                        # Try to parse content if it's a JSON string
+                        try:
+                            content_data = json.loads(raw_content)
+                            if isinstance(content_data, dict):
+                                # Extract actual content from nested structure
+                                content = content_data.get("content", raw_content)
+                            else:
+                                content = raw_content
+                        except (json.JSONDecodeError, TypeError):
+                            content = raw_content
+                except (json.JSONDecodeError, TypeError):
+                    pass
+                
+                # Filter by package name (PC-side filtering)
+                if package_name:
+                    if package_name not in self.BANK_PACKAGES:
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.debug(f"Filtered out notification from: {package_name}")
+                        self.wfile.write(b'{"status":"success","message":"filtered"}')
+                        return
+                    
+                    if hasattr(self.server, "logger") and self.server.logger:
+                        self.server.logger.info(f"Accepted notification from: {package_name}")
+                
+                self.wfile.write(b'{"status":"success","message":"received"}')
+                # Đẩy lên giao diện
                 if hasattr(self.server, "logger") and self.server.logger:
-                    self.server.logger.info(f"Notification received: {msg[:50]}...")
+                    self.server.logger.info(f"Processing notification: {content[:100]}...")
                 if hasattr(self.server, "signal"):
-                    self.server.signal.emit(str(msg))
+                    self.server.signal.emit(str(content))
             else:
-                self.send_response(400)
-                self.end_headers()
+                self.wfile.write(b'{"status":"success","message":"no content found"}')
+                if hasattr(self.server, "logger") and self.server.logger:
+                    self.server.logger.warning("No content found in request")
+                    
         except Exception as e:
             if hasattr(self.server, "logger") and self.server.logger:
-                self.server.logger.error(f"Error handling request: {e}")
+                self.server.logger.error(f"Error handling request: {e}", exc_info=True)
             try:
                 self.send_response(500)
+                self.send_header("Content-Type", "application/json")
                 self.end_headers()
+                self.wfile.write(f'{{"status":"error","message":"{str(e)}"}}'.encode())
             except:
                 pass
 
@@ -359,10 +608,18 @@ class QuickBankPeek(QFrame):
                 r, 0, QTableWidgetItem(bank_view_table.item(r, 0).text())
             )
 
-            # Copy màu sắc số tiền
-            amt_item = QTableWidgetItem(bank_view_table.item(r, 2).text())
-            amt_item.setForeground(QColor(AppColors.SUCCESS))
-            amt_item.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            # Copy màu sắc số tiền based on +/-
+            amt_text = bank_view_table.item(r, 2).text()
+            amt_item = QTableWidgetItem(amt_text)
+            
+            if amt_text.startswith('+'):
+                amt_item.setForeground(QColor(AppColors.SUCCESS))
+            elif amt_text.startswith('-'):
+                amt_item.setForeground(QColor(AppColors.ERROR))
+            else:
+                amt_item.setForeground(QColor(AppColors.SUCCESS))
+            
+            amt_item.setFont(QFont("Roboto", 8, QFont.Weight.Bold))
             self.table.setItem(r, 1, amt_item)
 
             self.table.setItem(
@@ -372,6 +629,9 @@ class QuickBankPeek(QFrame):
 
 class MainWindow(QMainWindow):
     """Main window - modern premium design"""
+    
+    # Signal for cross-thread notification
+    notification_received = pyqtSignal(str)
 
     def __init__(self, container=None):
         super().__init__()
@@ -402,6 +662,10 @@ class MainWindow(QMainWindow):
         self._setup_window()
         self._setup_ui()
         self._apply_theme()
+        
+        # Connect notification signal
+        self.notification_received.connect(self._do_show_notification)
+        
         self._start_notification_server()
 
         # Timer để ẩn Quick Peek có độ trễ nhỏ (tránh flickering)
@@ -697,8 +961,8 @@ class MainWindow(QMainWindow):
 
     def _show_notification(self, message):
         """Hiển thị thông báo an toàn (Safe UI Thread)"""
-        # Đưa việc cập nhật UI vào hàng đợi chính của Qt để tránh treo luồng
-        QTimer.singleShot(0, lambda: self._do_show_notification(message))
+        # Emit signal to handle in main thread
+        self.notification_received.emit(message)
 
     def _do_show_notification(self, message):
         now = datetime.now()
@@ -709,40 +973,192 @@ class MainWindow(QMainWindow):
         self._last_msg_content = message
         self._last_msg_time = now
 
-        source = "Phone"
-        msg_lower = message.lower()
-        if "momo" in msg_lower:
-            source = "MoMo"
-        elif "vcb" in msg_lower or "vietcombank" in msg_lower:
-            source = "VCB"
-        elif "mb" in msg_lower or "mbbank" in msg_lower:
-            source = "MB"
-        elif "tpbank" in msg_lower:
-            source = "TPBank"
-
-        amount = self._extract_amount(message)
+        # Try to parse as JSON first (structured notification from Android)
+        package_name = None
+        content = message
+        
+        try:
+            data = json.loads(message)
+            if isinstance(data, dict):
+                # Get package name from top level
+                package_name = data.get("package", "")
+                
+                # Debug logging
+                if hasattr(self, "logger"):
+                    self.logger.info(f"Parsed JSON - package: {package_name}")
+                
+                # Get content - could be string or nested dict
+                raw_content = data.get("content", message)
+                
+                # If content is a string, use it directly
+                if isinstance(raw_content, str):
+                    content = raw_content
+                # If content is a dict, try to extract meaningful text
+                elif isinstance(raw_content, dict):
+                    content = raw_content.get("content", str(raw_content))
+                else:
+                    content = str(raw_content)
+        except (json.JSONDecodeError, TypeError) as e:
+            # Plain text message
+            if hasattr(self, "logger"):
+                self.logger.debug(f"Not JSON: {e}")
+            pass
+        
+        # Determine source from package name
+        source = self._get_source_from_package(package_name) if package_name else "Phone"
+        
+        # Debug logging
+        if hasattr(self, "logger"):
+            self.logger.info(f"Source determined: {source} (from package: {package_name})")
+        
+        # Extract amount and transaction type, sender name
+        amount, trans_type = self._extract_amount(content)
+        sender_name = self._extract_sender_name(content)
         timestamp = now.strftime("%H:%M:%S")
 
-        # HTML Escape để tránh lỗi ký tự đặc biệt phá hỏng giao diện
-        safe_msg = html.escape(message[:100])
-        safe_source = html.escape(source)
-        safe_amount = html.escape(amount) if amount else ""
-
+        # Only show topbar notification if it has amount (real transaction)
         if amount:
-            rich_text = f"<b style='font-size:15px; color:white;'>{safe_amount}</b><br><span style='font-size:11px; color:#e1f5fe;'>{safe_source}: {safe_msg}</span>"
-        else:
-            rich_text = f"<b>Tin nhắn mới</b><br><span style='font-size:11px;'>{safe_msg}</span>"
+            # HTML Escape để tránh lỗi ký tự đặc biệt phá hỏng giao diện
+            safe_sender = html.escape(sender_name[:30]) if sender_name else ""
+            safe_source = html.escape(source)
+            safe_amount = html.escape(amount)
 
-        self.notif_label.setText(rich_text)
-        self.notif_box.show()
+            # Format: Giờ | Tiền | Người chuyển
+            if safe_sender:
+                rich_text = f"<b style='font-size:15px; color:white;'>{timestamp}</b> | <b style='font-size:15px; color:white;'>{safe_amount}</b> | <span style='font-size:12px; color:#e1f5fe;'>{safe_sender}</span>"
+            else:
+                rich_text = f"<b style='font-size:15px; color:white;'>{timestamp}</b> | <b style='font-size:15px; color:white;'>{safe_amount}</b> | <span style='font-size:11px; color:#e1f5fe;'>{safe_source}</span>"
+
+            self.notif_label.setText(rich_text)
+            self.notif_box.show()
 
         if hasattr(self, "bank_view"):
-            self.bank_view.add_notif(timestamp, source, amount, message)
+            # Always add to raw logs
+            self.bank_view.add_raw_log(timestamp, source, content)
+            
+            # Only add to transactions if it has amount (real bank transaction)
+            if amount:
+                self.bank_view.add_notif(timestamp, source, amount, sender_name, content)
+        else:
+            if hasattr(self, "logger"):
+                self.logger.warning("bank_view not initialized yet, notification not saved")
 
     def _extract_amount(self, text):
-        pattern = r"(?:\+|\-)?\d{1,3}(?:[.,]\d{3})+(?:\s?[đVNDvmd])?"
+        """Extract amount and detect transaction type (in/out)"""
+        pattern = r"(?:\+|\-)?\d{1,3}(?:[.,]\d{3})+(?:\s?[đVNDvmd₫])?"
         matches = re.findall(pattern, text)
-        return matches[0] if matches else None
+        if not matches:
+            return None, None
+        
+        amount = matches[0]
+        
+        # Detect transaction type from keywords
+        text_lower = text.lower()
+        
+        # Keywords for incoming money (tiền vào)
+        incoming_keywords = [
+            'nhận tiền', 'nhan tien', 'cộng tiền', 'cong tien',
+            'tiền vào', 'tien vao', '+', 'nạp tiền', 'nap tien',
+            'hoàn tiền', 'hoan tien'
+        ]
+        
+        # Keywords for outgoing money (tiền ra)
+        outgoing_keywords = [
+            'trừ tiền', 'tru tien', 'tiền ra', 'tien ra', 
+            'chi tiêu', 'chi tieu', 'thanh toán', 'thanh toan',
+            'chuyển tiền', 'chuyen tien', 'rút tiền', 'rut tien',
+            'giao dịch: -', 'giao dich: -', '-'
+        ]
+        
+        # Check for explicit +/- in amount
+        if amount.startswith('+'):
+            return amount, 'in'
+        elif amount.startswith('-'):
+            return amount, 'out'
+        
+        # Check keywords
+        for keyword in incoming_keywords:
+            if keyword in text_lower:
+                return f"+{amount}", 'in'
+        
+        for keyword in outgoing_keywords:
+            if keyword in text_lower:
+                return f"-{amount}", 'out'
+        
+        # Default: if no clear indicator, assume incoming (safer assumption)
+        return f"+{amount}", 'in'
+
+    def _get_source_from_package(self, package_name):
+        """Map package name to bank/app name"""
+        if not package_name:
+            return None
+        
+        package_map = {
+            "com.mservice.momotransfer": "MoMo",
+            "com.vnpay.wallet": "VNPay",
+            "com.vietcombank.mobile": "Vietcombank",
+            "com.vietinbank.ipay": "VietinBank",
+            "com.techcombank.bb.app": "Techcombank",
+            "com.mbmobile": "MB Bank",
+            "com.vnpay.bidv": "BIDV",
+            "com.acb.acbmobile": "ACB",
+            "com.tpb.mb.gprsandroid": "TPBank",
+            "com.msb.mbanking": "MSB",
+            "com.agribank.mobilebanking": "Agribank",
+            "com.sacombank.mbanking": "Sacombank",
+            "com.hdbank.mobilebanking": "HDBank",
+            "com.vpbank.mobilebanking": "VPBank",
+            "com.ocb.mobilebanking": "OCB",
+            "com.shb.mobilebanking": "SHB",
+            "com.scb.mobilebanking": "SCB",
+            "com.seabank.mobilebanking": "SeaBank",
+            "com.vib.mobilebanking": "VIB",
+            "com.lienvietpostbank.mobilebanking": "LienVietPostBank",
+            "com.bvbank.mobilebanking": "BaoVietBank",
+            "com.pvcombank.mobilebanking": "PVcomBank",
+        }
+        
+        return package_map.get(package_name)
+
+    def _extract_sender_name(self, text):
+        """Extract sender name from bank notification message"""
+        # Clean text first: remove escape characters and normalize
+        cleaned_text = text.replace('\\n', '\n').replace('\\', '').replace('\n', ' ')
+        
+        # Common patterns for Vietnamese bank notifications
+        # Use greedy matching [A-Z\s]+ to capture full names, then stop at boundaries
+        patterns = [
+            # Format: "ND Chuyen tien tu TEN" or "ND Nhan tien tu TEN"
+            r"ND\s+Chuyen\s+tien\s+tu\s+([A-Z][A-Z\s]+?)(?:\s+\d|\s*\.|,|\s+Ref|\s+MBVCB|\s+FT\d+|$)",
+            r"ND\s+Nhan\s+tien\s+tu\s+([A-Z][A-Z\s]+?)(?:\s+\d|\s*\.|,|\s+Ref|\s+MBVCB|\s+FT\d+|$)",
+            # Format: "Chuyen tien tu TEN" or "Nhan tien tu TEN" (without ND prefix, with/without diacritics)
+            r"Chuyen\s+tien\s+tu\s+([A-Z][A-Z\s]+?)(?:\s+\d|\s*\.|,|\s+Ref|\s+MBVCB|\s+FT\d+|$)",
+            r"Nhan\s+tien\s+tu\s+([A-Z][A-Z\s]+?)(?:\s+\d|\s*\.|,|\s+Ref|\s+MBVCB|\s+FT\d+|$)",
+            r"Nhận\s+tiền\s+từ\s+([A-Z][A-Z\s]+?)(?:\s+\d|\s*\.|,|\s+Ref|\s+MBVCB|\s+FT\d+|$)",
+            # Format: "ND: TEN chuyen tien" or "ND: TEN nhan tien" (name comes first, then action)
+            r"ND[:\s]+([A-Z][A-Z\s]+?)(?:\s+chuyen|\s+nhan|\s+Ref|\s+MBVCB|\s+FT\d+|\s*\.|,|\s+\d|$)",
+            # Format: "Nhận tiền chuyển khoản từ TEN" (MoMo style)
+            r"Nhận\s+tiền\s+chuyển\s+khoản\s+từ\s+([A-Z][A-Z\s]+?)(?:\s*:|,|\s+Số\s+tiền|$)",
+            # Format: "CT DI:xxxxx TEN Chuyen tien" (VietinBank style)
+            r"CT\s+DI:\d+\s+([A-Z][A-Z\s]+?)(?:\s+Chuyen|\s+chuyen|\s*;|$)",
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, cleaned_text, re.IGNORECASE)
+            if match:
+                name = match.group(1).strip()
+                # Clean up: remove trailing reference codes only
+                name = re.sub(r'\s*(Ref|MBVCB|FT\d+).*$', '', name, flags=re.IGNORECASE)
+                # Remove trailing action words only if they appear at the end
+                name = re.sub(r'\s+(chuyen\s+tien|nhan\s+tien|chuyen\s+khoan|nhan\s+khoan)$', '', name, flags=re.IGNORECASE)
+                # Remove trailing punctuation and whitespace
+                name = re.sub(r'[,.\s]+$', '', name)
+                name = name.strip()
+                # Valid name should be at least 3 chars (to filter out "A", "AB")
+                if len(name) >= 3:
+                    return name[:50]  # Limit length
+        
+        return ""
 
     def _refresh_calc(self):
         if hasattr(self, "calc_view"):
@@ -796,18 +1212,47 @@ class MainWindow(QMainWindow):
 
 def main():
     import ctypes
+    import sys
 
+    # Performance optimization for Windows
     try:
         myappid = "bangtinh.warehouse.app.2.0"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+        
+        # Set process priority to above normal for better responsiveness
+        import psutil
+        p = psutil.Process()
+        p.nice(psutil.ABOVE_NORMAL_PRIORITY_CLASS)
     except:
         pass
 
+    # Enable high DPI scaling
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
+    
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
+    
+    # Load custom fonts from assets
+    from PyQt6.QtGui import QFontDatabase
+    
+    fonts_dir = BASE_DIR / "assets" / "fonts"
+    
+    # Load Roboto fonts
+    roboto_dir = fonts_dir / "Roboto"
+    if roboto_dir.exists():
+        for font_file in roboto_dir.glob("*.ttf"):
+            QFontDatabase.addApplicationFont(str(font_file))
+    
+    # Load Cabin fonts
+    cabin_dir = fonts_dir / "Cabin-master" / "fonts" / "TTF"
+    if cabin_dir.exists():
+        for font_file in cabin_dir.glob("*.ttf"):
+            QFontDatabase.addApplicationFont(str(font_file))
+    
+    # Set default application font to Roboto
+    app.setFont(QFont('Roboto', 11))
     app.setApplicationVersion(APP_VERSION)
 
     icon_path = BASE_DIR / "assets" / "icon.png"

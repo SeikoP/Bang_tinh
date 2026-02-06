@@ -172,6 +172,7 @@ class BankNotification:
     source: str
     amount: str
     content: str
+    sender_name: str
     created_at: datetime
 
     @classmethod
@@ -182,6 +183,7 @@ class BankNotification:
             source=row["source"],
             amount=row["amount"],
             content=row["content"],
+            sender_name=row.get("sender_name", ""),
             created_at=row["created_at"],
         )
 

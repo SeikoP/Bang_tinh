@@ -424,13 +424,13 @@ class BankRepository:
     """Repository cho lịch sử thông báo ngân hàng"""
 
     @staticmethod
-    def add(time_str: str, source: str, amount: str, content: str) -> int:
+    def add(time_str: str, source: str, amount: str, content: str, sender_name: str = "") -> int:
         with get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                """INSERT INTO bank_history (time_str, source, amount, content) 
-                   VALUES (?, ?, ?, ?)""",
-                (time_str, source, amount, content),
+                """INSERT INTO bank_history (time_str, source, amount, content, sender_name) 
+                   VALUES (?, ?, ?, ?, ?)""",
+                (time_str, source, amount, content, sender_name),
             )
             return cursor.lastrowid
 

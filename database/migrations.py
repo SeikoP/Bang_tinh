@@ -203,6 +203,36 @@ class Migration003AddAuditColumns(Migration):
         pass
 
 
+class Migration004AddSenderName(Migration):
+    """Add sender_name column to bank_history"""
+
+    @property
+    def version(self) -> int:
+        return 4
+
+    @property
+    def description(self) -> str:
+        return "Add sender_name column to bank_history"
+
+    def up(self, conn: sqlite3.Connection) -> None:
+        """Add sender_name column"""
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("ALTER TABLE bank_history ADD COLUMN sender_name TEXT DEFAULT ''")
+            # Update existing rows to have empty string
+            cursor.execute("UPDATE bank_history SET sender_name = '' WHERE sender_name IS NULL")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+
+        conn.commit()
+
+    def down(self, conn: sqlite3.Connection) -> None:
+        """Remove sender_name column"""
+        # SQLite doesn't support DROP COLUMN easily
+        pass
+
+
 class MigrationManager:
     """Manages database migrations"""
 
@@ -215,6 +245,7 @@ class MigrationManager:
                 Migration001AddIndexes(),
                 Migration002AddForeignKeys(),
                 Migration003AddAuditColumns(),
+                Migration004AddSenderName(),
             ]
         else:
             self.migrations = migrations
@@ -288,12 +319,12 @@ class MigrationManager:
 
                         if logger:
                             logger.info(
-                                f"✓ Migration {migration.version} applied successfully"
+                                f"Migration {migration.version} applied successfully"
                             )
                     except Exception as e:
                         if logger:
                             logger.error(
-                                f"✗ Migration {migration.version} failed: {str(e)}"
+                                f"Migration {migration.version} failed: {str(e)}"
                             )
                         conn.rollback()
                         raise
@@ -335,12 +366,12 @@ class MigrationManager:
 
                         if logger:
                             logger.info(
-                                f"✓ Migration {migration.version} rolled back successfully"
+                                f"Migration {migration.version} rolled back successfully"
                             )
                     except Exception as e:
                         if logger:
                             logger.error(
-                                f"✗ Rollback of migration {migration.version} failed: {str(e)}"
+                                f"Rollback of migration {migration.version} failed: {str(e)}"
                             )
                         conn.rollback()
                         raise
@@ -358,7 +389,7 @@ class MigrationManager:
             logger.info("Available migrations:")
 
             for migration in self.migrations:
-                status = "✓ Applied" if migration.version <= current else "○ Pending"
+                status = "[Applied]" if migration.version <= current else "[Pending]"
                 logger.info(
                     f"  {status} - Version {migration.version}: {migration.description}"
                 )

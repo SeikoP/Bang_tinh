@@ -156,10 +156,17 @@ def init_db():
                 source TEXT,
                 amount TEXT,
                 content TEXT,
+                sender_name TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """
         )
+
+        # Migration: Add sender_name column if not exists
+        cursor.execute("PRAGMA table_info(bank_history)")
+        columns = [col[1] for col in cursor.fetchall()]
+        if 'sender_name' not in columns:
+            cursor.execute("ALTER TABLE bank_history ADD COLUMN sender_name TEXT")
 
         # Bảng stock_change_logs (lịch sử thay đổi số lượng kho)
         cursor.execute(

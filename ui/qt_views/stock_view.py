@@ -132,12 +132,12 @@ class StockView(QWidget):
         for i in [2, 3, 4, 5, 6]:
             header.setSectionResizeMode(i, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 45)
-        self.table.setColumnWidth(2, 75)
-        self.table.setColumnWidth(3, 75)
-        self.table.setColumnWidth(4, 130)
-        self.table.setColumnWidth(5, 130)
-        self.table.setColumnWidth(6, 110)
+        self.table.setColumnWidth(0, 55)
+        self.table.setColumnWidth(2, 85)
+        self.table.setColumnWidth(3, 85)
+        self.table.setColumnWidth(4, 140)
+        self.table.setColumnWidth(5, 140)
+        self.table.setColumnWidth(6, 120)
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -145,7 +145,7 @@ class StockView(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setDefaultSectionSize(58)
 
-    def _set_cell(self, row, col, text, center=False, bold=False, bg=None, fg=None):
+    def _set_cell(self, row, col, text, center=True, bold=False, bg=None, fg=None):
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         if center:
@@ -197,22 +197,28 @@ class StockView(QWidget):
 
             # Nút Trừ - Chiều cao bằng box
             btn_sub = QPushButton("−")
-            btn_sub.setFixedSize(36, 36)
+            # Nút Trừ
+            btn_sub = QPushButton("▼")
+            btn_sub.setFixedSize(40, 40)
             btn_sub.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_sub.setStyleSheet(
                 f"""
                 QPushButton {{
                     border: none;
-                    border-right: 2px solid {AppColors.BORDER};
-                    border-top-left-radius: 4px;
-                    border-bottom-left-radius: 4px;
-                    background: #fee2e2;
+                    border-right: 1px solid {AppColors.BORDER};
+                    border-top-left-radius: 6px;
+                    border-bottom-left-radius: 6px;
+                    background: #fef2f2;
                     color: #dc2626;
-                    font-weight: bold;
-                    font-size: 20px;
+                    font-weight: 700;
+                    font-size: 16px;
                 }}
                 QPushButton:hover {{ 
-                    background-color: #ef4444; 
+                    background-color: #fee2e2; 
+                    color: #b91c1c;
+                }}
+                QPushButton:pressed {{
+                    background-color: #ef4444;
                     color: white;
                 }}
             """
@@ -222,38 +228,43 @@ class StockView(QWidget):
             # Ô hiển thị số - Chỉ đọc
             display = QLineEdit(str(value))
             display.setReadOnly(True)
-            display.setFixedWidth(50)
+            display.setFixedWidth(60)
             display.setAlignment(Qt.AlignmentFlag.AlignCenter)
             display.setStyleSheet(
-                """
-                QLineEdit {
+                f"""
+                QLineEdit {{
                     border: none;
                     background: white;
-                    color: #0f172a;
-                    font-weight: bold;
+                    color: {AppColors.TEXT};
+                    font-weight: 700;
                     font-size: 16px;
-                }
+                    font-family: 'Roboto', 'Segoe UI', sans-serif;
+                }}
             """
             )
 
-            # Nút Cộng - Chiều cao bằng box
-            btn_add = QPushButton("+")
-            btn_add.setFixedSize(36, 36)
+            # Nút Cộng
+            btn_add = QPushButton("▲")
+            btn_add.setFixedSize(40, 40)
             btn_add.setCursor(Qt.CursorShape.PointingHandCursor)
             btn_add.setStyleSheet(
                 f"""
                 QPushButton {{
                     border: none;
-                    border-left: 2px solid {AppColors.BORDER};
-                    border-top-right-radius: 4px;
-                    border-bottom-right-radius: 4px;
-                    background: #d1fae5;
-                    color: #059669;
-                    font-weight: bold;
-                    font-size: 20px;
+                    border-left: 1px solid {AppColors.BORDER};
+                    border-top-right-radius: 6px;
+                    border-bottom-right-radius: 6px;
+                    background: #f0fdf4;
+                    color: #16a34a;
+                    font-weight: 700;
+                    font-size: 16px;
                 }}
                 QPushButton:hover {{ 
-                    background-color: #10b981; 
+                    background-color: #dcfce7; 
+                    color: #15803d;
+                }}
+                QPushButton:pressed {{
+                    background-color: #10b981;
                     color: white;
                 }}
             """
@@ -276,9 +287,9 @@ class StockView(QWidget):
             row_bg = "rgba(37, 99, 235, 0.05)" if has_data else None
 
             self._set_cell(
-                row, 0, str(row + 1), center=True, fg=AppColors.TEXT, bg=row_bg
+                row, 0, str(row + 1), fg=AppColors.TEXT, bg=row_bg
             )
-            self._set_cell(row, 1, p.name, bold=True, fg=AppColors.TEXT, bg=row_bg)
+            self._set_cell(row, 1, p.name, center=False, bold=True, fg=AppColors.TEXT, bg=row_bg)
 
             # Unit
             u_item = QTableWidgetItem(p.large_unit)
@@ -294,7 +305,7 @@ class StockView(QWidget):
             self.table.setItem(row, 2, u_item)
 
             self._set_cell(
-                row, 3, str(p.conversion), center=True, fg=AppColors.TEXT, bg=row_bg
+                row, 3, str(p.conversion), fg=AppColors.TEXT, bg=row_bg
             )
 
             # --- Cột SL Lớn ---

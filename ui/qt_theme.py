@@ -68,8 +68,8 @@ class AppTheme:
         }}
         
         QWidget {{
-            font-family: 'Segoe UI', 'SF Pro Display', -apple-system, sans-serif;
-            font-size: 13px;
+            font-family: 'Roboto', 'Segoe UI', 'SF Pro Display', -apple-system, sans-serif;
+            font-size: 12px;
             color: {c.TEXT};
         }}
         
@@ -85,6 +85,7 @@ class AppTheme:
         }}
         
         QLabel#title {{
+            font-family: 'Cabin', 'Segoe UI', sans-serif;
             font-size: 22px;
             font-weight: 800;
             color: {c.TEXT};
@@ -92,6 +93,7 @@ class AppTheme:
         }}
         
         QLabel#subtitle {{
+            font-family: 'Cabin', 'Segoe UI', sans-serif;
             font-size: 14px;
             color: {c.TEXT_SECONDARY};
             font-weight: 500;
@@ -353,10 +355,11 @@ class AppTheme:
             border-radius: 12px;
             gridline-color: transparent;
             outline: none;
+            font-size: 11px;
         }}
         
         QTableWidget::item {{
-            padding: 4px;
+            padding: 6px 4px;
             border: none;
         }}
         
@@ -373,12 +376,11 @@ class AppTheme:
             background-color: {c.BG};
             color: {c.TEXT_SECONDARY};
             font-weight: 700;
-            font-size: 11px;
-            text-transform: uppercase;
+            font-size: 10px;
             letter-spacing: 0.05em;
-            padding: 12px 10px;
+            padding: 12px 8px;
             border: none;
-            border-right: 1px solid {c.BORDER}; /* Vạch phân cách cột tiêu đề */
+            border-right: 1px solid {c.BORDER};
             border-bottom: 1px solid {c.BORDER};
         }}
         

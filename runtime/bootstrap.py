@@ -19,8 +19,8 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.config import Config
 from core.container import Container
-from core.exceptions import ConfigurationError, AppException
-from core.license import LicenseValidator
+from core.exceptions import ConfigurationError, AppException, ValidationError
+from core.license import LicenseValidator, LicenseManager
 from database.connection import init_db
 from utils.logging import LoggerFactory
 from runtime.crash_handler import CrashHandler
@@ -136,6 +136,11 @@ class ApplicationBootstrap:
 
             self.logger.info(f"Database initialized: {self.config.db_path}")
 
+            # Run migrations
+            from database.migrations import MigrationManager
+            migration_manager = MigrationManager(self.config.db_path)
+            migration_manager.migrate(logger=self.logger)
+
             # Log database info
             if self.config.db_path.exists():
                 size_mb = self.config.db_path.stat().st_size / (1024 * 1024)
@@ -170,33 +175,40 @@ class ApplicationBootstrap:
         self.logger.info("Global exception handling configured")
 
     def _check_license(self):
-        """Check license key (stub for now)"""
-        if self.config.environment == "production":
-            self.logger.info("Checking license...")
+        """Check license key validation"""
+        self.logger.info("Checking license...")
 
-            if not self.config.license_key:
-                self.logger.warning("No license key provided - running in trial mode")
+        # Skip license validation for dev/local environments
+        if self.config.environment in ["dev", "development", "local"]:
+            self.logger.info("License validation skipped (development environment)")
+            return
+
+        try:
+            # Create license validator
+            validator = LicenseValidator(logger=self.logger)
+
+            # Create license manager
+            license_manager = LicenseManager(validator=validator, logger=self.logger)
+
+            # Validate license at startup
+            is_valid = license_manager.validate_startup_license(
+                license_key=self.config.license_key, environment=self.config.environment
+            )
+
+            if not is_valid:
+                self.logger.warning(
+                    "License validation failed. Running in trial mode."
+                )
                 return
 
-            try:
-                # For now, just log that we would validate
-                # In production, you would use LicenseValidator here
-                self.logger.info("License validation skipped (stub)")
+            # Store license manager in container for later use
+            self.container._services["license_manager"] = license_manager
 
-                # Example of how to use LicenseValidator:
-                # validator = LicenseValidator(public_key_pem)
-                # is_valid, license_data = validator.validate(self.config.license_key)
-                # if not is_valid:
-                #     raise ValidationError("Invalid license key")
-                # self.logger.info(f"License valid for: {license_data.get('customer')}")
+            self.logger.info("License validation completed successfully")
 
-            except Exception as e:
-                self.logger.error(f"License validation failed: {e}")
-                raise
-        else:
-            self.logger.info(
-                f"License check skipped (environment: {self.config.environment})"
-            )
+        except Exception as e:
+            self.logger.warning(f"License validation error: {e}")
+            self.logger.info("Continuing without license validation")
 
     def _initialize_qt_application(self):
         """Initialize Qt Application"""

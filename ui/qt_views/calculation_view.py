@@ -303,13 +303,13 @@ class CalculationView(QWidget):
         for i in [3, 4, 5, 6, 7]:
             header.setSectionResizeMode(i, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 60)
-        self.table.setColumnWidth(1, 65)
-        self.table.setColumnWidth(3, 110)
-        self.table.setColumnWidth(4, 110)
-        self.table.setColumnWidth(5, 75)
-        self.table.setColumnWidth(6, 95)
-        self.table.setColumnWidth(7, 110)
+        self.table.setColumnWidth(0, 60)   # Đ.Vị - giảm từ 70
+        self.table.setColumnWidth(1, 65)   # Quy đổi - giảm từ 75
+        self.table.setColumnWidth(3, 80)   # Giao ca - giảm từ 120
+        self.table.setColumnWidth(4, 80)   # Chốt ca - giảm từ 120
+        self.table.setColumnWidth(5, 75)   # Đã dùng - giảm từ 85
+        self.table.setColumnWidth(6, 90)   # Đơn giá - giảm từ 105
+        self.table.setColumnWidth(7, 100)  # Thành tiền - giảm từ 120
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -545,7 +545,7 @@ class CalculationView(QWidget):
                 self._set_cell_helper(
                     self.prod_table, row, 0, str(row + 1), center=True
                 )
-                self._set_cell_helper(self.prod_table, row, 1, p.name, bold=True)
+                self._set_cell_helper(self.prod_table, row, 1, p.name, center=False, bold=True)
                 self._set_cell_helper(
                     self.prod_table,
                     row,
@@ -687,7 +687,7 @@ class CalculationView(QWidget):
         row,
         col,
         text,
-        center=False,
+        center=True,
         right=False,
         bold=False,
         bg=None,
@@ -695,13 +695,13 @@ class CalculationView(QWidget):
     ):
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        if center:
-            item.setTextAlignment(
-                Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
-            )
-        elif right:
+        if right:
             item.setTextAlignment(
                 Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+            )
+        elif center:
+            item.setTextAlignment(
+                Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
             )
         else:
             item.setTextAlignment(
