@@ -36,10 +36,17 @@ def main() -> int:
     container = bootstrap.get_container()
     qt_app = bootstrap.get_qt_app()
     logger = container.get("logger")
+    profiler = bootstrap.get_profiler()
+    watchdog = bootstrap.get_watchdog()
 
     # Step 3: Create lifecycle manager
     lifecycle = ApplicationLifecycle(
-        config=config, container=container, qt_app=qt_app, logger=logger
+        config=config, 
+        container=container, 
+        qt_app=qt_app, 
+        logger=logger,
+        profiler=profiler,
+        watchdog=watchdog
     )
 
     # Step 4: Create main window

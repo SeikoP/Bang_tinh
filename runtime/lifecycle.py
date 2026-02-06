@@ -11,6 +11,7 @@ Handles the application lifecycle:
 import logging
 import signal
 import sys
+from datetime import datetime
 from typing import Callable, Optional
 
 from PyQt6.QtWidgets import QApplication, QMainWindow
@@ -36,11 +37,15 @@ class ApplicationLifecycle:
         container: Container,
         qt_app: QApplication,
         logger: logging.Logger,
+        profiler: Optional['ApplicationProfiler'] = None,
+        watchdog: Optional['ApplicationWatchdog'] = None,
     ):
         self.config = config
         self.container = container
         self.qt_app = qt_app
         self.logger = logger
+        self.profiler = profiler
+        self.watchdog = watchdog
         self.main_window: Optional[QMainWindow] = None
         self._shutdown_handlers: list[Callable] = []
         self._is_shutting_down = False
@@ -86,9 +91,13 @@ class ApplicationLifecycle:
             int: Application exit code
         """
         self.main_window = main_window
+        startup_metric = None
 
         try:
             self.logger.info("Starting application...")
+            
+            if self.profiler:
+                startup_metric = self.profiler.start_metric("application_startup")
 
             # Show main window
             self.main_window.show()
@@ -100,9 +109,21 @@ class ApplicationLifecycle:
 
             # Set up periodic tasks (if needed)
             self._setup_periodic_tasks()
+            
+            if startup_metric and self.profiler:
+                self.profiler.end_metric(startup_metric)
+                self.profiler.startup_time = startup_metric.duration
 
             # Start Qt event loop
             self.logger.info("Entering Qt event loop...")
+            
+            # Update watchdog heartbeat periodically (avoid deadlock)
+            if self.watchdog:
+                from PyQt6.QtCore import QTimer
+                self._heartbeat_timer = QTimer()
+                self._heartbeat_timer.timeout.connect(self._update_heartbeat)
+                self._heartbeat_timer.start(30000)  # Every 30 seconds
+            
             exit_code = self.qt_app.exec()
 
             self.logger.info(f"Qt event loop exited with code: {exit_code}")
@@ -130,6 +151,14 @@ class ApplicationLifecycle:
         # health_timer.start(60000)  # Every minute
 
         pass
+    
+    def _update_heartbeat(self):
+        """Update watchdog heartbeat (called from Qt timer)"""
+        try:
+            if self.watchdog:
+                self.watchdog.heartbeat()
+        except Exception as e:
+            self.logger.error(f"Heartbeat update failed: {e}")
 
     def _auto_save(self):
         """Periodic auto-save (example)"""
@@ -161,6 +190,11 @@ class ApplicationLifecycle:
         self.logger.info("=" * 70)
 
         try:
+            # Stop watchdog
+            if self.watchdog:
+                self.logger.info("Stopping watchdog...")
+                self.watchdog.stop()
+            
             # Call registered shutdown handlers
             for handler in self._shutdown_handlers:
                 try:
@@ -181,6 +215,15 @@ class ApplicationLifecycle:
 
             # Close database connections
             self._close_database_connections()
+            
+            # Generate profiler report
+            if self.profiler:
+                try:
+                    report_path = self.config.log_dir / f"performance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                    self.profiler.generate_report(report_path)
+                    self.profiler.cleanup()
+                except Exception as e:
+                    self.logger.error(f"Failed to generate profiler report: {e}")
 
             # Flush logs
             self.logger.info("Shutdown complete")
