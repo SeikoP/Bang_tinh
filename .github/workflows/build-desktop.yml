@@ -55,7 +55,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: BangTinh-Portable
-        path: dist/Warehouse Management.exe
+        path: dist/WarehouseManagement.exe
         
     - name: Upload Installer
       uses: actions/upload-artifact@v4
@@ -68,7 +68,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          dist/Warehouse Management.exe
+          dist/WarehouseManagement.exe
           Output/BangTinhSetup.exe
         body: |
           ## Bảng Tính - Warehouse Management v${{ github.ref_name }}

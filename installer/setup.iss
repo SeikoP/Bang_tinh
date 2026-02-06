@@ -5,7 +5,7 @@
 #define MyAppVersion "2.0.0"
 #define MyAppPublisher "Bangla Team"
 #define MyAppURL "https://github.com/SeikoP/Bang_tinh"
-#define MyAppExeName "Warehouse Management.exe"
+#define MyAppExeName "WarehouseManagement.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
