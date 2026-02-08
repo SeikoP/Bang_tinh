@@ -525,9 +525,10 @@ class MainWindow(QMainWindow):
                     host=config.notification_host,
                     port=config.notification_port,
                     logger=self.logger,
+                    container=self.container,
                 )
             else:
-                self.notif_thread = NotificationServer(logger=self.logger)
+                self.notif_thread = NotificationServer(logger=self.logger, container=self.container)
             self.notif_thread.msg_received.connect(self._process_notification)
             self.notif_thread.start()
 

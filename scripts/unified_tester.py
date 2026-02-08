@@ -86,6 +86,63 @@ def test_sender_extraction():
     print("✅ Logic bóc tách hoạt động (Xem chi tiết trong app_window.py)")
     return True
 
+def test_session_api():
+    """Test session API (GET/POST)"""
+    print("\n📦 Đang kiểm tra Session API...")
+    url = f"http://{HOST}:{PORT}/api/session"
+    
+    # Get auth header
+    try:
+        from core.config import Config
+        key = Config.from_env().secret_key
+        headers = {"Authorization": f"Bearer {key}"}
+    except:
+        print("❌ Không thể lấy Secret Key. Bỏ qua.")
+        return
+
+    try:
+        # 1. GET Session
+        print(f"   GET {url}...")
+        resp = requests.get(url, headers=headers, timeout=2)
+        
+        data = None
+        if resp.status_code == 200:
+            try:
+                data = resp.json()
+                if data.get("success"):
+                    items = data.get("session", [])
+                    print(f"   ✅ GET Success: Đã tải {len(items)} sản phẩm")
+                else:
+                    print(f"   ❌ GET Failed: {data.get('error')}")
+            except:
+                print(f"   ❌ GET Failed: Invalid JSON")
+        else:
+            print(f"   ❌ GET Failed: HTTP {resp.status_code} - {resp.text}")
+            
+        # 2. POST Session (Dry run - update first item if exists)
+        if data and data.get("session") and len(data["session"]) > 0:
+            item = data["session"][0]
+            pid = item["product_id"]
+            current_closing = item["closing_qty"]
+            
+            payload = {
+                "updates": [
+                    {"product_id": pid, "closing_qty": current_closing} # No change
+                ]
+            }
+            
+            print(f"   POST {url} (Update product {pid})...")
+            resp = requests.post(url, json=payload, headers=headers, timeout=2)
+            if resp.status_code == 200:
+                print("   ✅ POST Success: Đã cập nhật session")
+            else:
+                print(f"   ❌ POST Failed: HTTP {resp.status_code} - {resp.text}")
+        else:
+            print("   ⚠️ Không có sản phẩm để test POST update.")
+        
+    except Exception as e:
+        print(f"   ❌ Error: {e}")
+
 # ===== Interactive Menu =====
 
 def main():
@@ -96,11 +153,12 @@ def main():
         print("1. Kiểm tra Thông báo Ngân hàng (Single)")
         print("2. Chạy Batch Test (10 thông báo liên tục)")
         print("3. Kiểm tra Giọng nói (TTS)")
-        print("4. Chạy Full System Check (Health Check)")
+        print("4. Kiểm tra API Chốt Ca (GET/POST)")
+        print("5. Chạy Full System Check (Health Check)")
         print("0. Thoát")
         print("-" * 50)
         
-        choice = input("Lựa chọn của bạn (0-4): ").strip()
+        choice = input("Lựa chọn của bạn (0-5): ").strip()
         
         if choice == "1":
             if not check_server():
@@ -120,13 +178,27 @@ def main():
                 time.sleep(0.5)
                 
         elif choice == "3":
-            test_tts_engines()
-            
+            try:
+                from services.tts_service import TTSService
+                s = TTSService()
+                s.speak("Hệ thống kiểm tra thoại hoạt động tốt")
+                print("✅ Đã phát âm thanh test.")
+            except:
+                print("❌ Lỗi init TTS.")
+            # test_tts_engines()
+
         elif choice == "4":
+            if not check_server():
+                print("❌ Lỗi: Ứng dụng chính chưa chạy!")
+                continue
+            test_session_api()
+            
+        elif choice == "5":
             print("📋 Đang kiểm tra toàn diện...")
             s1 = "PASS" if check_server() else "FAIL"
             print(f"   - Server Status: {s1}")
             test_sender_extraction()
+            test_session_api() 
             print("✅ Kiểm tra hoàn tất.")
             
         elif choice == "0":

@@ -12,12 +12,13 @@ class NotificationServer(QThread):
     """Luồng chạy server lắng nghe thông báo"""
 
     msg_received = pyqtSignal(str)
-
-    def __init__(self, host="0.0.0.0", port=5005, logger=None):
+    
+    def __init__(self, host="0.0.0.0", port=5005, logger=None, container=None):
         super().__init__()
         self.host = host
         self.port = port
         self.logger = logger
+        self.container = container
         self._server = None
         self._running = False
 
@@ -29,6 +30,7 @@ class NotificationServer(QThread):
             self._server.timeout = 5
             self._server.signal = self.msg_received
             self._server.logger = self.logger
+            self._server.container = self.container
             
             # --- AUTH CONFIG ---
             from core.config import Config

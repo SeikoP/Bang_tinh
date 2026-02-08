@@ -196,11 +196,133 @@ class NotificationHandler(BaseHTTPRequestHandler):
             except:
                 pass
 
-    def do_POST(self):
-        self.handle_request()
-
     def do_GET(self):
-        self.handle_request()
+        """Handle GET requests"""
+        if self.path.startswith("/api/session"):
+            self.handle_get_session()
+        else:
+            self.handle_request()  # Default notification handling
+
+    def do_POST(self):
+        """Handle POST requests"""
+        if self.path.startswith("/api/session"):
+            self.handle_post_session()
+        else:
+            self.handle_request()
+
+    def _check_auth(self):
+        """Helper to enforce auth"""
+        auth_header = self.headers.get("Authorization")
+        expected_key = getattr(self.server, "secret_key", None)
+        
+        if expected_key:
+            if not auth_header or not auth_header.startswith("Bearer "):
+                return False
+            token = auth_header.split(" ")[1].strip()
+            if token != expected_key:
+                return False
+        return True
+
+    def handle_get_session(self):
+        """API: Get current session data"""
+        if not self._check_auth():
+            self.send_response(401)
+            self.end_headers()
+            return
+
+        try:
+            container = getattr(self.server, "container", None)
+            if not container:
+                raise Exception("Container not found in server context")
+                
+            repo = container.get("session_repository")
+            if not repo:
+                raise Exception("Session repository not found")
+                
+            sessions = repo.get_all()
+            data = []
+            for s in sessions:
+                data.append({
+                    "product_id": s.product.id,
+                    "product_name": s.product.name,
+                    "large_unit": s.product.large_unit,
+                    "conversion": s.product.conversion,
+                    "unit_price": float(s.product.unit_price),
+                    "unit_char": s.product.unit_char,
+                    "handover_qty": s.handover_qty,
+                    "closing_qty": s.closing_qty,
+                    "used_qty": s.used_qty,
+                    "amount": float(s.amount)
+                })
+            
+            response = {"success": True, "session": data}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode("utf-8"))
+            
+        except Exception as e:
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.error(f"API Error (GET session): {e}")
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+
+    def handle_post_session(self):
+        """API: Update session data"""
+        if not self._check_auth():
+            self.send_response(401)
+            self.end_headers()
+            return
+
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length == 0:
+                raise Exception("Empty body")
+                
+            post_data = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(post_data)
+            updates = payload.get("updates", [])
+            
+            container = getattr(self.server, "container", None)
+            if not container:
+                raise Exception("Container not found")
+                
+            repo = container.get("session_repository")
+            if not repo:
+                raise Exception("Session repository not found")
+            
+            # Get current state to verify handover quantities
+            current_sessions = {s.product.id: s for s in repo.get_all()}
+            
+            for update in updates:
+                pid = update.get("product_id")
+                closing = update.get("closing_qty")
+                
+                if pid in current_sessions:
+                    current = current_sessions[pid]
+                    # Update closing quantity, keep handover same
+                    repo.update_qty(pid, current.handover_qty, closing)
+            
+            # Emit signal to refresh UI
+            if hasattr(self.server, "signal"):
+                # Use special command format for system actions
+                msg = json.dumps({"has_command": True, "command": "REFRESH_SESSION", "content": "Remote Update"})
+                self.server.signal.emit(msg)
+            
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True}).encode("utf-8"))
+            
+        except Exception as e:
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.error(f"API Error (POST session): {e}")
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
 
     def log_message(self, format, *args):
         # Silent logging - use server logger instead
