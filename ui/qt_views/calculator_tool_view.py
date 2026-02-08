@@ -34,7 +34,7 @@ class CalculatorToolView(QWidget):
 
         # --- LEFT: CALCULATOR ---
         calc_container = QFrame()
-        calc_container.setFixedWidth(380)
+        calc_container.setFixedWidth(400)
         calc_container.setStyleSheet(f"""
             QFrame {{
                 background-color: white;
@@ -81,8 +81,6 @@ class CalculatorToolView(QWidget):
         action_layout.setSpacing(8)
         
         actions = [
-            ("VAT 10%", AppColors.PRIMARY),
-            ("VAT 8%", AppColors.PRIMARY),
             ("Copy Kết quả", "#2563eb")
         ]
         
@@ -122,25 +120,32 @@ class CalculatorToolView(QWidget):
 
         for text, r, c in buttons:
             btn = QPushButton(text)
-            btn.setFixedSize(82, 54)
+            btn.setFixedSize(86, 60)  # Slightly larger for better touch/click area
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             
             is_digit = text.isdigit() or text == '.'
             is_op = text in ['/', '*', '-', '+']
             
+            # Optimized flat design (no shadow for performance)
             if text == '=':
-                st = f"background: {AppColors.PRIMARY}; color: white; border-radius: 6px; font-weight: 800; font-size: 22px;"
+                st = f"background: {AppColors.PRIMARY}; color: white; border-radius: 8px; font-weight: 800; font-size: 24px; border: none;"
+                hover = f"background: {AppColors.PRIMARY_HOVER};"
             elif is_op:
-                st = f"background: #f1f5f9; color: {AppColors.PRIMARY}; border-radius: 6px; font-weight: 700; font-size: 20px; border: 1px solid #e2e8f0;"
+                st = f"background: #e0f2fe; color: {AppColors.PRIMARY}; border-radius: 8px; font-weight: 700; font-size: 20px; border: 1px solid #bae6fd;"
+                hover = f"background: #bae6fd;"
             elif is_digit:
-                st = f"background: white; color: {AppColors.TEXT}; border-radius: 6px; font-weight: 700; font-size: 20px; border: 1px solid #f1f5f9; border-bottom: 2px solid #e2e8f0;"
+                st = f"background: white; color: {AppColors.TEXT}; border-radius: 8px; font-weight: 700; font-size: 22px; border: 1px solid #e2e8f0;"
+                hover = f"background: #f8fafc; border-color: {AppColors.BORDER_HOVER};"
             else: # Function keys
-                st = f"background: #f8fafc; color: {AppColors.TEXT_SECONDARY}; border-radius: 6px; font-weight: 600; font-size: 16px; border: 1px solid #e2e8f0;"
+                st = f"background: #f1f5f9; color: {AppColors.TEXT_SECONDARY}; border-radius: 8px; font-weight: 600; font-size: 16px; border: 1px solid #e2e8f0;"
+                hover = f"background: #e2e8f0; color: {AppColors.TEXT};"
             
             btn.setStyleSheet(f"""
                 QPushButton {{ {st} }}
-                QPushButton:hover {{ background-color: #e2e8f0; }}
+                QPushButton:hover {{ {hover} }}
+                QPushButton:pressed {{ margin-top: 1px; margin-left: 1px; }}
             """)
+            # Use direct connection for slightly better responsiveness
             btn.clicked.connect(lambda ch, t=text: self._on_btn(t))
             grid.addWidget(btn, r, c)
 
@@ -373,15 +378,34 @@ class CalculatorToolView(QWidget):
         except: pass
 
     def keyPressEvent(self, event):
-        t = event.text()
-        if t in "0123456789.": self._on_btn(t)
-        elif t in "+-*/": self._on_btn(t)
-        elif event.key() in [Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Equal]: self._on_btn('=')
-        elif event.key() == Qt.Key.Key_Backspace: self._on_btn('⌫')
-        elif event.key() == Qt.Key.Key_Escape: self._on_btn('C')
-        elif event.key() == Qt.Key.Key_Delete: self._on_btn('CE')
-        elif t == '%': self._on_btn('%')
-        elif event.key() == Qt.Key.Key_V: self._on_special_action("VAT 10%")
-        elif event.modifiers() == Qt.KeyboardModifier.ControlModifier and event.key() == Qt.Key.Key_C:
+        key = event.key()
+        text = event.text()
+
+        # Handle number keys (both top row and numpad)
+        if Qt.Key.Key_0 <= key <= Qt.Key.Key_9:
+            self._on_btn(text if text else chr(key))
+            return
+
+        # Handle operators
+        if text in "+-*/%.":
+            self._on_btn(text)
+            return
+            
+        # Handle Enter
+        if key in [Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Equal]:
+            self._on_btn('=')
+            return
+            
+        # Handle editing keys
+        if key == Qt.Key.Key_Backspace:
+            self._on_btn('⌫')
+        elif key == Qt.Key.Key_Escape:
+            self._on_btn('C')
+        elif key == Qt.Key.Key_Delete:
+            self._on_btn('CE')
+            
+        # Handle copy shortcut
+        elif event.modifiers() == Qt.KeyboardModifier.ControlModifier and key == Qt.Key.Key_C:
              self._on_special_action("Copy Kết quả")
+             
         super().keyPressEvent(event)

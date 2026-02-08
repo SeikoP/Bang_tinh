@@ -387,13 +387,22 @@ class MainWindow(QMainWindow):
         header_layout.addWidget(self.notif_box)
 
         content_layout.addWidget(header)
-        content_layout.addWidget(self.content_stack)
         
-        # Task Notification Widget at bottom - Premium Indigo Pill Design
+        # Task Notification Widget - Premium Indigo Pill Design
         self.task_notif_box = QFrame()
         self.task_notif_box.setFixedHeight(48)
         self.task_notif_box.setCursor(Qt.CursorShape.PointingHandCursor)
-        # Use a pill design that doesn't span the full width
+        
+        # Add task notification container below header
+        notif_container = QHBoxLayout()
+        notif_container.addStretch()
+        notif_container.addWidget(self.task_notif_box)
+        notif_container.addStretch()
+        content_layout.addLayout(notif_container)
+        
+        content_layout.addWidget(self.content_stack)
+        
+        main_layout.addWidget(main_content)
         self.task_notif_box.setStyleSheet(f"""
             QFrame {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
@@ -443,15 +452,6 @@ class MainWindow(QMainWindow):
 
         self.task_notif_box.hide()
         
-        # Add to content_layout with alignment
-        notif_container = QHBoxLayout()
-        notif_container.addStretch()
-        notif_container.addWidget(self.task_notif_box)
-        notif_container.addStretch()
-        content_layout.addLayout(notif_container)
-        
-        main_layout.addWidget(main_content)
-
         self._switch_view(0)
 
     def _add_nav_btn(self, layout, text, index):
@@ -651,17 +651,12 @@ class MainWindow(QMainWindow):
             cmd = data.get('command')
             
             # Change notif_box color to INFO (Emerald Dark or Blue) for system/command events
-            self.notif_label.setText(f"<b>{timestamp}</b> | ✨ {data['content']}")
-            self.notif_box.setStyleSheet(f"""
-                QFrame {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 {AppColors.INFO}, stop:1 {AppColors.PRIMARY});
-                    border-radius: 21px;
-                    padding: 0 6px;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
-                }}
-            """)
-            self._show_notification_animated()
+            # Use task notification area for system messages to avoid overwriting bank notifs
+            self.task_notif_label.setText(f"✨ {data['content']}")
+            self.task_notif_box.show()
+            
+            # Auto-hide system notification after 5 seconds
+            QTimer.singleShot(5000, self.task_notif_box.hide)
             
             if cmd == 'REFRESH_SESSION':
                 self._refresh_calc()
