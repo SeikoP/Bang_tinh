@@ -15,6 +15,14 @@ class ProductDialog(QDialog):
         self.result_data = None
         self._setup_ui()
 
+    def keyPressEvent(self, event):
+        """Handle Enter key to submit dialog"""
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            if not event.modifiers() or event.modifiers() == Qt.KeyboardModifier.KeypadModifier:
+                self._save()
+                return
+        super().keyPressEvent(event)
+
     def _setup_ui(self):
         self.setWindowTitle("Thêm sản phẩm" if not self.product else "Sửa sản phẩm")
         self.setFixedWidth(420)

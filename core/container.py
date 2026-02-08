@@ -55,6 +55,31 @@ class Container:
             port=self._config.notification_port,
             logger=logger,
         )
+        
+        # Command service for undo/redo
+        from services.command_service import CommandHistory
+        self._singletons["command_history"] = CommandHistory(
+            max_history=50,
+            logger=logger
+        )
+        
+        # Backup service
+        from services.backup_service import BackupService
+        from pathlib import Path
+        self._singletons["backup_service"] = BackupService(
+            db_path=Path("storage.db"),
+            backup_dir=self._config.backup_dir,
+            keep_backups=30,
+            logger=logger
+        )
+        
+        # Alert service
+        from services.alert_service import AlertService
+        self._singletons["alert_service"] = AlertService(
+            product_repo=self.get("product_repo"),
+            session_repo=self.get("session_repo"),
+            logger=logger
+        )
 
     def register_singleton(self, name: str, instance: Any) -> None:
         """Register a singleton service instance"""

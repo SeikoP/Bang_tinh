@@ -36,6 +36,14 @@ class SaveSessionDialog(QDialog):
         self.result_data = None
         self._setup_ui()
 
+    def keyPressEvent(self, event):
+        """Handle Enter key to submit dialog"""
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            if not event.modifiers() or event.modifiers() == Qt.KeyboardModifier.KeypadModifier:
+                self._save()
+                return
+        super().keyPressEvent(event)
+
     def _setup_ui(self):
         self.setWindowTitle("Lưu phiên làm việc")
         self.setFixedWidth(420)
@@ -141,46 +149,20 @@ class CalculationView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Sub Tabs
-        self.tabs = QTabWidget()
-        self.tabs.setStyleSheet(f"""
-            QTabWidget::pane {{
-                border: none;
-                background: transparent;
-            }}
-            QTabBar::tab {{
-                padding: 12px 28px;
-                font-weight: 600;
-                font-size: 13px;
-                background: transparent;
-                color: {AppColors.TEXT_SECONDARY};
-                border-bottom: 2px solid transparent;
-            }}
-            QTabBar::tab:selected {{
-                color: {AppColors.PRIMARY};
-                border-bottom: 2px solid {AppColors.PRIMARY};
-                background: rgba(37, 99, 235, 0.05);
-            }}
-            QTabBar::tab:hover:!selected {{
-                color: {AppColors.TEXT};
-                background: rgba(15, 23, 42, 0.05);
-            }}
-        """)
-
-        # 1. Calculation Tab
-        self.calc_tab = QWidget()
-        self._setup_calc_tab()
-        self.tabs.addTab(self.calc_tab, "🧮 Máy tính")
-
-        # 2. Product Management Tab (Moved from Product View)
+        # Setup calc tab directly (no sub-tabs)
+        self._setup_calc_tab_direct(layout)
+        
+        # Setup prod tab separately (will be used by parent)
         self.prod_tab = QWidget()
         self._setup_prod_tab()
-        self.tabs.addTab(self.prod_tab, "📦 Danh sách sản phẩm")
-
-        layout.addWidget(self.tabs)
 
     def _setup_calc_tab(self):
         layout = QVBoxLayout(self.calc_tab)
+        layout.setContentsMargins(20, 16, 20, 20)
+        layout.setSpacing(16)
+    
+    def _setup_calc_tab_direct(self, parent_layout):
+        layout = parent_layout
         layout.setContentsMargins(20, 16, 20, 20)
         layout.setSpacing(16)
 
@@ -215,10 +197,15 @@ class CalculationView(QWidget):
         self._setup_calc_table()
         content_layout.addWidget(self.table, 1)
 
-        # Report frame (visible by default)
+        # Report frame (Clean Sidebar surface)
         self.report_frame = QFrame()
-        self.report_frame.setObjectName("card")
-        self.report_frame.setFixedWidth(280)
+        self.report_frame.setFixedWidth(290)
+        self.report_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {AppColors.BG_SECONDARY};
+                border-radius: 12px;
+            }}
+        """)
         content_layout.addWidget(self.report_frame)
         self._show_report({})
 
@@ -355,9 +342,9 @@ class CalculationView(QWidget):
         self.prod_table.setDragDropMode(QTableWidget.DragDropMode.InternalMove)
         self.prod_table.setDefaultDropAction(Qt.DropAction.MoveAction)
 
-    def refresh_table(self):
+    def refresh_table(self, force=False):
         # Prevent duplicate refresh operations
-        if self._is_loading:
+        if self._is_loading and not force:
             return
 
         self._is_loading = True
@@ -383,14 +370,14 @@ class CalculationView(QWidget):
                 )
                 total += s.amount
                 has_data = s.used_qty > 0
-                row_bg = "rgba(37, 99, 235, 0.05)" if has_data else None
+                row_bg = None # Use white background for clarity
 
                 unit_item = QTableWidgetItem(p.large_unit)
                 unit_item.setFlags(unit_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 unit_item.setTextAlignment(
                     Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
                 )
-                unit_item.setBackground(QColor(row_bg if has_data else "#f1f5f9"))
+                unit_item.setBackground(QColor("white"))
                 unit_item.setForeground(QColor(AppColors.PRIMARY))
                 font = unit_item.font()
                 font.setBold(True)
@@ -467,50 +454,37 @@ class CalculationView(QWidget):
                 closing_layout.addWidget(closing_edit)
                 self.table.setCellWidget(row, 4, closing_container)
 
+                # Used Column: Highlight non-zero as a badge
                 if s.used_qty > 0:
-                    used_item = QTableWidgetItem(str(s.used_qty))
-                    used_item.setFlags(used_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                    used_item.setTextAlignment(
-                        Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                    self._set_cell_helper(
+                        self.table, row, 5, str(s.used_qty),
+                        right=True, fg="white", bold=True, bg=AppColors.ERROR
                     )
-                    used_item.setBackground(QColor(AppColors.WARNING))
-                    used_item.setForeground(QColor("white"))
-                    font = used_item.font()
-                    font.setBold(True)
-                    used_item.setFont(font)
-                    self.table.setItem(row, 5, used_item)
                 else:
                     self._set_cell_helper(
-                        self.table,
-                        row,
-                        5,
-                        "0",
-                        right=True,
-                        fg=AppColors.TEXT,
-                        bg=row_bg,
+                        self.table, row, 5, "0",
+                        right=True, fg=AppColors.TEXT_SECONDARY, bg=None
                     )
 
+                # Unit Price: Standard text
                 self._set_cell_helper(
-                    self.table,
-                    row,
-                    6,
-                    f"{p.unit_price:,.0f}",
-                    right=True,
-                    fg=AppColors.TEXT,
-                    bg=row_bg,
+                    self.table, row, 6, f"{p.unit_price:,.0f}",
+                    right=True, fg=AppColors.TEXT, bg=None
                 )
-                self._set_cell_helper(
-                    self.table,
-                    row,
-                    7,
-                    f"{s.amount:,.0f}",
-                    right=True,
-                    fg=AppColors.SUCCESS,
-                    bold=True,
-                    bg=row_bg,
-                )
+                
+                # Amount: Highlight non-zero with Primary badge
+                if s.amount > 0:
+                    self._set_cell_helper(
+                        self.table, row, 7, f"{s.amount:,.0f}",
+                        right=True, fg="white", bold=True, bg=AppColors.PRIMARY
+                    )
+                else:
+                    self._set_cell_helper(
+                        self.table, row, 7, "0",
+                        right=True, fg=AppColors.TEXT_SECONDARY, bg=None
+                    )
 
-            self.total_label.setText(f"💰 TỔNG TIỀN: {total:,.0f} VNĐ")
+            self.total_label.setText(f"TỔNG TIỀN: {total:,.0f} VNĐ")
             if self._next_focus:
                 row, col = self._next_focus
                 self._next_focus = None
@@ -556,9 +530,14 @@ class CalculationView(QWidget):
                 self._set_cell_helper(
                     self.prod_table, row, 0, str(row + 1), center=True
                 )
-                self._set_cell_helper(
-                    self.prod_table, row, 1, p.name, center=False, bold=True
-                )
+                name_item = QTableWidgetItem(p.name)
+                name_item.setData(Qt.ItemDataRole.UserRole, p.id) # Store ID
+                name_item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                f = name_item.font()
+                f.setBold(True)
+                name_item.setFont(f)
+                self.prod_table.setItem(row, 1, name_item)
                 self._set_cell_helper(
                     self.prod_table,
                     row,
@@ -679,9 +658,38 @@ class CalculationView(QWidget):
             return
         h = new if is_h else curr.handover_qty
         c = curr.closing_qty if is_h else new
+        
+        # Validate closing quantity
+        if not is_h and c > h:
+            # Show warning when closing exceeds handover
+            product_name = curr.product.name
+            handover_display = self.calc_service.format_to_display(h, conv, curr.product.unit_char)
+            closing_display = self.calc_service.format_to_display(c, conv, curr.product.unit_char)
+            
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("⚠️ Cảnh báo: Chốt ca > Giao ca")
+            msg.setText(f"<b style='font-size:14px;'>{product_name}</b>")
+            msg.setInformativeText(
+                f"<b>Chốt ca:</b> {closing_display}<br>"
+                f"<b>Giao ca:</b> {handover_display}<br><br>"
+                f"<span style='color:#dc2626;'>❌ Chốt ca không thể lớn hơn Giao ca!</span>"
+            )
+            msg.setDetailedText(
+                "Nguyên nhân có thể:\n\n"
+                "1. Tính toán sai số lượng chốt ca\n"
+                "2. Sai số lượng giao ca (nhập thiếu)\n"
+                "3. Sai tồn kho từ ca trước\n"
+                "4. Nhập nhầm đơn vị (thùng/lon)\n"
+                "5. Có nhập thêm hàng trong ca\n\n"
+                "→ Vui lòng kiểm tra lại số liệu!"
+            )
+            msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+            msg.exec()
+            
+            c = h  # Auto-adjust to handover
+        
         if is_h:
-            c = h
-        if c > h:
             c = h
 
         # Use repository interface
@@ -708,27 +716,46 @@ class CalculationView(QWidget):
     ):
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        if right:
-            item.setTextAlignment(
-                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            )
-        elif center:
-            item.setTextAlignment(
-                Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
-            )
-        else:
-            item.setTextAlignment(
-                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
-            )
+        
+        # Alignment
+        align = Qt.AlignmentFlag.AlignVCenter
+        if right: align |= Qt.AlignmentFlag.AlignRight
+        elif center: align |= Qt.AlignmentFlag.AlignCenter
+        else: align |= Qt.AlignmentFlag.AlignLeft
+        item.setTextAlignment(align)
+
         if bold:
             f = item.font()
             f.setBold(True)
             item.setFont(f)
-        if bg:
-            item.setBackground(QColor(bg))
-        if fg:
-            item.setForeground(QColor(fg))
-        table.setItem(row, col, item)
+
+        # Style - Use real labels for badges to guarantee visibility and style
+        if bg and fg == "white":
+            container = QWidget()
+            l = QHBoxLayout(container)
+            l.setContentsMargins(4, 6, 4, 6)
+            l.setAlignment(align)
+            
+            badge = QLabel(text)
+            badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {bg};
+                    color: white;
+                    border-radius: 12px;
+                    padding: 2px 12px;
+                    font-weight: {"bold" if bold else "normal"};
+                    font-size: 13px;
+                }}
+            """)
+            l.addWidget(badge)
+            table.setCellWidget(row, col, container)
+            # Item remains for sorting but text is hidden behind widget
+            item.setForeground(QColor("transparent"))
+            table.setItem(row, col, item)
+        else:
+            if bg: item.setBackground(QColor(bg))
+            if fg: item.setForeground(QColor(fg))
+            table.setItem(row, col, item)
 
     def _add_product(self):
         try:
@@ -834,70 +861,135 @@ class CalculationView(QWidget):
             QMessageBox.warning(self, "Lỗi", f"Không thể đọc file: {res['error']}")
 
     def _show_report(self, data: dict):
+        """Build a modern, premium summary sidebar"""
         if self.report_frame.layout():
-            l = self.report_frame.layout()
-            while l.count():
-                i = l.takeAt(0)
-                if i.widget():
-                    i.widget().deleteLater()
-                elif i.layout():
-                    s = i.layout()
-                    while s.count():
-                        si = s.takeAt(0)
-                        if si.widget():
-                            si.widget().deleteLater()
+            layout = self.report_frame.layout()
+            while layout.count():
+                item = layout.takeAt(0)
+                if item.widget(): item.widget().deleteLater()
+                elif item.layout():
+                    sub = item.layout()
+                    while sub.count():
+                        si = sub.takeAt(0)
+                        if si.widget(): si.widget().deleteLater()
         else:
-            l = QVBoxLayout(self.report_frame)
-            l.setContentsMargins(16, 20, 16, 20)
-            l.setSpacing(16)
-        h = QHBoxLayout()
-        h.setContentsMargins(0, 0, 0, 10)
-        t = QLabel("📄 Bảng Tổng Hợp")
-        t.setStyleSheet(
-            f"font-weight: 800; font-size: 18px; color: {AppColors.PRIMARY};"
-        )
-        h.addWidget(t)
-        h.addStretch()
+            layout = QVBoxLayout(self.report_frame)
+            layout.setContentsMargins(16, 20, 16, 20)
+            layout.setSpacing(14)
+
+        # Header with pulse-like indicator
+        header = QHBoxLayout()
+        header.setContentsMargins(0, 0, 0, 5)
+        
+        status_dot = QLabel("●")
+        status_dot.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 16px; margin-right: 2px;")
+        header.addWidget(status_dot)
+        
+        title = QLabel("TỔNG HỢP CA")
+        title.setStyleSheet(f"font-weight: 800; font-size: 14px; color: {AppColors.TEXT_SECONDARY}; letter-spacing: 1px;")
+        header.addWidget(title)
+        header.addStretch()
+        
         if data:
-            cb = QPushButton("×")
-            cb.setObjectName("iconBtn")
-            cb.setFixedSize(32, 32)
-            cb.clicked.connect(lambda: self._show_report({}))
-            h.addWidget(cb)
-        l.addLayout(h)
+            reset_btn = QPushButton("✕")
+            reset_btn.setFixedSize(24, 24)
+            reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            reset_btn.setStyleSheet(f"""
+                QPushButton {{
+                    border: none; background: transparent; color: {AppColors.TEXT_SECONDARY}; font-weight: bold;
+                }}
+                QPushButton:hover {{ color: {AppColors.ERROR}; }}
+            """)
+            reset_btn.clicked.connect(lambda: self._show_report({}))
+            header.addWidget(reset_btn)
+            
+        layout.addLayout(header)
+
+        # Divider
         line = QFrame()
         line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet(f"background-color: {AppColors.BORDER}; max-height: 1px;")
-        l.addWidget(line)
-        ac = self._create_stat_card(
+        line.setStyleSheet(f"background-color: {AppColors.BORDER}; max-height: 1px; min-height: 1px;")
+        layout.addWidget(line)
+        layout.addSpacing(5)
+
+        # Actual Total Card - Large and prominent
+        actual_val = data.get('actual_total', 0)
+        total_card = self._create_stat_card(
             "💰 Tiền thực tế",
-            f"{data.get('actual_total', 0):,.0f} đ",
+            f"{actual_val:,.0f} đ",
             AppColors.PRIMARY,
+            is_large=True
         )
-        l.addWidget(ac)
-        cc = self._create_stat_card(
-            "🎰 Lượt 50K", f"{data.get('count_50k', 0)} lượt", AppColors.WARNING
+        layout.addWidget(total_card)
+
+        # 50K Count Card
+        count_50k = data.get('count_50k', 0)
+        card_50k = self._create_stat_card(
+            "🎰 Lượt quay 50K",
+            f"{count_50k} lượt",
+            AppColors.WARNING
         )
-        l.addWidget(cc)
-        l.addStretch()
+        layout.addWidget(card_50k)
+
+        # Products Sold Count (Calculated from table)
+        sold_count = 0
+        for row in range(self.table.rowCount()):
+            # Assuming used_qty is in a way we can check
+            # For now just use sessions if available
+            pass
+        
+        # Add a sub-stat for variety
+        if actual_val > 0:
+            extra_info = QLabel(f"✨ Phiên này thu về triệu đồng...")
+            extra_info.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 11px;")
+            extra_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addSpacing(10)
+            # layout.addWidget(extra_info)
+
+        layout.addStretch()
+        
+        # Quick Actions at bottom of sidebar
+        if data:
+            print_btn = QPushButton("🖨️ In báo cáo (Thử nghiệm)")
+            print_btn.setObjectName("secondary")
+            print_btn.setFixedHeight(36)
+            layout.addWidget(print_btn)
+
         self.report_frame.show()
 
-    def _create_stat_card(self, label, value, color):
+    def _create_stat_card(self, label, value, color, is_large=False):
         card = QFrame()
-        card.setStyleSheet(
-            f"QFrame {{ background-color: rgba({self._hex_to_rgb(color)}, 0.1); border-left: 4px solid {color}; border-radius: 6px; padding: 8px 12px; }}"
-        )
-        cl = QVBoxLayout(card)
-        cl.setContentsMargins(8, 6, 8, 6)
-        cl.setSpacing(4)
-        lw = QLabel(label)
-        lw.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 500;"
-        )
-        cl.addWidget(lw)
-        vw = QLabel(value)
-        vw.setStyleSheet(f"color: {color}; font-size: 16px; font-weight: 700;")
-        cl.addWidget(vw)
+        height = 80 if is_large else 65
+        
+        card.setFixedHeight(height)
+        card.setStyleSheet(f"""
+            QFrame {{
+                background-color: white;
+                border: none;
+                border-left: 4px solid {color};
+                border-radius: 8px;
+            }}
+            QFrame:hover {{
+                background-color: #FFFFFF;
+                border-left-width: 6px;
+            }}
+        """)
+        
+        # Shadow effect logic omitted for simplicity but styling is clean
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(15, 8, 15, 8)
+        layout.setSpacing(1)
+        
+        label_text = label.upper()
+        l_lbl = QLabel(label_text)
+        l_lbl.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;")
+        layout.addWidget(l_lbl)
+        
+        v_lbl = QLabel(value)
+        v_font_size = "20px" if is_large else "16px"
+        v_lbl.setStyleSheet(f"color: {color}; font-size: {v_font_size}; font-weight: 900;")
+        layout.addWidget(v_lbl)
+        
         return card
 
     def _hex_to_rgb(self, h):
@@ -1089,13 +1181,11 @@ class CalculationView(QWidget):
                 for idx in range(self.prod_table.rowCount()):
                     name_item = self.prod_table.item(idx, 1)
                     if name_item:
-                        product_name = name_item.text()
-                        # Find product by name
-                        product = next((p for p in products if p.name == product_name), None)
-                        if product:
+                        product_id = name_item.data(Qt.ItemDataRole.UserRole)
+                        if product_id:
                             cursor.execute(
                                 "UPDATE products SET display_order = ? WHERE id = ?",
-                                (idx, product.id)
+                                (idx, product_id)
                             )
                 conn.commit()
             

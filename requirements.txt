@@ -39,5 +39,11 @@ cffi==2.0.0
 # Database
 # SQLite is included in Python standard library
 
+# Text-to-Speech (Recommended for high-quality voice notifications)
+edge-tts>=7.2.7
+num2words==0.5.13
+pyttsx3==2.98
+pywin32==308
+
 # Environment Variables
 python-dotenv==1.0.0

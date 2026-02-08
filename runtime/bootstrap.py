@@ -325,7 +325,12 @@ class ApplicationBootstrap:
         self.qt_app.setOrganizationName("Bangla Team")
 
         # Set application icon if available
-        icon_path = self.config.base_dir / "assets" / "icon.png"
+        try:
+            from app.core.paths import ASSETS
+            icon_path = ASSETS / "icon.png"
+        except ImportError:
+            icon_path = self.config.base_dir / "assets" / "icon.png"
+            
         if icon_path.exists():
             from PyQt6.QtGui import QIcon
 

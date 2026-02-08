@@ -75,16 +75,103 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                         )
                     return
 
+            # --- REMOTE SESSION API ---
+            parsed_url = urlparse(self.path)
+            
+            # GET /api/session - Get current session data
+            if self.command == "GET" and parsed_url.path == "/api/session":
+                try:
+                    from database.repositories import SessionRepository
+                    sessions = SessionRepository.get_all()
+                    
+                    data = {
+                        "success": True,
+                        "total_amount": sum(s.amount for s in sessions),
+                        "session": [
+                            {
+                                "product_id": s.product.id,
+                                "product_name": s.product.name,
+                                "large_unit": s.product.large_unit,
+                                "conversion": s.product.conversion,
+                                "unit_price": s.product.unit_price,
+                                "unit_char": "t" if s.product.conversion > 1 else "", # Default unit char
+                                "handover_qty": s.handover_qty,
+                                "closing_qty": s.closing_qty,
+                                "used_qty": s.used_qty,
+                                "amount": s.amount
+                            } for s in sessions
+                        ]
+                    }
+                    
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+                    return
+                except Exception as e:
+                    self.send_error(500, f"Error getting session: {str(e)}")
+                    return
+
+            # POST /api/session - Update closing quantities
+            if self.command == "POST" and parsed_url.path == "/api/session":
+                try:
+                    content_length = int(self.headers.get("Content-Length", 0))
+                    if content_length == 0:
+                        self.send_error(400, "Missing body")
+                        return
+                        
+                    post_data = self.rfile.read(content_length).decode("utf-8")
+                    update_data = json.loads(post_data)
+                    
+                    if "updates" not in update_data:
+                        self.send_error(400, "Missing 'updates' in payload")
+                        return
+                        
+                    from database.repositories import SessionRepository
+                    # Get current state to preserve handover_qty
+                    current_sessions = {s.product.id: s for s in SessionRepository.get_all()}
+                    
+                    success_count = 0
+                    for update in update_data["updates"]:
+                        pid = update.get("product_id")
+                        closing = update.get("closing_qty")
+                        
+                        if pid in current_sessions:
+                            handover = current_sessions[pid].handover_qty
+                            SessionRepository.update_qty(pid, handover, int(closing))
+                            success_count += 1
+                    
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"success": True, "updated": success_count}).encode("utf-8"))
+                    
+                    # Notify desktop UI that session data has changed
+                    if hasattr(self.server, "message_handler") and self.server.message_handler:
+                        try:
+                            cmd_json = json.dumps({
+                                "command": "SESSION_UPDATED", 
+                                "count": success_count
+                            })
+                            self.server.message_handler(cmd_json)
+                        except Exception as handler_err:
+                            if hasattr(self.server, "logger"):
+                                self.server.logger.error(f"Error notifying UI: {handler_err}")
+                    return
+                except Exception as e:
+                    self.send_error(500, f"Error updating session: {str(e)}")
+                    return
+
+            # --- NOTIFICATION API (Legacy) ---
             msg = None
 
             # Log incoming request
             if hasattr(self.server, "logger"):
                 self.server.logger.debug(
-                    f"Received {self.command} request from {client_ip}"
+                    f"Received {self.command} request from {client_ip} to {self.path}"
                 )
 
             # 1. Try to get content from URL query (?content=...)
-            parsed_url = urlparse(self.path)
             query_params = parse_qs(parsed_url.query)
 
             if "content" in query_params:
@@ -108,16 +195,27 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                         try:
                             data = json.loads(post_data)
 
-                            # Check if it's structured notification (with time, source, amount, content)
-                            if isinstance(data, dict) and "content" in data:
-                                # Pass the whole JSON object as string for parsing
-                                msg = json.dumps(data, ensure_ascii=False)
-                            else:
-                                # Fallback to content field only
-                                msg = data.get("content", "")
-                                if not isinstance(msg, str):
-                                    self.send_error(400, "Invalid content format")
+                            # Check if it's structured notification
+                            if isinstance(data, dict):
+                                # If it's a test ping from Android app
+                                if data.get("content") == "Ping":
+                                    # Send response to Android
+                                    self.send_response(200)
+                                    self.send_header("Content-Type", "application/json")
+                                    self.end_headers()
+                                    self.wfile.write(b'{"status":"success","message":"pong"}')
+                                    
+                                    # ALSO notify Desktop UI
+                                    if hasattr(self.server, "message_handler") and self.server.message_handler:
+                                        self.server.message_handler(post_data)
                                     return
+
+                                if "content" in data:
+                                    msg = json.dumps(data, ensure_ascii=False)
+                                else:
+                                    msg = post_data
+                            else:
+                                msg = post_data
                         except json.JSONDecodeError:
                             self.send_error(400, "Invalid JSON")
                             return
@@ -125,14 +223,10 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                         # Plain text content
                         msg = post_data
 
-            # Validate message content
+            # Validate message content (Accept everything if msg exists)
             if msg:
-                # Sanitize message (basic XSS prevention)
+                # Sanitize message
                 msg = self._sanitize_message(msg)
-
-                # Validate message length
-                if len(msg) > 1000:  # Max 1000 characters
-                    msg = msg[:1000]
 
                 # Send response first
                 self.send_response(200)
@@ -157,9 +251,12 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                         self.server.logger.warning("No message handler registered!")
 
                 if hasattr(self.server, "logger"):
-                    # Safe logging with ASCII encoding to avoid Unicode errors
-                    safe_msg = msg[:50].encode("ascii", "replace").decode("ascii")
-                    self.server.logger.info(f"Notification received: {safe_msg}...")
+                    # Safe logging
+                    try:
+                        safe_msg = msg[:50].encode("ascii", "replace").decode("ascii")
+                        self.server.logger.info(f"Notification received: {safe_msg}...")
+                    except:
+                        pass
             else:
                 self.send_error(400, "Missing content parameter")
 

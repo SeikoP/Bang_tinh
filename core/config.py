@@ -5,6 +5,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+# Import centralized paths
+try:
+    from app.core.paths import ROOT, DATABASE, LOGS, EXPORTS, BACKUPS
+except ImportError:
+    # Fallback for transition period
+    ROOT = Path(__file__).resolve().parents[1]
+    DATABASE = ROOT / "storage.db"
+    LOGS = ROOT / "data" / "logs"
+    EXPORTS = ROOT / "data" / "exports"
+    BACKUPS = ROOT / "data" / "backups"
+
 
 @dataclass
 class Config:
@@ -43,14 +54,14 @@ class Config:
     @classmethod
     def from_env(cls) -> "Config":
         """Load configuration from environment variables"""
-        base_dir = Path(os.getenv("APP_BASE_DIR", Path.cwd()))
+        base_dir = Path(os.getenv("APP_BASE_DIR", ROOT))
 
         return cls(
             base_dir=base_dir,
-            db_path=Path(os.getenv("DB_PATH", base_dir / "storage.db")),
-            export_dir=Path(os.getenv("EXPORT_DIR", base_dir / "exports")),
-            backup_dir=Path(os.getenv("BACKUP_DIR", base_dir / "backups")),
-            log_dir=Path(os.getenv("LOG_DIR", base_dir / "logs")),
+            db_path=Path(os.getenv("DB_PATH", DATABASE)),
+            export_dir=Path(os.getenv("EXPORT_DIR", EXPORTS)),
+            backup_dir=Path(os.getenv("BACKUP_DIR", BACKUPS)),
+            log_dir=Path(os.getenv("LOG_DIR", LOGS)),
             app_name=os.getenv("APP_NAME", "Warehouse Management"),
             app_version=os.getenv("APP_VERSION", "2.0.0"),
             environment=os.getenv("ENVIRONMENT", "production"),

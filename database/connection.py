@@ -1,22 +1,39 @@
 """
-Database connection management với context manager
+Database connection management với context manager and connection pooling
 """
 
-import os
 import sqlite3
-import sys
 from contextlib import contextmanager
 from typing import Generator
 
-# Thêm parent directory vào path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import DB_PATH
+# Import centralized paths
+try:
+    from app.core.paths import DATABASE
+    DB_PATH = DATABASE
+except ImportError:
+    # Fallback
+    from config import DB_PATH
+
+# Import connection pool
+from database.connection_pool import initialize_pool, get_pooled_connection, close_pool
+
+# Initialize connection pool on module load
+_pool_initialized = False
+
+
+def _ensure_pool_initialized():
+    """Ensure connection pool is initialized"""
+    global _pool_initialized
+    if not _pool_initialized:
+        initialize_pool(DB_PATH, pool_size=5)
+        _pool_initialized = True
 
 
 @contextmanager
 def get_connection() -> Generator[sqlite3.Connection, None, None]:
     """
     Context manager để quản lý database connection.
+    Uses connection pooling for better performance.
     Tự động đóng connection khi hoàn thành.
 
     Usage:
@@ -24,16 +41,11 @@ def get_connection() -> Generator[sqlite3.Connection, None, None]:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM products")
     """
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row  # Cho phép truy cập column bằng tên
-    try:
+    _ensure_pool_initialized()
+    
+    # Use pooled connection
+    with get_pooled_connection() as conn:
         yield conn
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        raise e
-    finally:
-        conn.close()
 
 
 def init_db():

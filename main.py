@@ -9,10 +9,19 @@ Usage:
 """
 
 import sys
+import os
 from pathlib import Path
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent))
+# Fix Unicode encoding for Windows console BEFORE any imports
+if sys.platform == 'win32':
+    # Set environment variable for Python I/O encoding
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    
+    # Reconfigure stdout/stderr to use UTF-8
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 from runtime.bootstrap import ApplicationBootstrap
 from runtime.lifecycle import ApplicationLifecycle
