@@ -154,27 +154,6 @@ class MainWindow(QMainWindow):
         self.fade_animation.setEndValue(1.0)
         self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
         
-        # Notification slide animations
-        self.notif_slide_in = QPropertyAnimation(self.notif_box, b"maximumWidth")
-        self.notif_slide_in.setDuration(400)
-        self.notif_slide_in.setStartValue(0)
-        self.notif_slide_in.setEndValue(500)
-        self.notif_slide_in.setEasingCurve(QEasingCurve.Type.OutBack)
-        
-        self.notif_fade = QGraphicsOpacityEffect(self.notif_box)
-        self.notif_box.setGraphicsEffect(self.notif_fade)
-        self.notif_fade_anim = QPropertyAnimation(self.notif_fade, b"opacity")
-        self.notif_fade_anim.setDuration(300)
-        self.notif_fade_anim.setStartValue(0.0)
-        self.notif_fade_anim.setEndValue(1.0)
-        
-        # Task notification animations
-        self.task_notif_fade = QGraphicsOpacityEffect(self.task_notif_box)
-        self.task_notif_box.setGraphicsEffect(self.task_notif_fade)
-        self.task_notif_fade_anim = QPropertyAnimation(self.task_notif_fade, b"opacity")
-        self.task_notif_fade_anim.setDuration(300)
-        self.task_notif_fade_anim.setStartValue(0.0)
-        self.task_notif_fade_anim.setEndValue(1.0)
 
     def _setup_window(self):
         title = f"{APP_NAME} v{APP_VERSION}"
@@ -339,23 +318,7 @@ class MainWindow(QMainWindow):
 
         header_layout.addStretch()
 
-        # Bank Notification Widget (Toast-like in header) - Modern gradient design
-        self.notif_box = QFrame()
-        self.notif_box.setFixedHeight(42)
-        self.notif_box.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.notif_box.setStyleSheet(f"""
-            QFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #10B981, stop:1 #059669);
-                border-radius: 21px;
-                padding: 0 6px;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-            }}
-            QFrame:hover {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #059669, stop:1 #047857);
-                border: 2px solid rgba(255, 255, 255, 0.5);
-            }}
+
         # Notification Area
         from ui.widgets.notification_banners import BankNotificationBanner, SystemNotificationBanner
         
@@ -378,27 +341,8 @@ class MainWindow(QMainWindow):
         
         content_layout.addWidget(self.content_stack)
 
-        # Close button - Modern design
-        self.task_notif_close_btn = QPushButton("✕")
-        self.task_notif_close_btn.setFixedSize(30, 30)
-        self.task_notif_close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.task_notif_close_btn.setStyleSheet("""
-            QPushButton {
-                background: rgba(255, 255, 255, 0.2);
-                color: white;
-                border: none;
-                border-radius: 15px;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background: rgba(255, 255, 255, 0.35);
-            }
-        """)
-        self.task_notif_close_btn.clicked.connect(self.task_notif_box.hide)
-        task_notif_layout.addWidget(self.task_notif_close_btn)
-
-        self.task_notif_box.hide()
+        
+        # Task Banner init hidden by default
         
         self._switch_view(0)
 
@@ -422,7 +366,8 @@ class MainWindow(QMainWindow):
 
     def eventFilter(self, source, event):
         """Xử lý sự kiện di chuyển chuột (Hover)"""
-        if source == self.notif_box:
+        # Update to verify notification banner hover
+        if hasattr(self, 'notif_banner') and source == self.notif_banner:
             if event.type() == QEvent.Type.Enter:
                 self._show_peek_under_notif()
             elif event.type() == QEvent.Type.Leave:
@@ -444,7 +389,7 @@ class MainWindow(QMainWindow):
             self.quick_peek.installEventFilter(self)
 
         self.quick_peek.update_data(self.bank_view.table)
-        pos = self.notif_box.mapToGlobal(self.notif_box.rect().bottomLeft())
+        pos = self.notif_banner.mapToGlobal(self.notif_banner.rect().bottomLeft())
         self.quick_peek.move(pos.x(), pos.y() + 5)
         self.quick_peek.show()
         self._peek_timer.stop()
