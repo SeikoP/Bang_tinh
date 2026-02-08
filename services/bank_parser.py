@@ -37,6 +37,9 @@ class BankStatementParser:
         # Format: "CT tu 9386565885 DINH CONG LUONG toi ..."
         r'tu\s+\d+\s+([A-Z][A-Z\s]{2,50}?)(\s+toi|$)',
         
+        # Format: "tu NGUYEN VAN A" (simple format without phone number)
+        r'tu\s+([A-Z][A-Z\s]{2,50}?)(?:\.|$|\s+SD:)',
+        
         # Format: "tu [NAME] - ND: ..."
         r'tu\s+([A-Z][A-Z\s]{2,50}?)(?:\s+-\s+ND:|\s+chuyen|\s+nhan)',
         
