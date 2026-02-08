@@ -144,15 +144,18 @@ class NotificationHandler(BaseHTTPRequestHandler):
                         # Get content - might be nested JSON string
                         raw_content = data.get("content", msg)
 
-                        # Try to parse content if it's a JSON string
-                        try:
-                            content_data = json.loads(raw_content)
-                            if isinstance(content_data, dict):
-                                # Extract actual content from nested structure
-                                content = content_data.get("content", raw_content)
-                            else:
+                        # Only try to parse content if it looks like JSON (starts with { or [)
+                        if isinstance(raw_content, str) and raw_content.strip().startswith(("{", "[")):
+                            try:
+                                content_data = json.loads(raw_content)
+                                if isinstance(content_data, dict):
+                                    # Extract actual content from nested structure
+                                    content = content_data.get("content", raw_content)
+                                else:
+                                    content = raw_content
+                            except (json.JSONDecodeError, TypeError):
                                 content = raw_content
-                        except (json.JSONDecodeError, TypeError):
+                        else:
                             content = raw_content
                 except (json.JSONDecodeError, TypeError):
                     pass

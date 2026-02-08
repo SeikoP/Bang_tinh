@@ -300,8 +300,8 @@ class ApplicationBootstrap:
                 )
 
             # Store license manager and status in container
-            self.container._services["license_manager"] = license_manager
-            self.container._services["is_license_valid"] = is_valid
+            self.container.register_singleton("license_manager", license_manager)
+            self.container.register_singleton("is_license_valid", is_valid)
 
             if not is_valid:
                 self.logger.warning("License validation failed or missing. Running in TRIAL MODE.")
@@ -313,7 +313,7 @@ class ApplicationBootstrap:
         except Exception as e:
             self.logger.warning(f"License validation error: {e}")
             self.logger.info("Continuing in TRIAL MODE")
-            self.container._services["is_license_valid"] = False
+            self.container.register_singleton("is_license_valid", False)
 
     def _initialize_qt_application(self):
         """Initialize Qt Application"""

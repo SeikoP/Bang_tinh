@@ -112,7 +112,6 @@ class MainWindow(QMainWindow):
         self._setup_window()
         self._setup_ui()
         self._apply_theme()
-        self._setup_animations()  # Moved after _setup_ui
         self._setup_keyboard_shortcuts()
 
         # Start notification server
@@ -142,8 +141,8 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 self.logger.error(f"Startup backup failed: {e}")
     
-    def _setup_animations(self):
-        """Setup animations for UI elements"""
+    def _setup_animations_internal(self):
+        """Setup animations for UI elements - called internally after content_stack is ready"""
         # Fade animation for content stack
         self.fade_effect = QGraphicsOpacityEffect(self.content_stack)
         self.content_stack.setGraphicsEffect(self.fade_effect)
@@ -159,7 +158,7 @@ class MainWindow(QMainWindow):
         title = f"{APP_NAME} v{APP_VERSION}"
         
         # Check license status
-        is_licensed = self.container.get("is_license_valid", False) if self.container else False
+        is_licensed = self.container.get("is_license_valid") if self.container else None
         if not is_licensed:
             title += " [TRIAL MODE]"
             
@@ -340,7 +339,12 @@ class MainWindow(QMainWindow):
         content_layout.addLayout(notif_container)
         
         content_layout.addWidget(self.content_stack)
-
+        
+        # Add main_content to main_layout
+        main_layout.addWidget(main_content)
+        
+        # Setup animations after content_stack is fully initialized
+        self._setup_animations_internal()
         
         # Task Banner init hidden by default
         
