@@ -6,12 +6,21 @@ import json
 import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
+from decimal import Decimal
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Lock, Thread
 from typing import Callable, Dict, Optional
 from urllib.parse import parse_qs, urlparse
 
 from core.exceptions import AppException, ValidationError
+
+
+class DecimalEncoder(json.JSONEncoder):
+    """Custom JSON encoder to handle Decimal types"""
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super().default(obj)
 
 
 class RateLimiter:
@@ -86,19 +95,19 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     
                     data = {
                         "success": True,
-                        "total_amount": sum(s.amount for s in sessions),
+                        "total_amount": float(sum(s.amount for s in sessions)),
                         "session": [
                             {
                                 "product_id": s.product.id,
                                 "product_name": s.product.name,
                                 "large_unit": s.product.large_unit,
                                 "conversion": s.product.conversion,
-                                "unit_price": s.product.unit_price,
-                                "unit_char": "t" if s.product.conversion > 1 else "", # Default unit char
+                                "unit_price": float(s.product.unit_price),
+                                "unit_char": s.product.unit_char or ("t" if s.product.conversion > 1 else ""),
                                 "handover_qty": s.handover_qty,
                                 "closing_qty": s.closing_qty,
                                 "used_qty": s.used_qty,
-                                "amount": s.amount
+                                "amount": float(s.amount)
                             } for s in sessions
                         ]
                     }
@@ -106,7 +115,7 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+                    self.wfile.write(json.dumps(data, ensure_ascii=False, cls=DecimalEncoder).encode("utf-8"))
                     return
                 except Exception as e:
                     self.send_error(500, f"Error getting session: {str(e)}")
@@ -318,6 +327,7 @@ class NotificationService:
         port: int = 5005,
         logger: Optional[logging.Logger] = None,
         max_requests_per_minute: int = 100,
+        container=None,
     ):
         """
         Initialize notification service.
@@ -327,10 +337,12 @@ class NotificationService:
             port: Server port
             logger: Logger instance
             max_requests_per_minute: Rate limit threshold
+            container: Dependency injection container
         """
         self.host = host
         self.port = port
         self.logger = logger or logging.getLogger(__name__)
+        self.container = container
         self.server: Optional[ThreadingHTTPServer] = None
         self.server_thread: Optional[Thread] = None
         self._message_handler: Optional[Callable] = None
@@ -376,6 +388,7 @@ class NotificationService:
             self.server.message_handler = self._message_handler
             self.server.logger = self.logger
             self.server.rate_limiter = self.rate_limiter
+            self.server.container = self.container  # Pass container to handler
 
             # Start server in background thread
             self.server_thread = Thread(target=self._run_server, daemon=True)

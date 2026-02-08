@@ -54,6 +54,7 @@ class Container:
             host=self._config.notification_host,
             port=self._config.notification_port,
             logger=logger,
+            container=self,
         )
         
         # Command service for undo/redo

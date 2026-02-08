@@ -228,17 +228,26 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
     def handle_get_session(self):
         """API: Get current session data"""
-        if not self._check_auth():
-            self.send_response(401)
-            self.end_headers()
-            return
-
         try:
+            # Log request
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.info(f"GET /api/session from {self.client_address}")
+            
+            # Check auth
+            if not self._check_auth():
+                if hasattr(self.server, "logger") and self.server.logger:
+                    self.server.logger.warning("Auth failed for /api/session")
+                self.send_response(401)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": "Unauthorized"}).encode("utf-8"))
+                return
+
             container = getattr(self.server, "container", None)
             if not container:
                 raise Exception("Container not found in server context")
                 
-            repo = container.get("session_repository")
+            repo = container.get("session_repo")
             if not repo:
                 raise Exception("Session repository not found")
                 
@@ -259,6 +268,10 @@ class NotificationHandler(BaseHTTPRequestHandler):
                 })
             
             response = {"success": True, "session": data}
+            
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.info(f"Returning {len(data)} session items")
+            
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
@@ -266,7 +279,7 @@ class NotificationHandler(BaseHTTPRequestHandler):
             
         except Exception as e:
             if hasattr(self.server, "logger") and self.server.logger:
-                self.server.logger.error(f"API Error (GET session): {e}")
+                self.server.logger.error(f"API Error (GET session): {e}", exc_info=True)
             self.send_response(500)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
