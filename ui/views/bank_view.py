@@ -213,6 +213,35 @@ class BankView(QWidget):
         """Add to raw logs tab only"""
         self._add_log_row(time_str, package, raw_message)
 
+    def add_system_log(self, message):
+        """Add system log (Ping/Connection status) to raw logs"""
+        from datetime import datetime
+        time_str = datetime.now().strftime("%H:%M:%S")
+        
+        row = 0
+        self.logs_table.insertRow(row)
+
+        # Timestamp
+        time_item = QTableWidgetItem(time_str)
+        time_item.setFont(QFont("Roboto", 9))
+        self.logs_table.setItem(row, 0, time_item)
+
+        # System Label
+        pkg_item = QTableWidgetItem("System")
+        pkg_item.setFont(QFont("Roboto", 9, QFont.Weight.Bold))
+        pkg_item.setForeground(QColor(AppColors.INFO))
+        self.logs_table.setItem(row, 1, pkg_item)
+
+        # Message
+        msg_item = QTableWidgetItem(message)
+        msg_item.setFont(QFont("Segoe UI Emoji", 9)) # Better emoji support
+        msg_item.setForeground(QColor(AppColors.TEXT))
+        self.logs_table.setItem(row, 2, msg_item)
+        
+        # Limit logs
+        while self.logs_table.rowCount() > 100:
+            self.logs_table.removeRow(self.logs_table.rowCount() - 1)
+
     def _add_log_row(self, time_str, package, raw_message):
         """Thêm raw log vào logs table"""
         row = 0

@@ -50,11 +50,24 @@ class Config:
     # Logging
     log_level: str
     log_rotation: str
+    secret_key: str
 
     @classmethod
     def from_env(cls) -> "Config":
         """Load configuration from environment variables"""
         base_dir = Path(os.getenv("APP_BASE_DIR", ROOT))
+        
+        # Load or generate secret key
+        secret_file = base_dir / ".secret_key"
+        if secret_file.exists():
+            secret_key = secret_file.read_text().strip()
+        else:
+            import uuid
+            secret_key = str(uuid.uuid4())
+            try:
+                secret_file.write_text(secret_key)
+            except Exception:
+                pass # Fail silently if cannot write, key will change on restart (acceptable fallback)
 
         return cls(
             base_dir=base_dir,
@@ -73,6 +86,7 @@ class Config:
             enable_ssl=os.getenv("ENABLE_SSL", "false").lower() == "true",
             license_key=os.getenv("LICENSE_KEY"),
             encryption_key=os.getenv("ENCRYPTION_KEY"),
+            secret_key=secret_key,
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             log_rotation=os.getenv("LOG_ROTATION", "daily"),
         )

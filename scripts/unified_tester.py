@@ -34,12 +34,22 @@ def check_server():
     except:
         return False
 
+# ===== Auth =====
+def get_auth_header():
+    try:
+        from core.config import Config
+        key = Config.from_env().secret_key
+        return {"Authorization": f"Bearer {key}"}
+    except:
+        return {}
+
 def test_bank_notification(amount="+500,000", sender="NGUYEN VAN A"):
     print(f"📤 Gửi thông báo thử nghiệm: {amount} từ {sender}...")
     content = f"Biến động số dư: GD {amount}VND. ND Chuyen tien tu {sender}"
     data = {"package": "com.vietinbank.ipay", "content": content}
+    headers = get_auth_header()
     try:
-        r = requests.post(f"http://{HOST}:{PORT}", json=data, timeout=3)
+        r = requests.post(f"http://{HOST}:{PORT}", json=data, headers=headers, timeout=3)
         if r.status_code == 200:
             print("✅ Thông báo đã gửi thành công!")
             return True

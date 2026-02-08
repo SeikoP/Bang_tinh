@@ -177,7 +177,14 @@ class MainWindow(QMainWindow):
         self.task_notif_fade_anim.setEndValue(1.0)
 
     def _setup_window(self):
-        self.setWindowTitle(f"{APP_NAME} v{APP_VERSION}")
+        title = f"{APP_NAME} v{APP_VERSION}"
+        
+        # Check license status
+        is_licensed = self.container.get("is_license_valid", False) if self.container else False
+        if not is_licensed:
+            title += " [TRIAL MODE]"
+            
+        self.setWindowTitle(title)
         self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
 
@@ -349,86 +356,27 @@ class MainWindow(QMainWindow):
                     stop:0 #059669, stop:1 #047857);
                 border: 2px solid rgba(255, 255, 255, 0.5);
             }}
-        """)
-        self.notif_box.mousePressEvent = lambda e: self._switch_view(2)
-        self.notif_box.installEventFilter(self)
-
-        notif_layout = QHBoxLayout(self.notif_box)
-        notif_layout.setContentsMargins(16, 0, 8, 0)
-        notif_layout.setSpacing(10)
-
-        self.notif_label = QLabel("Đang chờ giao dịch...")
-        self.notif_label.setStyleSheet(
-            "color: white; font-weight: 700; font-size: 13px; background: transparent; letter-spacing: 0.3px;"
-        )
-        notif_layout.addWidget(self.notif_label)
-
-        # Nút đóng thông báo (X) - Modern design
-        self.notif_close_btn = QPushButton("✕")
-        self.notif_close_btn.setFixedSize(30, 30)
-        self.notif_close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.notif_close_btn.setStyleSheet("""
-            QPushButton {
-                background: rgba(255, 255, 255, 0.25);
-                color: white;
-                border: none;
-                border-radius: 15px;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background: rgba(255, 255, 255, 0.4);
-            }
-        """)
-        self.notif_close_btn.clicked.connect(self.notif_box.hide)
-        notif_layout.addWidget(self.notif_close_btn)
-
-        self.notif_box.hide()
-        header_layout.addWidget(self.notif_box)
+        # Notification Area
+        from ui.widgets.notification_banners import BankNotificationBanner, SystemNotificationBanner
+        
+        self.notif_banner = BankNotificationBanner()
+        self.notif_banner.clicked.connect(lambda: self._switch_view(2)) # Cmd 2: Bank View
+        header_layout.addWidget(self.notif_banner)
 
         content_layout.addWidget(header)
         
-        # Task Notification Widget - Premium Indigo Pill Design
-        self.task_notif_box = QFrame()
-        self.task_notif_box.setFixedHeight(48)
-        self.task_notif_box.setCursor(Qt.CursorShape.PointingHandCursor)
+        # Task Notification Widget
+        self.task_banner = SystemNotificationBanner()
+        self.task_banner.clicked.connect(lambda: self._switch_view(1)) # Cmd 1: Task View
         
         # Add task notification container below header
         notif_container = QHBoxLayout()
         notif_container.addStretch()
-        notif_container.addWidget(self.task_notif_box)
+        notif_container.addWidget(self.task_banner)
         notif_container.addStretch()
         content_layout.addLayout(notif_container)
         
         content_layout.addWidget(self.content_stack)
-        
-        main_layout.addWidget(main_content)
-        self.task_notif_box.setStyleSheet(f"""
-            QFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #6366F1, stop:1 #4F46E5);
-                border-radius: 24px;
-                padding: 0 5px;
-                margin: 0 0 16px 0;
-                border: 1px solid rgba(255, 255, 255, 0.25);
-            }}
-            QFrame:hover {{
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #4F46E5, stop:1 #4338CA);
-                border: 1px solid rgba(255, 255, 255, 0.4);
-            }}
-        """)
-        self.task_notif_box.mousePressEvent = lambda e: self._switch_view(1)
-
-        task_notif_layout = QHBoxLayout(self.task_notif_box)
-        task_notif_layout.setContentsMargins(20, 0, 8, 0)
-        task_notif_layout.setSpacing(12)
-
-        self.task_notif_label = QLabel("Chưa có việc")
-        self.task_notif_label.setStyleSheet(
-            "color: white; font-weight: 800; font-size: 13px; background: transparent; border: none;"
-        )
-        task_notif_layout.addWidget(self.task_notif_label)
 
         # Close button - Modern design
         self.task_notif_close_btn = QPushButton("✕")
@@ -651,12 +599,16 @@ class MainWindow(QMainWindow):
             cmd = data.get('command')
             
             # Change notif_box color to INFO (Emerald Dark or Blue) for system/command events
-            # Use task notification area for system messages to avoid overwriting bank notifs
-            self.task_notif_label.setText(f"✨ {data['content']}")
-            self.task_notif_box.show()
-            
-            # Auto-hide system notification after 5 seconds
-            QTimer.singleShot(5000, self.task_notif_box.hide)
+            if cmd == 'PING_SUCCESS':
+                # Message from "Test Connection" button or KeepAlive
+                # Log to Bank View but DO NOT show popup notification
+                if hasattr(self, 'bank_view'):
+                    self.bank_view.add_system_log(f"⚡ {data['content']}")
+                return
+
+            # Use task notification area for system messages
+            content = f"✨ {data['content']}"
+            self.task_banner.show_message(content, duration=5000)
             
             if cmd == 'REFRESH_SESSION':
                 self._refresh_calc()
@@ -672,6 +624,7 @@ class MainWindow(QMainWindow):
         has_amount = data.get('has_amount', False)
 
         if has_amount:
+            import html
             safe_sender = html.escape(sender_name[:30]) if sender_name else ""
             safe_source = html.escape(source)
             safe_amount = html.escape(amount)
@@ -681,26 +634,8 @@ class MainWindow(QMainWindow):
             else:
                 rich_text = f"<b style='font-size:15px; color:white;'>{timestamp}</b> | <b style='font-size:15px; color:white;'>{safe_amount}</b> | <span style='font-size:11px; color:#e1f5fe;'>{safe_source}</span>"
 
-            self.notif_label.setText(rich_text)
-            
-            # Reset notification box to Emerald Green (SUCCESS) gradient
-            self.notif_box.setStyleSheet(f"""
-                QFrame {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #10B981, stop:1 #059669);
-                    border-radius: 21px;
-                    padding: 0 6px;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
-                }}
-                QFrame:hover {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #059669, stop:1 #047857);
-                    border: 2px solid rgba(255, 255, 255, 0.5);
-                }}
-            """)
-            
-            # Animate notification appearance
-            self._show_notification_animated()
+            # Show banner (Bank notifications stay until closed or replaced)
+            self.notif_banner.show_message(rich_text)
             
             # Speak notification using TTS
             if self._tts_service and amount:
@@ -716,28 +651,6 @@ class MainWindow(QMainWindow):
         else:
             if self.logger:
                 self.logger.warning("bank_view not initialized yet, notification not saved")
-    
-    def _show_notification_animated(self):
-        """Show notification with slide and fade animation"""
-        self.notif_box.setMaximumWidth(0)
-        self.notif_box.show()
-        
-        # Parallel animation: slide + fade
-        self.notif_slide_in.start()
-        self.notif_fade_anim.start()
-        
-        # Add bounce effect
-        QTimer.singleShot(400, self._bounce_notification)
-    
-    def _bounce_notification(self):
-        """Add subtle bounce effect to notification"""
-        try:
-            # Quick scale animation
-            original_height = self.notif_box.height()
-            self.notif_box.setFixedHeight(int(original_height * 1.1))
-            QTimer.singleShot(100, lambda: self.notif_box.setFixedHeight(original_height))
-        except:
-            pass
 
     def _handle_notification_error(self, error_msg: str):
         """Handle notification processing errors"""

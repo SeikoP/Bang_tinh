@@ -30,7 +30,7 @@ class SettingsView(QWidget):
     widget_height_changed = pyqtSignal(int)
 
     class IPWorker(QThread):
-        finished = pyqtSignal(str, int, object) # IP, Port, QPixmap
+        finished = pyqtSignal(str, int, str, object) # IP, Port, SecretKey, QPixmap
         error = pyqtSignal()
         
         def __init__(self, container=None):
@@ -57,10 +57,25 @@ class SettingsView(QWidget):
                     if config:
                         port = config.notification_port
 
-                # Generate QR
-                url = f"http://{ip}:{port}"
+                # Get secret key
+                secret_key = ""
+                if self.container:
+                    config = self.container.get("config")
+                    if config:
+                        port = config.notification_port
+                        secret_key = config.secret_key
+
+                # Generate QR code with JSON data
+                # Using short keys to keep QR simple: h=host, p=port, k=key
+                import json
+                qr_data = json.dumps({
+                    "h": ip,
+                    "p": port,
+                    "k": secret_key
+                })
+                
                 qr = qrcode.QRCode(version=1, box_size=10, border=2)
-                qr.add_data(url)
+                qr.add_data(qr_data)
                 qr.make(fit=True)
                 img = qr.make_image(fill_color="black", back_color="white")
                 
@@ -70,7 +85,7 @@ class SettingsView(QWidget):
                 pixmap = QPixmap()
                 pixmap.loadFromData(buffer.read())
                 
-                self.finished.emit(ip, port, pixmap)
+                self.finished.emit(ip, port, secret_key, pixmap)
             except:
                 self.error.emit()
 
@@ -406,6 +421,13 @@ class SettingsView(QWidget):
         )
         info_layout.addWidget(self.port_label)
 
+        # Key info
+        self.key_label = QLabel("Key: ...")
+        self.key_label.setStyleSheet(
+            f"font-size: 13px; color: {AppColors.TEXT_SECONDARY}; font-family: monospace;"
+        )
+        info_layout.addWidget(self.key_label)
+
         # Refresh button
         refresh_btn = QPushButton("Làm mới")
         refresh_btn.setFixedWidth(120)
@@ -418,7 +440,7 @@ class SettingsView(QWidget):
         layout.addLayout(qr_layout)
 
         # Manual URL guide
-        guide = QLabel("Hoặc nhập thủ công URL hiển thị ở trên")
+        guide = QLabel("Hoặc nhập thủ công URL và Key hiển thị ở trên")
         guide.setStyleSheet(
             f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 11px;"
         )
@@ -436,9 +458,13 @@ class SettingsView(QWidget):
         self._worker.error.connect(lambda: self.ip_label.setText("127.0.0.1 (Offline)"))
         self._worker.start()
 
-    def _on_ip_ready(self, ip, port, pixmap):
+    def _on_ip_ready(self, ip, port, secret_key, pixmap):
         self.ip_label.setText(ip)
         self.port_label.setText(f"Port: {port}")
+        # Show partial key for verification
+        short_key = secret_key[:8] + "..." if secret_key else "None"
+        self.key_label.setText(f"Key: {short_key}")
+        
         scaled = pixmap.scaled(190, 190, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         self.qr_label.setPixmap(scaled)
 

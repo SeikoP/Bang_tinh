@@ -30,12 +30,14 @@ class NotificationServer(QThread):
             self._server.signal = self.msg_received
             self._server.logger = self.logger
             
-            self._running = True
+            # --- AUTH CONFIG ---
+            from core.config import Config
+            self.secret_key = Config.from_env().secret_key
+            self._server.secret_key = self.secret_key
             
             if self.logger:
-                self.logger.info(
-                    f"Notification Server started on {self.host}:{self.port}"
-                )
+                self.logger.info(f"Notification Server started on {self.host}:{self.port}")
+                self.logger.info(f"Using Secret Key for Authentication: {self.secret_key[:8]}...")
             
             # Serve forever with proper shutdown handling
             while self._running:

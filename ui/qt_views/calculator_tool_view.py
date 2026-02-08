@@ -111,42 +111,46 @@ class CalculatorToolView(QWidget):
 
         buttons = [
             ('%', 0, 0), ('CE', 0, 1), ('C', 0, 2), ('⌫', 0, 3),
-            ('1/x', 1, 0), ('x²', 1, 1), ('√x', 1, 2), ('/', 1, 3),
-            ('7', 2, 0), ('8', 2, 1), ('9', 2, 2), ('*', 2, 3),
-            ('4', 3, 0), ('5', 3, 1), ('6', 3, 2), ('-', 3, 3),
+            ('1/x', 1, 0), ('x²', 1, 1), ('√x', 1, 2), ('÷', 1, 3),
+            ('7', 2, 0), ('8', 2, 1), ('9', 2, 2), ('×', 2, 3),
+            ('4', 3, 0), ('5', 3, 1), ('6', 3, 2), ('−', 3, 3),
             ('1', 4, 0), ('2', 4, 1), ('3', 4, 2), ('+', 4, 3),
             ('±', 5, 0), ('0', 5, 1), ('.', 5, 2), ('=', 5, 3)
         ]
 
         for text, r, c in buttons:
+            real_op = text # For display vs logic mapping
+            if text == '÷': real_op = '/'
+            elif text == '×': real_op = '*'
+            elif text == '−': real_op = '-'
+
             btn = QPushButton(text)
-            btn.setFixedSize(86, 60)  # Slightly larger for better touch/click area
+            btn.setFixedSize(86, 60)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             
             is_digit = text.isdigit() or text == '.'
-            is_op = text in ['/', '*', '-', '+']
+            is_op = text in ['÷', '×', '−', '+']
             
-            # Optimized flat design (no shadow for performance)
+            # Ultra-clean modern style
             if text == '=':
-                st = f"background: {AppColors.PRIMARY}; color: white; border-radius: 8px; font-weight: 800; font-size: 24px; border: none;"
-                hover = f"background: {AppColors.PRIMARY_HOVER};"
+                st = f"background: {AppColors.PRIMARY}; color: white; border-radius: 12px; font-weight: 700; font-size: 24px; border: none;"
+                hover = f"background: {AppColors.PRIMARY_HOVER}; margin-top: -2px;"
             elif is_op:
-                st = f"background: #e0f2fe; color: {AppColors.PRIMARY}; border-radius: 8px; font-weight: 700; font-size: 20px; border: 1px solid #bae6fd;"
-                hover = f"background: #bae6fd;"
+                st = f"background: #F1F5F9; color: {AppColors.PRIMARY}; border-radius: 12px; font-weight: 600; font-size: 24px; border: none;"
+                hover = f"background: #E2E8F0; color: {AppColors.PRIMARY_DARK};"
             elif is_digit:
-                st = f"background: white; color: {AppColors.TEXT}; border-radius: 8px; font-weight: 700; font-size: 22px; border: 1px solid #e2e8f0;"
-                hover = f"background: #f8fafc; border-color: {AppColors.BORDER_HOVER};"
-            else: # Function keys
-                st = f"background: #f1f5f9; color: {AppColors.TEXT_SECONDARY}; border-radius: 8px; font-weight: 600; font-size: 16px; border: 1px solid #e2e8f0;"
-                hover = f"background: #e2e8f0; color: {AppColors.TEXT};"
+                st = f"background: white; color: {AppColors.TEXT}; border-radius: 12px; font-weight: 600; font-size: 22px; border: 1px solid #F1F5F9;"
+                hover = f"background: #F8FAFC; border-color: {AppColors.BORDER_HOVER};"
+            else: # Function keys (CE, C, etc)
+                st = f"background: white; color: {AppColors.ERROR if text in ['C', 'CE'] else AppColors.TEXT_SECONDARY}; border-radius: 12px; font-weight: 600; font-size: 16px; border: 1px solid #F1F5F9;"
+                hover = f"background: #FEF2F2; color: {AppColors.ERROR}; border-color: #FECACA;" if text in ['C', 'CE'] else f"background: #F8FAFC; color: {AppColors.TEXT};"
             
             btn.setStyleSheet(f"""
                 QPushButton {{ {st} }}
                 QPushButton:hover {{ {hover} }}
-                QPushButton:pressed {{ margin-top: 1px; margin-left: 1px; }}
+                QPushButton:pressed {{ background: #E2E8F0; margin-top: 1px; }}
             """)
-            # Use direct connection for slightly better responsiveness
-            btn.clicked.connect(lambda ch, t=text: self._on_btn(t))
+            btn.clicked.connect(lambda ch, t=real_op: self._on_btn(t))
             grid.addWidget(btn, r, c)
 
         calc_layout.addLayout(grid)

@@ -49,6 +49,32 @@ class NotificationHandler(BaseHTTPRequestHandler):
                 )
                 self.server.logger.info(f"Headers: {dict(self.headers)}")
 
+            # --- SECURITY CHECK ---
+            auth_header = self.headers.get("Authorization")
+            expected_key = getattr(self.server, "secret_key", None)
+            
+            # If server has a secret key configured, enforce it
+            if expected_key:
+                if not auth_header or not auth_header.startswith("Bearer "):
+                    self.send_response(401)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"error","message":"Unauthorized: Missing or invalid token"}')
+                    if hasattr(self.server, "logger") and self.server.logger:
+                        self.server.logger.warning(f"Unauthorized request from {self.client_address}")
+                    return
+                
+                token = auth_header.split(" ")[1].strip()
+                if token != expected_key:
+                    self.send_response(403)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(b'{"status":"error","message":"Forbidden: Invalid token"}')
+                    if hasattr(self.server, "logger") and self.server.logger:
+                        self.server.logger.warning(f"Forbidden request from {self.client_address}: Invalid token")
+                    return
+            # ----------------------
+
             # 1. Thử lấy từ URL Query (?content=...)
             parsed_url = urlparse(self.path)
             query_params = parse_qs(parsed_url.query)
