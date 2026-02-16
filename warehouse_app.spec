@@ -29,6 +29,8 @@ a = Analysis(
         'core.constants',
         'encodings.idna',
         'encodings.utf_8',
+        'qrcode',
+        'PIL',
     ],
     hookspath=[],
     hooksconfig={},
@@ -39,7 +41,6 @@ a = Analysis(
         'numpy',
         'pandas',
         'scipy',
-        'PIL',
         'cv2',
         # Testing frameworks
         'tkinter',
