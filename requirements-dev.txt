@@ -1,4 +1,4 @@
-# Development Dependencies for Warehouse Management Application
+# Development Dependencies for WMS
 # Include all production dependencies plus development tools
 
 -r requirements.txt

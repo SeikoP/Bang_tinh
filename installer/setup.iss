@@ -1,11 +1,11 @@
-; Inno Setup Script for Warehouse Management Application
+; Inno Setup Script for WMS
 ; This script creates a professional Windows installer with proper configuration
 
-#define MyAppName "Bảng Tính"
+#define MyAppName "WMS"
 #define MyAppVersion "2.0.0"
-#define MyAppPublisher "Bangla Team"
+#define MyAppPublisher "WAREHOUSE"
 #define MyAppURL "https://github.com/SeikoP/Bang_tinh"
-#define MyAppExeName "WarehouseManagement.exe"
+#define MyAppExeName "WMS.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -18,13 +18,14 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={autopf}\BangTinh
+DefaultDirName={autopf}\WMS
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=..\LICENSE.txt
+LicenseFile=..\
+LICENSE.txt
 InfoBeforeFile=info_before.txt
 OutputDir=..\Output
-OutputBaseFilename=BangTinhSetup
+OutputBaseFilename=WMSSetup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern

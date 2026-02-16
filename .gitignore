@@ -1,118 +1,81 @@
-
-
-.hypothesis
-############################
 # Python
-############################
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-*.pyd
-*.dll
-assets/
-############################
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.__pycache__
+*.pyc
 # Virtual Environment
-############################
 .venv/
 venv/
-env/
 ENV/
+env/
 
-############################
-# Environment / Secrets
-############################
-.env
-.env.*
-!.env.example
-
-############################
-# IDE / Editor
-############################
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
+*~
 
-############################
-# OS Files
-############################
+# Testing
+.pytest_cache/
+.hypothesis/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# Data (runtime)
+data/logs/*.log
+data/logs/*.log.*
+data/exports/*
+data/backups/*
+data/cache/*
+!data/logs/.gitkeep
+!data/exports/.gitkeep
+!data/backups/.gitkeep
+!data/cache/.gitkeep
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Build artifacts
+build/
+dist/
+*.spec.bak
+
+# OS
 .DS_Store
 Thumbs.db
 desktop.ini
 
-############################
+# Environment
+.env
+.env.local
+!.env.example
+
 # Logs
-############################
 logs/
 *.log
-build_*.log
 
-############################
-# Test / Coverage
-############################
-.pytest_cache/
-.coverage
-htmlcov/
-coverage.xml
+# Android
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android_notifier/local.properties
+android_notifier/.gradle/
+android_notifier/build/
+android_notifier/app/build/
 
-############################
-# Build / Distribution
-############################
-build/
-dist/
-*.whl
-*.zip
-build_*.log
-
-############################
-# PyInstaller
-############################
-*.manifest
-*.toc
-
-############################
-# Database (Local)
-############################
-*.db
-*.sqlite
-*.sqlite3
-
-############################
-# Migrations Cache
-############################
-alembic/versions/__pycache__/
-
-############################
-# Reports / Audit
-############################
-audit_reports/
-reports/
-*.html
-*.json
-
-############################
-# Temp / Cache
-############################
-.cache/
-.tmp/
-temp/
-tmp/
-
-############################
-# Node (nếu có frontend)
-############################
-node_modules/
-dist-electron/
-
-############################
-# Installer
-############################
-installer/output/
-*.iss.bak
-
-############################
-# CI Artifacts
-############################
-artifacts/
+# Ruff cache
+.ruff_cache/

@@ -1,24 +1,29 @@
 """
 Cấu hình và constants cho ứng dụng Quản lý Xuất kho & Dịch vụ
+DEPRECATED: Use app.core.paths for path management
 """
 
 import os
 import sys
 from pathlib import Path
 
-# === Đường dẫn (hỗ trợ cả dev và build exe) ===
-# Khi build exe với PyInstaller, sys.frozen = True
-if getattr(sys, "frozen", False):
-    # Running as compiled exe
-    BASE_DIR = Path(sys.executable).parent
-else:
-    # Running as script
-    BASE_DIR = Path(__file__).parent
-
-# Load from environment variables with fallbacks
-DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "storage.db"))
-BACKUP_DIR = Path(os.getenv("BACKUP_DIR", BASE_DIR / "backups"))
-EXPORT_DIR = Path(os.getenv("EXPORT_DIR", BASE_DIR / "exports"))
+# Import centralized paths
+try:
+    from app.core.paths import ROOT, DATABASE, BACKUPS, EXPORTS, ASSETS
+    BASE_DIR = ROOT
+    DB_PATH = DATABASE
+    BACKUP_DIR = BACKUPS
+    EXPORT_DIR = EXPORTS
+except ImportError:
+    # Fallback for transition period
+    if getattr(sys, "frozen", False):
+        BASE_DIR = Path(sys.executable).parent
+    else:
+        BASE_DIR = Path(__file__).parent
+    
+    DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "storage.db"))
+    BACKUP_DIR = Path(os.getenv("BACKUP_DIR", BASE_DIR / "data" / "backups"))
+    EXPORT_DIR = Path(os.getenv("EXPORT_DIR", BASE_DIR / "data" / "exports"))
 
 
 # === Theme Colors ===
@@ -66,9 +71,9 @@ WINDOW_MIN_WIDTH = 850
 WINDOW_MIN_HEIGHT = 600
 
 # === App Info ===
-APP_NAME = os.getenv("APP_NAME", "Phần mềm Quản lý Xuất kho & Dịch vụ")
+APP_NAME = os.getenv("APP_NAME", "WMS")
 APP_VERSION = os.getenv("APP_VERSION", "2.0.0")
-APP_AUTHOR = "Bang_tinh Team"
+APP_AUTHOR = "WAREHOUSE"
 
 # === Export Settings ===
 EXPORT_DATE_FORMAT = "%Y-%m-%d_%H%M%S"

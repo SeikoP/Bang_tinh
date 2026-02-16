@@ -1,6 +1,6 @@
-Warehouse Management System - Installation Information
+WMS - Warehouse Management - Installation Information
 
-Thank you for choosing Warehouse Management System!
+Thank you for choosing WMS!
 
 This installer will guide you through the installation process.
 
@@ -10,7 +10,7 @@ SYSTEM REQUIREMENTS:
 - 2 GB RAM (minimum)
 
 WHAT WILL BE INSTALLED:
-- Warehouse Management application
+- WMS application
 - Configuration templates
 - Sample assets and resources
 

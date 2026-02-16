@@ -1,0 +1,20 @@
+# Path Configuration
+# All paths are relative to project root unless absolute
+paths:
+  database: "storage.db"
+  
+  data:
+    logs: "data/logs"
+    exports: "data/exports"
+    backups: "data/backups"
+    cache: "data/cache"
+  
+  resources:
+    fonts: "app/resources/fonts"
+    icons: "app/resources/icons"
+    themes: "app/resources/themes"
+  
+  build:
+    pyinstaller: "build/pyinstaller"
+    dist: "build/dist"
+    installer: "build/installer"

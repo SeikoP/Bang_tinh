@@ -1,0 +1,30 @@
+# Application Configuration
+app:
+  name: "WMS"
+  version: "2.0.0"
+  author: "WAREHOUSE"
+  
+window:
+  width: 1200
+  height: 800
+  min_width: 850
+  min_height: 600
+  
+theme:
+  name: "modern"
+  colors:
+    primary: "#334e88"
+    secondary: "#ff7043"
+    success: "#4caf50"
+    warning: "#ff9800"
+    error: "#f44336"
+    
+server:
+  notification_port: 5005
+  notification_host: "0.0.0.0"
+  enable_ssl: false
+  
+features:
+  enable_bank_notifications: true
+  enable_auto_backup: true
+  enable_export: true

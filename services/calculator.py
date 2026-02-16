@@ -50,8 +50,10 @@ class CalculatorService:
 
         value_str = str(value_str).strip().lower()
 
-        # Thay thế ký tự chữ bằng dấu chấm
-        normalized = re.sub(r"[a-z]", ".", value_str)
+        # Thay thế ký tự chữ bằng dấu chấm, nhưng chỉ giữ 1 dấu chấm
+        normalized = re.sub(r"[a-z]+", ".", value_str)
+        # Remove multiple consecutive dots
+        normalized = re.sub(r"\.+", ".", normalized)
 
         try:
             if "." in normalized:
@@ -103,6 +105,9 @@ class CalculatorService:
             raise ValidationError("Conversion factor must be positive", "conversion")
 
         if total_small_units < 0:
+            return "0"
+        
+        if total_small_units == 0:
             return "0"
 
         large = total_small_units // conversion

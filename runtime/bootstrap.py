@@ -292,22 +292,28 @@ class ApplicationBootstrap:
             license_manager = LicenseManager(validator=validator, logger=self.logger)
 
             # Validate license at startup
-            is_valid = license_manager.validate_startup_license(
-                license_key=self.config.license_key, environment=self.config.environment
-            )
+            is_valid = False
+            if self.config.license_key:
+                is_valid = license_manager.validate_startup_license(
+                    license_key=self.config.license_key, 
+                    environment=self.config.environment
+                )
+
+            # Store license manager and status in container
+            self.container.register_singleton("license_manager", license_manager)
+            self.container.register_singleton("is_license_valid", is_valid)
 
             if not is_valid:
-                self.logger.warning("License validation failed. Running in trial mode.")
+                self.logger.warning("License validation failed or missing. Running in TRIAL MODE.")
+                # Optional: Show trial warning dialog here if needed
                 return
-
-            # Store license manager in container for later use
-            self.container._services["license_manager"] = license_manager
 
             self.logger.info("License validation completed successfully")
 
         except Exception as e:
             self.logger.warning(f"License validation error: {e}")
-            self.logger.info("Continuing without license validation")
+            self.logger.info("Continuing in TRIAL MODE")
+            self.container.register_singleton("is_license_valid", False)
 
     def _initialize_qt_application(self):
         """Initialize Qt Application"""
@@ -325,7 +331,12 @@ class ApplicationBootstrap:
         self.qt_app.setOrganizationName("Bangla Team")
 
         # Set application icon if available
-        icon_path = self.config.base_dir / "assets" / "icon.png"
+        try:
+            from app.core.paths import ASSETS
+            icon_path = ASSETS / "icon.png"
+        except ImportError:
+            icon_path = self.config.base_dir / "assets" / "icon.png"
+            
         if icon_path.exists():
             from PyQt6.QtGui import QIcon
 

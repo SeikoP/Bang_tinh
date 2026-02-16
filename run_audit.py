@@ -18,7 +18,7 @@ def main():
     print(f"Project root: {project_root}\n")
 
     # Create audit report
-    report = AuditReport(project_name="Warehouse Management System")
+    report = AuditReport(project_name="WMS")
 
     # Run architecture analysis
     print("Running architecture analysis...")

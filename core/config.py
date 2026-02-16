@@ -5,6 +5,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+# Import centralized paths
+try:
+    from app.core.paths import ROOT, DATABASE, LOGS, EXPORTS, BACKUPS
+except ImportError:
+    # Fallback for transition period
+    ROOT = Path(__file__).resolve().parents[1]
+    DATABASE = ROOT / "storage.db"
+    LOGS = ROOT / "data" / "logs"
+    EXPORTS = ROOT / "data" / "exports"
+    BACKUPS = ROOT / "data" / "backups"
+
 
 @dataclass
 class Config:
@@ -39,19 +50,32 @@ class Config:
     # Logging
     log_level: str
     log_rotation: str
+    secret_key: str
 
     @classmethod
     def from_env(cls) -> "Config":
         """Load configuration from environment variables"""
-        base_dir = Path(os.getenv("APP_BASE_DIR", Path.cwd()))
+        base_dir = Path(os.getenv("APP_BASE_DIR", ROOT))
+        
+        # Load or generate secret key
+        secret_file = base_dir / ".secret_key"
+        if secret_file.exists():
+            secret_key = secret_file.read_text().strip()
+        else:
+            import uuid
+            secret_key = str(uuid.uuid4())
+            try:
+                secret_file.write_text(secret_key)
+            except Exception:
+                pass # Fail silently if cannot write, key will change on restart (acceptable fallback)
 
         return cls(
             base_dir=base_dir,
-            db_path=Path(os.getenv("DB_PATH", base_dir / "storage.db")),
-            export_dir=Path(os.getenv("EXPORT_DIR", base_dir / "exports")),
-            backup_dir=Path(os.getenv("BACKUP_DIR", base_dir / "backups")),
-            log_dir=Path(os.getenv("LOG_DIR", base_dir / "logs")),
-            app_name=os.getenv("APP_NAME", "Warehouse Management"),
+            db_path=Path(os.getenv("DB_PATH", DATABASE)),
+            export_dir=Path(os.getenv("EXPORT_DIR", EXPORTS)),
+            backup_dir=Path(os.getenv("BACKUP_DIR", BACKUPS)),
+            log_dir=Path(os.getenv("LOG_DIR", LOGS)),
+            app_name=os.getenv("APP_NAME", "WMS"),
             app_version=os.getenv("APP_VERSION", "2.0.0"),
             environment=os.getenv("ENVIRONMENT", "production"),
             window_width=int(os.getenv("WINDOW_WIDTH", "1200")),
@@ -62,6 +86,7 @@ class Config:
             enable_ssl=os.getenv("ENABLE_SSL", "false").lower() == "true",
             license_key=os.getenv("LICENSE_KEY"),
             encryption_key=os.getenv("ENCRYPTION_KEY"),
+            secret_key=secret_key,
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             log_rotation=os.getenv("LOG_ROTATION", "daily"),
         )
