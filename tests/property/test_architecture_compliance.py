@@ -137,12 +137,10 @@ def test_property_6_layer_dependency_rules(ui_file, import_layer):
 
     if import_layer in allowed_layers:
         # This should be allowed
-        import_statement = f"from {import_layer}.module import Something"
         # Property: No violation should be raised
         assert True
     else:
         # This should be a violation (services, database)
-        import_statement = f"from {import_layer}.module import Something"
         # Property: This violates layer dependency rules
         assert import_layer not in allowed_layers
 

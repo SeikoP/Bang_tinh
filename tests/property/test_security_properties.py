@@ -192,7 +192,7 @@ def test_property_21_secrets_in_environment_variables(secret):
 
         # Property: Secret should not be hardcoded (check pattern)
         # This is a meta-test - in real code, we'd scan source files
-        hardcoded_pattern = f"{secret['type']}\\s*=\\s*['\"].*['\"]"
+        f"{secret['type']}\\s*=\\s*['\"].*['\"]"
 
         # Simulate checking if it's hardcoded (should not be)
         is_hardcoded = False  # In real test, scan actual files

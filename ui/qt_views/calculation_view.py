@@ -2,8 +2,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QFrame,
                              QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-                             QMessageBox, QPushButton, QSizePolicy, QTableWidget,
-                             QTableWidgetItem, QTabWidget, QTextEdit,
+                             QMessageBox, QPushButton, QSizePolicy,
+                             QTableWidget, QTableWidgetItem, QTextEdit,
                              QVBoxLayout, QWidget)
 
 from database import HistoryRepository, ProductRepository, SessionRepository
@@ -15,11 +15,11 @@ from ui.qt_views.product_dialog import ProductDialog
 
 class DragDropTableWidget(QTableWidget):
     """Custom QTableWidget with drag & drop support"""
-    
+
     def __init__(self, parent=None, on_drop_callback=None):
         super().__init__(parent)
         self.on_drop_callback = on_drop_callback
-        
+
     def dropEvent(self, event):
         """Handle drop event to save new order"""
         super().dropEvent(event)
@@ -39,7 +39,10 @@ class SaveSessionDialog(QDialog):
     def keyPressEvent(self, event):
         """Handle Enter key to submit dialog"""
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            if not event.modifiers() or event.modifiers() == Qt.KeyboardModifier.KeypadModifier:
+            if (
+                not event.modifiers()
+                or event.modifiers() == Qt.KeyboardModifier.KeypadModifier
+            ):
                 self._save()
                 return
         super().keyPressEvent(event)
@@ -152,7 +155,7 @@ class CalculationView(QWidget):
 
         # Setup calc tab directly (no sub-tabs)
         self._setup_calc_tab_direct(layout)
-        
+
         # Setup prod tab separately (will be used by parent)
         self.prod_tab = QWidget()
         self._setup_prod_tab()
@@ -161,7 +164,7 @@ class CalculationView(QWidget):
         layout = QVBoxLayout(self.calc_tab)
         layout.setContentsMargins(20, 16, 20, 20)
         layout.setSpacing(16)
-    
+
     def _setup_calc_tab_direct(self, parent_layout):
         layout = parent_layout
         layout.setContentsMargins(20, 16, 20, 20)
@@ -294,7 +297,7 @@ class CalculationView(QWidget):
         header = self.table.horizontalHeader()
         # "Tên sản phẩm" stretches to fill, but is also interactive
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        
+
         # Numerical columns: Interactive (Excel-like) with min-width
         for i in [1, 2, 3, 4, 5]:
             header.setSectionResizeMode(i, QHeaderView.ResizeMode.Interactive)
@@ -303,7 +306,7 @@ class CalculationView(QWidget):
         # Initial default widths
         self.table.setColumnWidth(1, 100)  # Giao ca
         self.table.setColumnWidth(2, 100)  # Chốt ca
-        self.table.setColumnWidth(3, 90)   # Đã dùng
+        self.table.setColumnWidth(3, 90)  # Đã dùng
         self.table.setColumnWidth(4, 110)  # Đơn giá
         self.table.setColumnWidth(5, 120)  # Thành tiền
 
@@ -312,7 +315,7 @@ class CalculationView(QWidget):
         self.table.setWordWrap(True)
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setDefaultSectionSize(70)
-        
+
         # Allow double-click to auto-fit (Qt default for Interactive)
         header.setSectionsClickable(True)
         header.setSectionsMovable(True)
@@ -339,7 +342,7 @@ class CalculationView(QWidget):
         self.prod_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.prod_table.verticalHeader().setVisible(False)
         self.prod_table.verticalHeader().setDefaultSectionSize(64)
-        
+
         # Enable drag & drop
         self.prod_table.setDragEnabled(True)
         self.prod_table.setAcceptDrops(True)
@@ -373,8 +376,6 @@ class CalculationView(QWidget):
                     s.closing_qty, p.conversion, p.unit_char
                 )
                 total += s.amount
-                has_data = s.used_qty > 0
-                row_bg = None # Use white background for clarity
 
                 # Col 0: Product name (with unit hint)
                 name_text = f"{p.name}"
@@ -394,7 +395,7 @@ class CalculationView(QWidget):
                 handover_layout = QVBoxLayout(handover_container)
                 handover_layout.setContentsMargins(4, 4, 4, 4)
                 handover_layout.setSpacing(0)
-                
+
                 handover_edit = QLineEdit(handover_disp if s.handover_qty > 0 else "0")
                 handover_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 handover_edit.setMinimumHeight(self._widget_height)
@@ -429,7 +430,7 @@ class CalculationView(QWidget):
                 closing_layout = QVBoxLayout(closing_container)
                 closing_layout.setContentsMargins(4, 4, 4, 4)
                 closing_layout.setSpacing(0)
-                
+
                 closing_edit = QLineEdit(closing_disp if s.closing_qty > 0 else "0")
                 closing_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 closing_edit.setMinimumHeight(self._widget_height)
@@ -462,31 +463,58 @@ class CalculationView(QWidget):
                 # Col 3: Used Column - Highlight non-zero as a badge
                 if s.used_qty > 0:
                     self._set_cell_helper(
-                        self.table, row, 3, str(s.used_qty),
-                        right=True, fg="white", bold=True, bg=AppColors.ERROR
+                        self.table,
+                        row,
+                        3,
+                        str(s.used_qty),
+                        right=True,
+                        fg="white",
+                        bold=True,
+                        bg=AppColors.ERROR,
                     )
                 else:
                     self._set_cell_helper(
-                        self.table, row, 3, "0",
-                        right=True, fg=AppColors.TEXT_SECONDARY, bg=None
+                        self.table,
+                        row,
+                        3,
+                        "0",
+                        right=True,
+                        fg=AppColors.TEXT_SECONDARY,
+                        bg=None,
                     )
 
                 # Col 4: Unit Price
                 self._set_cell_helper(
-                    self.table, row, 4, f"{p.unit_price:,.0f}",
-                    right=True, fg=AppColors.TEXT, bg=None
+                    self.table,
+                    row,
+                    4,
+                    f"{p.unit_price:,.0f}",
+                    right=True,
+                    fg=AppColors.TEXT,
+                    bg=None,
                 )
-                
+
                 # Col 5: Amount - Highlight non-zero with Primary badge
                 if s.amount > 0:
                     self._set_cell_helper(
-                        self.table, row, 5, f"{s.amount:,.0f}",
-                        right=True, fg="white", bold=True, bg=AppColors.PRIMARY
+                        self.table,
+                        row,
+                        5,
+                        f"{s.amount:,.0f}",
+                        right=True,
+                        fg="white",
+                        bold=True,
+                        bg=AppColors.PRIMARY,
                     )
                 else:
                     self._set_cell_helper(
-                        self.table, row, 5, "0",
-                        right=True, fg=AppColors.TEXT_SECONDARY, bg=None
+                        self.table,
+                        row,
+                        5,
+                        "0",
+                        right=True,
+                        fg=AppColors.TEXT_SECONDARY,
+                        bg=None,
                     )
 
             self.total_label.setText(f"TỔNG TIỀN: {total:,.0f} VNĐ")
@@ -536,8 +564,10 @@ class CalculationView(QWidget):
                     self.prod_table, row, 0, str(row + 1), center=True
                 )
                 name_item = QTableWidgetItem(p.name)
-                name_item.setData(Qt.ItemDataRole.UserRole, p.id) # Store ID
-                name_item.setTextAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+                name_item.setData(Qt.ItemDataRole.UserRole, p.id)  # Store ID
+                name_item.setTextAlignment(
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
+                )
                 name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 f = name_item.font()
                 f.setBold(True)
@@ -663,14 +693,18 @@ class CalculationView(QWidget):
             return
         h = new if is_h else curr.handover_qty
         c = curr.closing_qty if is_h else new
-        
+
         # Validate closing quantity
         if not is_h and c > h:
             # Show warning when closing exceeds handover
             product_name = curr.product.name
-            handover_display = self.calc_service.format_to_display(h, conv, curr.product.unit_char)
-            closing_display = self.calc_service.format_to_display(c, conv, curr.product.unit_char)
-            
+            handover_display = self.calc_service.format_to_display(
+                h, conv, curr.product.unit_char
+            )
+            closing_display = self.calc_service.format_to_display(
+                c, conv, curr.product.unit_char
+            )
+
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Warning)
             msg.setWindowTitle("⚠️ Cảnh báo: Chốt ca > Giao ca")
@@ -691,9 +725,9 @@ class CalculationView(QWidget):
             )
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
             msg.exec()
-            
+
             c = h  # Auto-adjust to handover
-        
+
         if is_h:
             c = h
 
@@ -704,7 +738,7 @@ class CalculationView(QWidget):
             SessionRepository.update_qty(pid, h, c)
 
         self.refresh_table()
-        self._show_report(getattr(self, '_last_report_data', {}))
+        self._show_report(getattr(self, "_last_report_data", {}))
         if self.on_refresh_stock:
             self.on_refresh_stock()
 
@@ -722,12 +756,15 @@ class CalculationView(QWidget):
     ):
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        
+
         # Alignment
         align = Qt.AlignmentFlag.AlignVCenter
-        if right: align |= Qt.AlignmentFlag.AlignRight
-        elif center: align |= Qt.AlignmentFlag.AlignCenter
-        else: align |= Qt.AlignmentFlag.AlignLeft
+        if right:
+            align |= Qt.AlignmentFlag.AlignRight
+        elif center:
+            align |= Qt.AlignmentFlag.AlignCenter
+        else:
+            align |= Qt.AlignmentFlag.AlignLeft
         item.setTextAlignment(align)
 
         if bold:
@@ -741,7 +778,7 @@ class CalculationView(QWidget):
             l = QHBoxLayout(container)
             l.setContentsMargins(4, 6, 4, 6)
             l.setAlignment(align)
-            
+
             badge = QLabel(text)
             badge.setStyleSheet(f"""
                 QLabel {{
@@ -759,8 +796,10 @@ class CalculationView(QWidget):
             item.setForeground(QColor("transparent"))
             table.setItem(row, col, item)
         else:
-            if bg: item.setBackground(QColor(bg))
-            if fg: item.setForeground(QColor(fg))
+            if bg:
+                item.setBackground(QColor(bg))
+            if fg:
+                item.setForeground(QColor(fg))
             table.setItem(row, col, item)
 
     def _add_product(self):
@@ -878,8 +917,8 @@ class CalculationView(QWidget):
         - Readable in 3 seconds by fatigued operator
         """
         # --- Palette (2 colors) ---
-        CLR_MUTED = AppColors.TEXT_SECONDARY   # #6B7280
-        CLR_ACCENT = "#16a34a"                 # soft green (revenue)
+        CLR_MUTED = AppColors.TEXT_SECONDARY  # #6B7280
+        CLR_ACCENT = "#16a34a"  # soft green (revenue)
 
         # --- Computation (separated from rendering) ---
         summary = self._compute_shift_summary(data)
@@ -1084,8 +1123,7 @@ class CalculationView(QWidget):
             "html_actual_total": html_data.get("actual_total", 0) if html_data else 0,
             "html_count_50k": html_data.get("count_50k", 0) if html_data else 0,
             "used_products": [
-                {"name": s.product.name, "amount": s.amount}
-                for s in used
+                {"name": s.product.name, "amount": s.amount} for s in used
             ],
         }
 
@@ -1151,129 +1189,115 @@ class CalculationView(QWidget):
         """Import products from CSV"""
         try:
             path, _ = QFileDialog.getOpenFileName(
-                self,
-                "Chọn file CSV để nhập",
-                "",
-                "CSV Files (*.csv);;All Files (*.*)"
+                self, "Chọn file CSV để nhập", "", "CSV Files (*.csv);;All Files (*.*)"
             )
             if not path:
                 return
 
             import csv
-            
+
             # Read CSV file
-            with open(path, 'r', encoding='utf-8-sig') as f:
+            with open(path, "r", encoding="utf-8-sig") as f:
                 reader = csv.DictReader(f)
-                
+
                 # Validate columns
-                required_cols = ['Tên sản phẩm', 'Đơn vị', 'Quy đổi', 'Đơn giá']
+                required_cols = ["Tên sản phẩm", "Đơn vị", "Quy đổi", "Đơn giá"]
                 if not all(col in reader.fieldnames for col in required_cols):
                     QMessageBox.warning(
                         self,
                         "Lỗi",
-                        f"File CSV phải có các cột: {', '.join(required_cols)}"
+                        f"File CSV phải có các cột: {', '.join(required_cols)}",
                     )
                     return
-                
+
                 # Import products
                 imported = 0
                 for row in reader:
                     try:
-                        name = str(row['Tên sản phẩm']).strip()
-                        large_unit = str(row['Đơn vị']).strip()
-                        conversion = int(row['Quy đổi'])
-                        unit_price = float(row['Đơn giá'])
-                        
+                        name = str(row["Tên sản phẩm"]).strip()
+                        large_unit = str(row["Đơn vị"]).strip()
+                        conversion = int(row["Quy đổi"])
+                        unit_price = float(row["Đơn giá"])
+
                         if name and large_unit and conversion > 0 and unit_price >= 0:
                             if self.container:
-                                self.product_repo.add(name, large_unit, conversion, unit_price)
+                                self.product_repo.add(
+                                    name, large_unit, conversion, unit_price
+                                )
                             else:
-                                ProductRepository.add(name, large_unit, conversion, unit_price)
+                                ProductRepository.add(
+                                    name, large_unit, conversion, unit_price
+                                )
                             imported += 1
                     except Exception as e:
                         if self.logger:
                             self.logger.warning(f"Skip row: {e}")
                         continue
-            
+
             self.refresh_product_list()
             self.refresh_table()
             if self.on_refresh_stock:
                 self.on_refresh_stock()
-            
-            QMessageBox.information(
-                self,
-                "Thành công",
-                f"Đã nhập {imported} sản phẩm!"
-            )
-            
+
+            QMessageBox.information(self, "Thành công", f"Đã nhập {imported} sản phẩm!")
+
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error importing products: {str(e)}", exc_info=True)
-            QMessageBox.critical(
-                self,
-                "Lỗi",
-                f"Không thể nhập file: {str(e)}"
-            )
+            QMessageBox.critical(self, "Lỗi", f"Không thể nhập file: {str(e)}")
 
     def _export_products(self):
         """Export products to CSV"""
         try:
             path, _ = QFileDialog.getSaveFileName(
-                self,
-                "Lưu file CSV",
-                "danh_sach_san_pham.csv",
-                "CSV Files (*.csv)"
+                self, "Lưu file CSV", "danh_sach_san_pham.csv", "CSV Files (*.csv)"
             )
             if not path:
                 return
 
             import csv
-            
+
             # Get all products
             if self.container:
                 products = self.product_repo.get_all()
             else:
                 products = ProductRepository.get_all()
-            
+
             # Write CSV file
-            with open(path, 'w', encoding='utf-8-sig', newline='') as f:
-                fieldnames = ['STT', 'Tên sản phẩm', 'Đơn vị', 'Quy đổi', 'Đơn giá']
+            with open(path, "w", encoding="utf-8-sig", newline="") as f:
+                fieldnames = ["STT", "Tên sản phẩm", "Đơn vị", "Quy đổi", "Đơn giá"]
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
-                
+
                 writer.writeheader()
                 for idx, p in enumerate(products, 1):
-                    writer.writerow({
-                        'STT': idx,
-                        'Tên sản phẩm': p.name,
-                        'Đơn vị': p.large_unit,
-                        'Quy đổi': p.conversion,
-                        'Đơn giá': p.unit_price
-                    })
-            
+                    writer.writerow(
+                        {
+                            "STT": idx,
+                            "Tên sản phẩm": p.name,
+                            "Đơn vị": p.large_unit,
+                            "Quy đổi": p.conversion,
+                            "Đơn giá": p.unit_price,
+                        }
+                    )
+
             QMessageBox.information(
-                self,
-                "Thành công",
-                f"Đã xuất {len(products)} sản phẩm!"
+                self, "Thành công", f"Đã xuất {len(products)} sản phẩm!"
             )
-            
+
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error exporting products: {str(e)}", exc_info=True)
-            QMessageBox.critical(
-                self,
-                "Lỗi",
-                f"Không thể xuất file: {str(e)}"
-            )
+            QMessageBox.critical(self, "Lỗi", f"Không thể xuất file: {str(e)}")
 
     def _save_product_order(self):
         """Save product order after drag & drop"""
         try:
             # Get all products
             if self.container:
-                products = self.product_repo.get_all()
+                self.product_repo.get_all()
             else:
-                products = ProductRepository.get_all()
-            
+                ProductRepository.get_all()
+
             # Update display_order in database based on current table order
             with get_connection() as conn:
                 cursor = conn.cursor()
@@ -1284,16 +1308,18 @@ class CalculationView(QWidget):
                         if product_id:
                             cursor.execute(
                                 "UPDATE products SET display_order = ? WHERE id = ?",
-                                (idx, product_id)
+                                (idx, product_id),
                             )
                 conn.commit()
-            
+
             # Refresh all tables to reflect new order
             self.refresh_product_list()  # Refresh product list table
             self.refresh_table()  # Refresh calculation table
             if self.on_refresh_stock:
                 self.on_refresh_stock()  # Refresh stock view
-            
+
         except Exception as e:
             if self.logger:
-                self.logger.error(f"Error saving product order: {str(e)}", exc_info=True)
+                self.logger.error(
+                    f"Error saving product order: {str(e)}", exc_info=True
+                )

@@ -35,7 +35,9 @@ class CrashHandler:
     - System diagnostics
     """
 
-    def __init__(self, logger: logging.Logger, config: Config, auto_restart: bool = False):
+    def __init__(
+        self, logger: logging.Logger, config: Config, auto_restart: bool = False
+    ):
         self.logger = logger
         self.config = config
         self.auto_restart = auto_restart
@@ -71,12 +73,14 @@ class CrashHandler:
 
         # Save crash report
         crash_file = self._save_crash_report(exc_type, exc_value, exc_traceback)
-        
+
         # Create zip archive
         zip_file = self._create_crash_archive(crash_file)
 
         # Show error dialog to user
-        should_restart = self._show_crash_dialog(exc_type, exc_value, crash_file, zip_file)
+        should_restart = self._show_crash_dialog(
+            exc_type, exc_value, crash_file, zip_file
+        )
 
         # Auto-restart if enabled and user agrees
         if should_restart and self.auto_restart:
@@ -132,6 +136,7 @@ class CrashHandler:
                 f.write("System Information:\n")
                 try:
                     import platform
+
                     f.write(f"  OS: {platform.system()} {platform.release()}\n")
                     f.write(f"  Version: {platform.version()}\n")
                     f.write(f"  Machine: {platform.machine()}\n")
@@ -145,10 +150,15 @@ class CrashHandler:
                 f.write("Resource Information:\n")
                 try:
                     import psutil
+
                     mem = psutil.virtual_memory()
-                    disk = psutil.disk_usage('/')
-                    f.write(f"  Memory: {mem.percent:.1f}% used ({mem.used / 1024 / 1024 / 1024:.2f} GB / {mem.total / 1024 / 1024 / 1024:.2f} GB)\n")
-                    f.write(f"  Disk: {disk.percent:.1f}% used ({disk.free / 1024 / 1024 / 1024:.2f} GB free)\n")
+                    disk = psutil.disk_usage("/")
+                    f.write(
+                        f"  Memory: {mem.percent:.1f}% used ({mem.used / 1024 / 1024 / 1024:.2f} GB / {mem.total / 1024 / 1024 / 1024:.2f} GB)\n"
+                    )
+                    f.write(
+                        f"  Disk: {disk.percent:.1f}% used ({disk.free / 1024 / 1024 / 1024:.2f} GB free)\n"
+                    )
                     f.write(f"  CPU: {psutil.cpu_percent()}%\n")
                 except:
                     f.write("  (psutil not available)\n")
@@ -156,18 +166,25 @@ class CrashHandler:
 
                 # Environment variables (filtered)
                 f.write("Environment Variables:\n")
-                safe_vars = ['PATH', 'PYTHONPATH', 'TEMP', 'TMP', 'USERNAME', 'COMPUTERNAME']
+                safe_vars = [
+                    "PATH",
+                    "PYTHONPATH",
+                    "TEMP",
+                    "TMP",
+                    "USERNAME",
+                    "COMPUTERNAME",
+                ]
                 for var in safe_vars:
-                    value = os.environ.get(var, 'N/A')
+                    value = os.environ.get(var, "N/A")
                     f.write(f"  {var}: {value}\n")
                 f.write("\n")
 
                 # Loaded modules
                 f.write("Loaded Modules:\n")
                 for name, module in sorted(sys.modules.items())[:50]:  # First 50
-                    if hasattr(module, '__version__'):
+                    if hasattr(module, "__version__"):
                         f.write(f"  {name}: {module.__version__}\n")
-                    elif hasattr(module, '__file__'):
+                    elif hasattr(module, "__file__"):
                         f.write(f"  {name}: {module.__file__}\n")
                     else:
                         f.write(f"  {name}\n")
@@ -182,25 +199,29 @@ class CrashHandler:
     def _create_crash_archive(self, crash_file: Path) -> Optional[Path]:
         """
         Create zip archive with crash report and recent logs.
-        
+
         Args:
             crash_file: Path to crash report
-            
+
         Returns:
             Path to zip file or None if failed
         """
         try:
-            zip_path = crash_file.with_suffix('.zip')
-            
-            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zip_path = crash_file.with_suffix(".zip")
+
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 # Add crash report
                 zipf.write(crash_file, crash_file.name)
-                
+
                 # Add recent log files (last 3)
-                log_files = sorted(self.config.log_dir.glob("*.log"), key=lambda p: p.stat().st_mtime, reverse=True)[:3]
+                log_files = sorted(
+                    self.config.log_dir.glob("*.log"),
+                    key=lambda p: p.stat().st_mtime,
+                    reverse=True,
+                )[:3]
                 for log_file in log_files:
                     zipf.write(log_file, f"logs/{log_file.name}")
-                
+
                 # Add config (without sensitive data)
                 try:
                     config_info = f"""Application Configuration:
@@ -213,25 +234,27 @@ Log Level: {self.config.log_level}
                     zipf.writestr("config.txt", config_info)
                 except:
                     pass
-            
+
             self.logger.info(f"Crash archive created: {zip_path}")
             return zip_path
-            
+
         except Exception as e:
             self.logger.error(f"Failed to create crash archive: {e}")
             return None
 
-    def _show_crash_dialog(self, exc_type, exc_value, crash_file: Path, zip_file: Optional[Path]) -> bool:
+    def _show_crash_dialog(
+        self, exc_type, exc_value, crash_file: Path, zip_file: Optional[Path]
+    ) -> bool:
         """
         Show crash dialog to user.
-        
+
         Returns:
             bool: True if user wants to restart, False otherwise
         """
         try:
             # Ensure QApplication exists
             if not QApplication.instance():
-                app = QApplication(sys.argv)
+                QApplication(sys.argv)
 
             # Create error message
             error_msg = (
@@ -239,12 +262,12 @@ Log Level: {self.config.log_level}
                 f"Lỗi: {exc_type.__name__}\n"
                 f"Chi tiết: {str(exc_value)}\n\n"
             )
-            
+
             if zip_file:
                 error_msg += f"Báo cáo lỗi đã được lưu tại:\n{zip_file}\n\n"
             else:
                 error_msg += f"Báo cáo lỗi đã được lưu tại:\n{crash_file}\n\n"
-            
+
             error_msg += "Vui lòng liên hệ bộ phận hỗ trợ và gửi file báo cáo lỗi."
 
             # Show dialog with restart option
@@ -252,7 +275,7 @@ Log Level: {self.config.log_level}
             msg_box.setIcon(QMessageBox.Icon.Critical)
             msg_box.setWindowTitle("Lỗi nghiêm trọng")
             msg_box.setText(error_msg)
-            
+
             if self.auto_restart:
                 msg_box.setInformativeText("Bạn có muốn khởi động lại ứng dụng?")
                 msg_box.setStandardButtons(
@@ -277,18 +300,20 @@ Log Level: {self.config.log_level}
         """Restart the application"""
         try:
             self.logger.info("Restarting application...")
-            
+
             # Windows-safe restart
-            if sys.platform == 'win32':
+            if sys.platform == "win32":
                 import subprocess
+
                 # Use subprocess.Popen for Windows
                 subprocess.Popen([sys.executable] + sys.argv)
                 sys.exit(0)
             else:
                 # Unix-like systems can use os.execv
                 import os
+
                 os.execv(sys.executable, [sys.executable] + sys.argv)
-            
+
         except Exception as e:
             self.logger.error(f"Failed to restart application: {e}")
             sys.exit(1)
@@ -308,4 +333,3 @@ class QtExceptionHandler:
     def handle_qt_exception(self, exc_type, exc_value, exc_traceback):
         """Handle Qt exception"""
         self.crash_handler.handle_exception(exc_type, exc_value, exc_traceback)
-

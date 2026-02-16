@@ -18,7 +18,10 @@ class ProductDialog(QDialog):
     def keyPressEvent(self, event):
         """Handle Enter key to submit dialog"""
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            if not event.modifiers() or event.modifiers() == Qt.KeyboardModifier.KeypadModifier:
+            if (
+                not event.modifiers()
+                or event.modifiers() == Qt.KeyboardModifier.KeypadModifier
+            ):
                 self._save()
                 return
         super().keyPressEvent(event)

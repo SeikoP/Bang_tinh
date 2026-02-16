@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 # Determine if running as PyInstaller bundle
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     # Running as compiled executable
     ROOT = Path(sys.executable).parent
     # PyInstaller extracts to a temp folder
@@ -59,27 +59,30 @@ BUILD_INSTALLER = BUILD / "installer"
 # Assets (bundled resources)
 ASSETS = BUNDLE / "assets"
 
+
 def ensure_data_dirs():
     """Ensure all data directories exist"""
     for path in [LOGS, EXPORTS, BACKUPS, CACHE]:
         path.mkdir(parents=True, exist_ok=True)
 
+
 def get_resource_path(relative_path: str) -> Path:
     """
     Get absolute path to resource, works for dev and PyInstaller.
-    
+
     Args:
         relative_path: Path relative to resources directory
-        
+
     Returns:
         Absolute path to resource
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # PyInstaller bundle
         return BUNDLE / relative_path
     else:
         # Development
         return ROOT / relative_path
+
 
 # Initialize data directories on import
 ensure_data_dirs()

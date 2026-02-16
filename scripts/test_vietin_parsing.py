@@ -1,37 +1,42 @@
-
-import requests
-import json
+import os
+import sys
 import time
 
+import requests
+
 URL = "http://localhost:5005"
+
 
 # ===== Auth =====
 def get_auth_header():
     try:
         sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         from core.config import Config
+
         key = Config.from_env().secret_key
         return {"Authorization": f"Bearer {key}"}
     except:
         return {}
+
 
 def send_test(title, content):
     data = {
         "package": "com.vietinbank.ipay",
         "title": title,
         "content": content,
-        "postTime": int(time.time() * 1000)
+        "postTime": int(time.time() * 1000),
     }
-    
+
     headers = get_auth_header()
-    
+
     try:
         resp = requests.post(URL, json=data, headers=headers)
         print(f"Sent: {content[:50]}... | Status: {resp.status_code}")
         if resp.status_code != 200:
-             print(f"Response: {resp.text}")
+            print(f"Response: {resp.text}")
     except Exception as e:
         print(f"Error sending: {e}")
+
 
 # Case 1: Complex transfer with long message
 msg1 = """Biến động số dư: Thời gian: 07/02/2026 03:30

@@ -46,15 +46,16 @@ class LoggerFactory:
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
         console_handler.setFormatter(console_formatter)
-        
+
         # Force UTF-8 encoding for console
         import sys
-        if hasattr(sys.stdout, 'reconfigure'):
+
+        if hasattr(sys.stdout, "reconfigure"):
             try:
-                sys.stdout.reconfigure(encoding='utf-8')
+                sys.stdout.reconfigure(encoding="utf-8")
             except:
                 pass
-        
+
         logger.addHandler(console_handler)
 
         # File handler with UTF-8 encoding
@@ -63,11 +64,15 @@ class LoggerFactory:
 
         if rotation == "size":
             file_handler = RotatingFileHandler(
-                log_file, maxBytes=max_bytes, backupCount=backup_count, encoding='utf-8'
+                log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
             )
         else:  # daily rotation
             file_handler = TimedRotatingFileHandler(
-                log_file, when="midnight", interval=1, backupCount=backup_count, encoding='utf-8'
+                log_file,
+                when="midnight",
+                interval=1,
+                backupCount=backup_count,
+                encoding="utf-8",
             )
 
         file_handler.setLevel(logging.DEBUG)

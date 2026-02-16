@@ -4,13 +4,13 @@ Modern Premium Design with Real-time History
 """
 
 from datetime import datetime
-from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import (QFrame, QHBoxLayout, QHeaderView, QLabel,
-                             QLineEdit, QMessageBox, QPushButton, QTableWidget,
-                             QTableWidgetItem, QVBoxLayout, QWidget, QScrollArea)
+                             QLineEdit, QMessageBox, QPushButton, QScrollArea,
+                             QTableWidget, QTableWidgetItem, QVBoxLayout,
+                             QWidget)
 
 from database import SessionRepository, StockChangeLogRepository
 from services import CalculatorService
@@ -19,7 +19,7 @@ from ui.qt_theme import AppColors
 
 class StockStepper(QFrame):
     """Modern Stepper Component for adjusting quantities"""
-    
+
     value_changed = pyqtSignal(int)
 
     def __init__(self, value: int, label: str = "", parent=None):
@@ -41,7 +41,7 @@ class StockStepper(QFrame):
                 border-color: {AppColors.PRIMARY};
             }}
         """)
-        
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
@@ -127,38 +127,42 @@ class StockView(QWidget):
 
         # Header Section: Stats & Search
         header_panel = QHBoxLayout()
-        
+
         # Stats summary
         stats_frame = QFrame()
         stats_frame.setObjectName("stats_card")
-        stats_frame.setStyleSheet(f"""
-            QFrame#stats_card {{
+        stats_frame.setStyleSheet("""
+            QFrame#stats_card {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1E293B, stop:1 #334155);
                 border-radius: 12px;
                 min-width: 300px;
-            }}
+            }
         """)
         stats_layout = QHBoxLayout(stats_frame)
         stats_layout.setContentsMargins(20, 12, 20, 12)
-        
+
         self.total_products_label = QLabel("📦 Sản phẩm: 0")
-        self.total_products_label.setStyleSheet("color: white; font-weight: 700; font-size: 14px;")
+        self.total_products_label.setStyleSheet(
+            "color: white; font-weight: 700; font-size: 14px;"
+        )
         stats_layout.addWidget(self.total_products_label)
-        
+
         stats_layout.addSpacing(20)
-        
+
         self.total_stock_label = QLabel("📥 Tổng tồn: 0")
-        self.total_stock_label.setStyleSheet("color: #94A3B8; font-weight: 600; font-size: 14px;")
+        self.total_stock_label.setStyleSheet(
+            "color: #94A3B8; font-weight: 600; font-size: 14px;"
+        )
         stats_layout.addWidget(self.total_stock_label)
-        
+
         header_panel.addWidget(stats_frame)
-        
+
         header_panel.addStretch()
-        
+
         # Search & Refresh
         search_layout = QHBoxLayout()
         search_layout.setSpacing(10)
-        
+
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("🔍 Tìm sản phẩm...")
         self.search_input.setFixedWidth(250)
@@ -175,7 +179,7 @@ class StockView(QWidget):
         """)
         self.search_input.textChanged.connect(self.filter_table)
         search_layout.addWidget(self.search_input)
-        
+
         refresh_btn = QPushButton("🔄 Làm mới")
         refresh_btn.setObjectName("secondary")
         refresh_btn.setFixedHeight(42)
@@ -183,9 +187,9 @@ class StockView(QWidget):
         refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         refresh_btn.clicked.connect(self.refresh_data)
         search_layout.addWidget(refresh_btn)
-        
+
         header_panel.addLayout(search_layout)
-        
+
         main_layout.addLayout(header_panel)
 
         # Content Section: Table & History
@@ -196,11 +200,11 @@ class StockView(QWidget):
         table_container = QWidget()
         table_v_layout = QVBoxLayout(table_container)
         table_v_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         self.table = QTableWidget()
         self._setup_main_table()
         table_v_layout.addWidget(self.table)
-        
+
         content_layout.addWidget(table_container, 3)
 
         # Right: History panel
@@ -216,13 +220,15 @@ class StockView(QWidget):
         """)
         history_layout = QVBoxLayout(history_panel)
         history_layout.setContentsMargins(16, 16, 16, 16)
-        
+
         h_header = QHBoxLayout()
         h_title = QLabel("🕒 Lịch sử kiểm kho")
-        h_title.setStyleSheet(f"font-weight: 800; font-size: 15px; color: {AppColors.TEXT};")
+        h_title.setStyleSheet(
+            f"font-weight: 800; font-size: 15px; color: {AppColors.TEXT};"
+        )
         h_header.addWidget(h_title)
         h_header.addStretch()
-        
+
         clear_btn = QPushButton("🗑️")
         clear_btn.setFixedSize(30, 30)
         clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -234,50 +240,58 @@ class StockView(QWidget):
         clear_btn.clicked.connect(self._clear_history)
         h_header.addWidget(clear_btn)
         history_layout.addLayout(h_header)
-        
+
         self.history_scroll = QScrollArea()
         self.history_scroll.setWidgetResizable(True)
         self.history_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.history_scroll.setStyleSheet("background: transparent;")
-        
+
         self.history_content = QWidget()
         self.history_content.setStyleSheet("background: transparent;")
         self.history_list_layout = QVBoxLayout(self.history_content)
         self.history_list_layout.setContentsMargins(0, 5, 0, 5)
         self.history_list_layout.setSpacing(8)
         self.history_list_layout.addStretch()
-        
+
         self.history_scroll.setWidget(self.history_content)
         history_layout.addWidget(self.history_scroll)
-        
+
         content_layout.addWidget(history_panel, 1)
 
         main_layout.addLayout(content_layout)
 
     def _setup_main_table(self):
         self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels([
-            "STT", "Sản phẩm", "Đơn vị", "Quy đổi", "SỐ LƯỢNG LỚN", "SỐ LƯỢNG LẺ", "TỔNG TỒN"
-        ])
-        
+        self.table.setHorizontalHeaderLabels(
+            [
+                "STT",
+                "Sản phẩm",
+                "Đơn vị",
+                "Quy đổi",
+                "SỐ LƯỢNG LỚN",
+                "SỐ LƯỢNG LẺ",
+                "TỔNG TỒN",
+            ]
+        )
+
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         for i in [0, 2, 3, 4, 5, 6]:
             header.setSectionResizeMode(i, QHeaderView.ResizeMode.Fixed)
-            
+
         self.table.setColumnWidth(0, 50)
         self.table.setColumnWidth(2, 90)
         self.table.setColumnWidth(3, 80)
         self.table.setColumnWidth(4, 160)
         self.table.setColumnWidth(5, 160)
         self.table.setColumnWidth(6, 120)
-        
+
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setDefaultSectionSize(60)
-        
+
         self.table.setStyleSheet(f"""
             QTableWidget {{
                 border: 1px solid {AppColors.BORDER};
@@ -311,57 +325,65 @@ class StockView(QWidget):
     def refresh_list(self):
         sessions = SessionRepository.get_all()
         self.table.setRowCount(len(sessions))
-        
+
         total_qty = 0
         for row, s in enumerate(sessions):
             p = s.product
             total_qty += s.closing_qty
             l_qty = s.closing_qty // p.conversion
             s_qty = s.closing_qty % p.conversion
-            
+
             # STT
             stt = QTableWidgetItem(str(row + 1))
             stt.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 0, stt)
-            
+
             # Name
             name = QTableWidgetItem(p.name)
             name.setFont(QFont("", -1, QFont.Weight.Bold))
             self.table.setItem(row, 1, name)
-            
+
             # Unit
             unit = QTableWidgetItem(p.large_unit)
             unit.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             unit.setForeground(QColor(AppColors.PRIMARY))
             self.table.setItem(row, 2, unit)
-            
+
             # Conversion
             conv = QTableWidgetItem(str(p.conversion))
             conv.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.table.setItem(row, 3, conv)
-            
+
             # Stepper Large
             stepper_l = StockStepper(l_qty)
-            stepper_l.value_changed.connect(lambda v, pid=p.id, c=p.conversion, sq=s_qty: 
-                                          self._on_qty_change(pid, v, sq, c))
+            stepper_l.value_changed.connect(
+                lambda v, pid=p.id, c=p.conversion, sq=s_qty: self._on_qty_change(
+                    pid, v, sq, c
+                )
+            )
             self.table.setCellWidget(row, 4, self._wrap_widget(stepper_l))
-            
+
             # Stepper Small
             stepper_s = StockStepper(s_qty)
-            stepper_s.value_changed.connect(lambda v, pid=p.id, lq=l_qty, c=p.conversion: 
-                                          self._on_qty_change(pid, lq, v, c))
+            stepper_s.value_changed.connect(
+                lambda v, pid=p.id, lq=l_qty, c=p.conversion: self._on_qty_change(
+                    pid, lq, v, c
+                )
+            )
             self.table.setCellWidget(row, 5, self._wrap_widget(stepper_s))
-            
+
             # Total: Use true badge widget for visibility
             total = QTableWidgetItem(str(s.closing_qty))
             total.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             if s.closing_qty > 0:
-                self.table.setCellWidget(row, 6, self._create_badge(str(s.closing_qty), AppColors.PRIMARY))
+                self.table.setCellWidget(
+                    row, 6, self._create_badge(str(s.closing_qty), AppColors.PRIMARY)
+                )
                 total.setForeground(QColor("transparent"))
             else:
                 total.setForeground(QColor(AppColors.TEXT_SECONDARY))
             self.table.setItem(row, 6, total)
-            
+
         self.total_products_label.setText(f"📦 Sản phẩm: {len(sessions)}")
         self.total_stock_label.setText(f"📥 Tổng tồn: {total_qty:,}")
 
@@ -376,17 +398,18 @@ class StockView(QWidget):
     def _on_qty_change(self, pid: int, large: int, small: int, conv: int):
         sessions = SessionRepository.get_all()
         s = next((x for x in sessions if x.product.id == pid), None)
-        if not s: return
-        
+        if not s:
+            return
+
         old_val = s.closing_qty
-        
+
         # Calculate new total value allowing for units borrowing
         raw_new_val = (large * conv) + small
-        
+
         # Logic: If small went negative (-1), it's handled by (large*conv) - 1
         # BUT we must clamp the TOTAL to 0 and handover
         new_val = max(0, min(raw_new_val, s.handover_qty))
-        
+
         if old_val != new_val:
             SessionRepository.update_qty(pid, s.handover_qty, new_val)
             StockChangeLogRepository.add_log(pid, s.product.name, old_val, new_val)
@@ -399,8 +422,9 @@ class StockView(QWidget):
         # Clear existing logs
         while self.history_list_layout.count() > 1:
             item = self.history_list_layout.takeAt(0)
-            if item.widget(): item.widget().deleteLater()
-            
+            if item.widget():
+                item.widget().deleteLater()
+
         logs = StockChangeLogRepository.get_all(30)
         for log in logs:
             card = QFrame()
@@ -415,27 +439,33 @@ class StockView(QWidget):
             """)
             l = QVBoxLayout(card)
             l.setSpacing(4)
-            
+
             top = QHBoxLayout()
             name = QLabel(log.product_name)
             name.setStyleSheet("font-weight: 700; color: #334155; font-size: 13px;")
             top.addWidget(name)
             top.addStretch()
-            
+
             diff = log.new_qty - log.old_qty
             diff_label = QLabel(f"{diff:+d}")
             color = AppColors.SUCCESS if diff > 0 else AppColors.ERROR
             diff_label.setStyleSheet(f"font-weight: 900; color: {color};")
             top.addWidget(diff_label)
             l.addLayout(top)
-            
+
             bottom = QHBoxLayout()
-            time_str = log.changed_at.strftime("%H:%M:%S") if isinstance(log.changed_at, datetime) else str(log.changed_at)[-8:]
+            time_str = (
+                log.changed_at.strftime("%H:%M:%S")
+                if isinstance(log.changed_at, datetime)
+                else str(log.changed_at)[-8:]
+            )
             time_lbl = QLabel(time_str)
-            time_lbl.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+            time_lbl.setStyleSheet(
+                f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;"
+            )
             bottom.addWidget(time_lbl)
             bottom.addStretch()
-            
+
             l.addLayout(bottom)
             self.history_list_layout.insertWidget(0, card)
 
@@ -444,7 +474,7 @@ class StockView(QWidget):
         l = QHBoxLayout(container)
         l.setContentsMargins(4, 6, 4, 6)
         l.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
+
         badge = QLabel(text)
         badge.setStyleSheet(f"""
             QLabel {{
@@ -460,7 +490,14 @@ class StockView(QWidget):
         return container
 
     def _clear_history(self):
-        if QMessageBox.question(self, "Xác nhận", "Xóa toàn bộ lịch sử?", 
-                             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No) == QMessageBox.StandardButton.Yes:
+        if (
+            QMessageBox.question(
+                self,
+                "Xác nhận",
+                "Xóa toàn bộ lịch sử?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
             StockChangeLogRepository.clear_all()
             self.refresh_history()

@@ -30,7 +30,9 @@ class ProductRepository(IProductRepository):
             with get_connection() as conn:
                 cursor = conn.cursor()
                 if include_inactive:
-                    cursor.execute("SELECT * FROM products ORDER BY display_order, name")
+                    cursor.execute(
+                        "SELECT * FROM products ORDER BY display_order, name"
+                    )
                 else:
                     cursor.execute(
                         "SELECT * FROM products WHERE is_active = 1 ORDER BY display_order, name"

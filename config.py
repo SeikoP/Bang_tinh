@@ -9,7 +9,8 @@ from pathlib import Path
 
 # Import centralized paths
 try:
-    from app.core.paths import ROOT, DATABASE, BACKUPS, EXPORTS, ASSETS
+    from app.core.paths import ASSETS, BACKUPS, DATABASE, EXPORTS, ROOT
+
     BASE_DIR = ROOT
     DB_PATH = DATABASE
     BACKUP_DIR = BACKUPS
@@ -20,7 +21,7 @@ except ImportError:
         BASE_DIR = Path(sys.executable).parent
     else:
         BASE_DIR = Path(__file__).parent
-    
+
     DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "storage.db"))
     BACKUP_DIR = Path(os.getenv("BACKUP_DIR", BASE_DIR / "data" / "backups"))
     EXPORT_DIR = Path(os.getenv("EXPORT_DIR", BASE_DIR / "data" / "exports"))

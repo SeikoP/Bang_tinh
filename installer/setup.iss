@@ -5,7 +5,7 @@
 #define MyAppVersion "2.0.0"
 #define MyAppPublisher "WAREHOUSE"
 #define MyAppURL "https://github.com/SeikoP/Bang_tinh"
-#define MyAppExeName "WMS.exe"
+#define MyAppExeName "WarehouseManagement.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -24,7 +24,7 @@ AllowNoIcons=yes
 LicenseFile=..\LICENSE.txt
 InfoBeforeFile=info_before.txt
 OutputDir=..\Output
-OutputBaseFilename=WMSSetup
+OutputBaseFilename=BangTinhSetup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern

@@ -8,20 +8,19 @@ Usage:
     python main.py
 """
 
-import sys
 import os
-from pathlib import Path
+import sys
 
 # Fix Unicode encoding for Windows console BEFORE any imports
-if sys.platform == 'win32':
+if sys.platform == "win32":
     # Set environment variable for Python I/O encoding
-    os.environ['PYTHONIOENCODING'] = 'utf-8'
-    
+    os.environ["PYTHONIOENCODING"] = "utf-8"
+
     # Reconfigure stdout/stderr to use UTF-8
-    if hasattr(sys.stdout, 'reconfigure'):
-        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-    if hasattr(sys.stderr, 'reconfigure'):
-        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 from runtime.bootstrap import ApplicationBootstrap
 from runtime.lifecycle import ApplicationLifecycle
@@ -50,12 +49,12 @@ def main() -> int:
 
     # Step 3: Create lifecycle manager
     lifecycle = ApplicationLifecycle(
-        config=config, 
-        container=container, 
-        qt_app=qt_app, 
+        config=config,
+        container=container,
+        qt_app=qt_app,
         logger=logger,
         profiler=profiler,
-        watchdog=watchdog
+        watchdog=watchdog,
     )
 
     # Step 4: Create main window

@@ -3,22 +3,20 @@ Settings View - Cài đặt
 Modern Premium Design
 """
 
-import os
-import shutil
-from datetime import datetime
-
-from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer
-from PyQt6.QtWidgets import (QFileDialog, QFrame, QHBoxLayout, QLabel,
-                             QMessageBox, QPushButton, QScrollArea, QSlider,
-                             QVBoxLayout, QWidget, QCheckBox, QComboBox)
+from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
+from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFrame,
+                             QHBoxLayout, QLabel, QMessageBox, QPushButton,
+                             QScrollArea, QSlider, QVBoxLayout, QWidget)
 
 
 class NoWheelComboBox(QComboBox):
     """Custom ComboBox that ignores wheel events to prevent accidental changes while scrolling"""
+
     def wheelEvent(self, event):
         event.ignore()
 
-from config import APP_NAME, APP_VERSION, BACKUP_DIR, DB_PATH
+
+from config import APP_NAME, APP_VERSION, BACKUP_DIR
 from ui.qt_theme import AppColors
 
 
@@ -30,18 +28,20 @@ class SettingsView(QWidget):
     widget_height_changed = pyqtSignal(int)
 
     class IPWorker(QThread):
-        finished = pyqtSignal(str, int, str, object) # IP, Port, SecretKey, QPixmap
+        finished = pyqtSignal(str, int, str, object)  # IP, Port, SecretKey, QPixmap
         error = pyqtSignal()
-        
+
         def __init__(self, container=None):
             super().__init__()
             self.container = container
-            
+
         def run(self):
             import socket
             from io import BytesIO
+
             import qrcode
             from PyQt6.QtGui import QPixmap
+
             try:
                 # Get local IP
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -68,23 +68,20 @@ class SettingsView(QWidget):
                 # Generate QR code with JSON data
                 # Using short keys to keep QR simple: h=host, p=port, k=key
                 import json
-                qr_data = json.dumps({
-                    "h": ip,
-                    "p": port,
-                    "k": secret_key
-                })
-                
+
+                qr_data = json.dumps({"h": ip, "p": port, "k": secret_key})
+
                 qr = qrcode.QRCode(version=1, box_size=10, border=2)
                 qr.add_data(qr_data)
                 qr.make(fit=True)
                 img = qr.make_image(fill_color="black", back_color="white")
-                
+
                 buffer = BytesIO()
                 img.save(buffer, format="PNG")
                 buffer.seek(0)
                 pixmap = QPixmap()
                 pixmap.loadFromData(buffer.read())
-                
+
                 self.finished.emit(ip, port, secret_key, pixmap)
             except:
                 self.error.emit()
@@ -95,7 +92,7 @@ class SettingsView(QWidget):
         self.current_row_height = 70
         self.current_widget_height = 28
         self.current_machine_count = 46
-        
+
         # Explicitly set background style
         self.setStyleSheet(f"background-color: {AppColors.BG};")
         self._setup_ui()
@@ -167,7 +164,7 @@ class SettingsView(QWidget):
 
         # Machine count configuration
         machine_layout = QVBoxLayout()
-        machine_label = QLabel(f"Số lượng máy: 46")
+        machine_label = QLabel("Số lượng máy: 46")
         machine_label.setObjectName("subtitle")
         machine_layout.addWidget(machine_label)
 
@@ -252,7 +249,7 @@ class SettingsView(QWidget):
     def _on_machine_count_change(self, value: int, label: QLabel):
         self.current_machine_count = value
         label.setText(f"Số lượng máy: {value}")
-    
+
     def _on_row_height_change(self, value: int, label: QLabel):
         self.current_row_height = value
         label.setText(f"Chiều cao hàng: {value}px")
@@ -263,11 +260,19 @@ class SettingsView(QWidget):
         label.setText(f"Chiều cao widget: {value}px")
         self.widget_height_changed.emit(value)
 
-    def _reset_defaults(self, machine_slider, row_slider, widget_slider, machine_label, row_label, widget_label):
+    def _reset_defaults(
+        self,
+        machine_slider,
+        row_slider,
+        widget_slider,
+        machine_label,
+        row_label,
+        widget_label,
+    ):
         machine_slider.setValue(46)
         row_slider.setValue(70)
         widget_slider.setValue(28)
-    
+
     def _tts_content(self) -> QWidget:
         content = QWidget()
         layout = QVBoxLayout(content)
@@ -335,7 +340,7 @@ class SettingsView(QWidget):
         layout.addWidget(info)
 
         return content
-    
+
     def _on_tts_enabled_changed(self, state):
         """Handle TTS enable/disable"""
         enabled = state == Qt.CheckState.Checked.value
@@ -345,7 +350,7 @@ class SettingsView(QWidget):
             tts_service = self.container.get("tts_service")
             if tts_service:
                 tts_service.set_enabled(enabled)
-    
+
     def _on_voice_changed(self, index):
         """Handle voice selection change"""
         voice = self.voice_combo.itemData(index)
@@ -353,7 +358,7 @@ class SettingsView(QWidget):
             tts_service = self.container.get("tts_service")
             if tts_service:
                 tts_service.set_voice(voice)
-    
+
     def _on_volume_changed(self, value):
         """Handle volume change"""
         self.volume_label.setText(f"Âm lượng: {value}%")
@@ -361,13 +366,13 @@ class SettingsView(QWidget):
             tts_service = self.container.get("tts_service")
             if tts_service:
                 tts_service.set_volume(value)
-    
+
     def _test_tts(self):
         """Test TTS with sample message"""
         if self.container:
             tts_service = self.container.get("tts_service")
             if tts_service:
-                voice_name = self.voice_combo.currentText().split(' (')[0]
+                voice_name = self.voice_combo.currentText().split(" (")[0]
                 sample_text = f"Xin chào, tôi là {voice_name}. Tôi sẽ giúp bạn thông báo khi có tiền về. Chúc bạn một ngày làm việc hiệu quả!"
                 tts_service.speak(sample_text)
             else:
@@ -464,8 +469,13 @@ class SettingsView(QWidget):
         # Show partial key for verification
         short_key = secret_key[:8] + "..." if secret_key else "None"
         self.key_label.setText(f"Key: {short_key}")
-        
-        scaled = pixmap.scaled(190, 190, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+
+        scaled = pixmap.scaled(
+            190,
+            190,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
         self.qr_label.setPixmap(scaled)
 
     def _create_section(self, title: str, content: QWidget) -> QFrame:
@@ -498,8 +508,10 @@ class SettingsView(QWidget):
         status_label = QLabel("✅ Tự động sao lưu: Đang bật")
         status_label.setStyleSheet(f"color: {AppColors.SUCCESS}; font-weight: 600;")
         layout.addWidget(status_label)
-        
-        info = QLabel("• Sao lưu khi khởi động\n• Sao lưu khi tắt app\n• Sao lưu hàng ngày")
+
+        info = QLabel(
+            "• Sao lưu khi khởi động\n• Sao lưu khi tắt app\n• Sao lưu hàng ngày"
+        )
         info.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
         layout.addWidget(info)
 
@@ -514,7 +526,7 @@ class SettingsView(QWidget):
         restore_btn.setObjectName("secondary")
         restore_btn.clicked.connect(self._restore_database)
         btns.addWidget(restore_btn)
-        
+
         layout.addLayout(btns)
         return content
 
@@ -522,7 +534,9 @@ class SettingsView(QWidget):
         content = QWidget()
         layout = QVBoxLayout(content)
         layout.addLayout(self._info_row("Tên ứng dụng", APP_NAME))
-        layout.addLayout(self._info_row("Phiên bản", APP_VERSION, color=AppColors.PRIMARY))
+        layout.addLayout(
+            self._info_row("Phiên bản", APP_VERSION, color=AppColors.PRIMARY)
+        )
         return content
 
     def _info_row(self, label: str, value: str, color: str = None) -> QHBoxLayout:
@@ -532,7 +546,8 @@ class SettingsView(QWidget):
         row.addWidget(lbl)
         row.addStretch()
         val = QLabel(value)
-        if color: val.setStyleSheet(f"color: {color}; font-weight: 500;")
+        if color:
+            val.setStyleSheet(f"color: {color}; font-weight: 500;")
         row.addWidget(val)
         return row
 
@@ -543,17 +558,33 @@ class SettingsView(QWidget):
                 if bs:
                     f = bs.create_backup(prefix="manual")
                     QMessageBox.information(self, "Thành công", f"Đã sao lưu: {f.name}")
-        except Exception as e: QMessageBox.critical(self, "Lỗi", str(e))
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", str(e))
 
     def _restore_database(self):
-        f_path, _ = QFileDialog.getOpenFileName(self, "Chọn file backup", str(BACKUP_DIR), "Database (*.db)")
-        if not f_path: return
-        if QMessageBox.question(self, "Xác nhận", "Ghi đè dữ liệu hiện tại?", QMessageBox.StandardButton.Yes) == QMessageBox.StandardButton.Yes:
+        f_path, _ = QFileDialog.getOpenFileName(
+            self, "Chọn file backup", str(BACKUP_DIR), "Database (*.db)"
+        )
+        if not f_path:
+            return
+        if (
+            QMessageBox.question(
+                self,
+                "Xác nhận",
+                "Ghi đè dữ liệu hiện tại?",
+                QMessageBox.StandardButton.Yes,
+            )
+            == QMessageBox.StandardButton.Yes
+        ):
             try:
                 if self.container:
                     bs = self.container.get("backup_service")
                     if bs:
                         from pathlib import Path
+
                         bs.restore_backup(Path(f_path))
-                        QMessageBox.information(self, "Thành công", "Đã khôi phục. Hãy khởi động lại.")
-            except Exception as e: QMessageBox.critical(self, "Lỗi", str(e))
+                        QMessageBox.information(
+                            self, "Thành công", "Đã khôi phục. Hãy khởi động lại."
+                        )
+            except Exception as e:
+                QMessageBox.critical(self, "Lỗi", str(e))

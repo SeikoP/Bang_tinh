@@ -5,11 +5,11 @@ Single source of truth for all UI styling
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict
 
 
 class FontWeight(Enum):
     """Font weight constants"""
+
     LIGHT = 300
     REGULAR = 400
     MEDIUM = 500
@@ -21,6 +21,7 @@ class FontWeight(Enum):
 
 class FontSize(Enum):
     """Font size constants (px)"""
+
     TINY = 10
     SMALL = 11
     NORMAL = 12
@@ -34,6 +35,7 @@ class FontSize(Enum):
 
 class Spacing(Enum):
     """Spacing constants (px)"""
+
     NONE = 0
     TINY = 4
     SMALL = 8
@@ -47,45 +49,46 @@ class Spacing(Enum):
 @dataclass
 class ColorPalette:
     """Color palette"""
+
     # Primary colors
     primary: str = "#334e88"
     primary_light: str = "#5472b8"
     primary_dark: str = "#1a2d5a"
-    
+
     # Secondary colors
     secondary: str = "#ff7043"
     secondary_light: str = "#ffa270"
     secondary_dark: str = "#c63f17"
-    
+
     # Neutral colors
     background: str = "#f5f6f9"
     surface: str = "#ffffff"
     border: str = "#e0e0e0"
     divider: str = "#eeeeee"
-    
+
     # Text colors
     text_primary: str = "#212121"
     text_secondary: str = "#757575"
     text_disabled: str = "#bdbdbd"
     text_hint: str = "#9e9e9e"
-    
+
     # Semantic colors
     success: str = "#4caf50"
     success_light: str = "#81c784"
     success_dark: str = "#388e3c"
-    
+
     warning: str = "#ff9800"
     warning_light: str = "#ffb74d"
     warning_dark: str = "#f57c00"
-    
+
     error: str = "#f44336"
     error_light: str = "#e57373"
     error_dark: str = "#d32f2f"
-    
+
     info: str = "#2196f3"
     info_light: str = "#64b5f6"
     info_dark: str = "#1976d2"
-    
+
     # Sidebar
     sidebar_bg: str = "#2c3e50"
     sidebar_text: str = "#ecf0f1"
@@ -96,10 +99,11 @@ class ColorPalette:
 @dataclass
 class Typography:
     """Typography settings"""
+
     # Font family - ONLY Cabin
     font_family: str = "Cabin"
     font_family_mono: str = "Courier New"
-    
+
     # Font sizes
     size_tiny: int = FontSize.TINY.value
     size_small: int = FontSize.SMALL.value
@@ -110,7 +114,7 @@ class Typography:
     size_xxlarge: int = FontSize.XXLARGE.value
     size_huge: int = FontSize.HUGE.value
     size_massive: int = FontSize.MASSIVE.value
-    
+
     # Font weights
     weight_light: int = FontWeight.LIGHT.value
     weight_regular: int = FontWeight.REGULAR.value
@@ -119,7 +123,7 @@ class Typography:
     weight_bold: int = FontWeight.BOLD.value
     weight_extrabold: int = FontWeight.EXTRABOLD.value
     weight_black: int = FontWeight.BLACK.value
-    
+
     # Line heights
     line_height_tight: float = 1.2
     line_height_normal: float = 1.5
@@ -129,6 +133,7 @@ class Typography:
 @dataclass
 class Layout:
     """Layout settings"""
+
     # Spacing
     spacing_none: int = Spacing.NONE.value
     spacing_tiny: int = Spacing.TINY.value
@@ -138,7 +143,7 @@ class Layout:
     spacing_large: int = Spacing.LARGE.value
     spacing_xlarge: int = Spacing.XLARGE.value
     spacing_xxlarge: int = Spacing.XXLARGE.value
-    
+
     # Border radius
     radius_none: int = 0
     radius_small: int = 4
@@ -146,13 +151,13 @@ class Layout:
     radius_large: int = 12
     radius_xlarge: int = 16
     radius_round: int = 9999
-    
+
     # Shadows
     shadow_none: str = "none"
     shadow_small: str = "0 1px 3px rgba(0,0,0,0.12)"
     shadow_normal: str = "0 2px 8px rgba(0,0,0,0.15)"
     shadow_large: str = "0 4px 16px rgba(0,0,0,0.18)"
-    
+
     # Transitions
     transition_fast: str = "all 0.15s ease"
     transition_normal: str = "all 0.3s ease"
@@ -162,22 +167,22 @@ class Layout:
 class AppTheme:
     """
     Application theme
-    
+
     Usage:
         theme = AppTheme()
         stylesheet = theme.get_stylesheet()
         app.setStyleSheet(stylesheet)
     """
-    
+
     def __init__(self):
         self.colors = ColorPalette()
         self.typography = Typography()
         self.layout = Layout()
-    
+
     def get_stylesheet(self) -> str:
         """
         Get complete QSS stylesheet
-        
+
         Returns:
             QSS stylesheet string
         """
@@ -605,15 +610,19 @@ class AppTheme:
             border-color: {self.colors.primary};
         }}
         """
-    
+
     def get_color(self, color_name: str) -> str:
         """Get color by name"""
         return getattr(self.colors, color_name, self.colors.text_primary)
-    
+
     def get_font_size(self, size_name: str) -> int:
         """Get font size by name"""
-        return getattr(self.typography, f"size_{size_name}", self.typography.size_normal)
-    
+        return getattr(
+            self.typography, f"size_{size_name}", self.typography.size_normal
+        )
+
     def get_spacing(self, spacing_name: str) -> int:
         """Get spacing by name"""
-        return getattr(self.layout, f"spacing_{spacing_name}", self.layout.spacing_normal)
+        return getattr(
+            self.layout, f"spacing_{spacing_name}", self.layout.spacing_normal
+        )

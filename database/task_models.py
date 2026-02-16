@@ -9,6 +9,7 @@ from enum import Enum
 
 class TaskType(Enum):
     """Task types"""
+
     UNPAID = "unpaid"  # Chưa thanh toán
     UNCOLLECTED = "uncollected"  # Chưa thu tiền
     UNDELIVERED = "undelivered"  # Chưa giao đồ
@@ -19,6 +20,7 @@ class TaskType(Enum):
 @dataclass
 class Task:
     """Task data model"""
+
     id: int
     task_type: str
     description: str
@@ -28,7 +30,7 @@ class Task:
     completed: bool = False
     completed_at: datetime = None
     notes: str = ""
-    
+
     @property
     def type_display(self) -> str:
         """Get display text for task type"""
@@ -37,6 +39,6 @@ class Task:
             "uncollected": "💵 Chưa thu tiền",
             "undelivered": "📦 Chưa giao đồ",
             "unreceived": "📥 Chưa lấy đồ",
-            "other": "📝 Khác"
+            "other": "📝 Khác",
         }
         return type_map.get(self.task_type, "📝 Khác")

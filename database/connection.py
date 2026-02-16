@@ -9,13 +9,14 @@ from typing import Generator
 # Import centralized paths
 try:
     from app.core.paths import DATABASE
+
     DB_PATH = DATABASE
 except ImportError:
     # Fallback
     from config import DB_PATH
 
 # Import connection pool
-from database.connection_pool import initialize_pool, get_pooled_connection, close_pool
+from database.connection_pool import get_pooled_connection, initialize_pool
 
 # Initialize connection pool on module load
 _pool_initialized = False
@@ -42,7 +43,7 @@ def get_connection() -> Generator[sqlite3.Connection, None, None]:
             cursor.execute("SELECT * FROM products")
     """
     _ensure_pool_initialized()
-    
+
     # Use pooled connection
     with get_pooled_connection() as conn:
         yield conn

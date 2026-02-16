@@ -7,7 +7,7 @@ Inspired by modern desktop applications with enhanced visual appeal
 class AppColors:
     """
     WCAG AA Compliant Color System
-    
+
     Rules:
     - Only Roboto and Cabin fonts allowed
     - No white text on light backgrounds

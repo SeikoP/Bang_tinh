@@ -13,7 +13,7 @@ Handles the initialization sequence for the application:
 
 import logging
 import sys
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
@@ -24,6 +24,11 @@ from core.license import LicenseManager, LicenseValidator
 from database.connection import init_db
 from runtime.crash_handler import CrashHandler
 from utils.logging import LoggerFactory
+
+if TYPE_CHECKING:
+    from runtime.healthcheck import HealthCheckSystem
+    from runtime.profiler import ApplicationProfiler
+    from runtime.watchdog import ApplicationWatchdog
 
 
 class ApplicationBootstrap:
@@ -40,9 +45,9 @@ class ApplicationBootstrap:
         self.logger: Optional[logging.Logger] = None
         self.qt_app: Optional[QApplication] = None
         self.crash_handler: Optional[CrashHandler] = None
-        self.profiler: Optional['ApplicationProfiler'] = None
-        self.watchdog: Optional['ApplicationWatchdog'] = None
-        self.health_check: Optional['HealthCheckSystem'] = None
+        self.profiler: Optional["ApplicationProfiler"] = None
+        self.watchdog: Optional["ApplicationWatchdog"] = None
+        self.health_check: Optional["HealthCheckSystem"] = None
         self._initialized = False
 
     def initialize(self) -> bool:
@@ -59,10 +64,10 @@ class ApplicationBootstrap:
 
             # Step 2: Initialize logging
             self._initialize_logging()
-            
+
             # Step 3: Initialize profiler
             self._initialize_profiler()
-            
+
             config_metric = self.profiler.start_metric("configuration_load")
 
             self.logger.info("=" * 70)
@@ -71,7 +76,7 @@ class ApplicationBootstrap:
             )
             self.logger.info(f"Environment: {self.config.environment}")
             self.logger.info("=" * 70)
-            
+
             if config_metric:
                 self.profiler.end_metric(config_metric)
 
@@ -87,10 +92,10 @@ class ApplicationBootstrap:
 
             # Step 6: Set up global exception handling
             self._setup_exception_handling()
-            
+
             # Step 7: Initialize watchdog
             self._initialize_watchdog()
-            
+
             # Step 8: Initialize health check system
             self._initialize_health_check()
 
@@ -101,17 +106,17 @@ class ApplicationBootstrap:
             qt_metric = self.profiler.start_metric("qt_init")
             self._initialize_qt_application()
             self.profiler.end_metric(qt_metric)
-            
+
             # Step 11: Run initial health checks
             self._run_initial_health_checks()
 
             self._initialized = True
             self.logger.info("Application bootstrap completed successfully")
-            
+
             # Log system metrics
             if self.profiler:
                 self.profiler.log_system_metrics()
-            
+
             return True
 
         except ConfigurationError as e:
@@ -202,76 +207,71 @@ class ApplicationBootstrap:
         # Create crash handler with auto-restart option
         auto_restart = self.config.environment in ["production", "prod"]
         self.crash_handler = CrashHandler(
-            logger=self.logger, 
-            config=self.config,
-            auto_restart=auto_restart
+            logger=self.logger, config=self.config, auto_restart=auto_restart
         )
 
         # Install exception hook
         sys.excepthook = self.crash_handler.handle_exception
 
         self.logger.info("Global exception handling configured")
-    
+
     def _initialize_profiler(self):
         """Initialize performance profiler"""
         from runtime.profiler import ApplicationProfiler
-        
+
         # Enable profiler in dev/staging, optional in production
         enabled = self.config.environment in ["dev", "development", "staging"]
         self.profiler = ApplicationProfiler(self.logger, enabled=enabled)
-        
+
         self.logger.info(f"Profiler initialized (enabled: {enabled})")
-    
+
     def _initialize_watchdog(self):
         """Initialize application watchdog"""
         from runtime.watchdog import ApplicationWatchdog
-        
+
         # Enable watchdog in all environments
         self.watchdog = ApplicationWatchdog(
-            logger=self.logger,
-            check_interval=60,  # Check every minute
-            enabled=True
+            logger=self.logger, check_interval=60, enabled=True  # Check every minute
         )
-        
+
         # Start watchdog
         self.watchdog.start()
-        
+
         # Store in container
-        self.container._services['watchdog'] = self.watchdog
-        
+        self.container._services["watchdog"] = self.watchdog
+
         self.logger.info("Watchdog initialized and started")
-    
+
     def _initialize_health_check(self):
         """Initialize health check system"""
         from runtime.healthcheck import HealthCheckSystem
-        
-        self.health_check = HealthCheckSystem(
-            logger=self.logger,
-            config=self.config
-        )
-        
+
+        self.health_check = HealthCheckSystem(logger=self.logger, config=self.config)
+
         # Store in container
-        self.container._services['health_check'] = self.health_check
-        
+        self.container._services["health_check"] = self.health_check
+
         self.logger.info("Health check system initialized")
-    
+
     def _run_initial_health_checks(self):
         """Run initial health checks"""
         if not self.health_check:
             return
-        
+
         self.logger.info("Running initial health checks...")
-        
+
         try:
             checks = self.health_check.run_all_checks()
-            
+
             # Log any critical issues
             critical_checks = [c for c in checks if c.status.value == "critical"]
             if critical_checks:
-                self.logger.warning(f"Found {len(critical_checks)} critical health issues")
+                self.logger.warning(
+                    f"Found {len(critical_checks)} critical health issues"
+                )
                 for check in critical_checks:
                     self.logger.warning(f"  - {check.name}: {check.message}")
-        
+
         except Exception as e:
             self.logger.error(f"Initial health check failed: {e}")
 
@@ -295,8 +295,8 @@ class ApplicationBootstrap:
             is_valid = False
             if self.config.license_key:
                 is_valid = license_manager.validate_startup_license(
-                    license_key=self.config.license_key, 
-                    environment=self.config.environment
+                    license_key=self.config.license_key,
+                    environment=self.config.environment,
                 )
 
             # Store license manager and status in container
@@ -304,7 +304,9 @@ class ApplicationBootstrap:
             self.container.register_singleton("is_license_valid", is_valid)
 
             if not is_valid:
-                self.logger.warning("License validation failed or missing. Running in TRIAL MODE.")
+                self.logger.warning(
+                    "License validation failed or missing. Running in TRIAL MODE."
+                )
                 # Optional: Show trial warning dialog here if needed
                 return
 
@@ -333,10 +335,11 @@ class ApplicationBootstrap:
         # Set application icon if available
         try:
             from app.core.paths import ASSETS
+
             icon_path = ASSETS / "icon.png"
         except ImportError:
             icon_path = self.config.base_dir / "assets" / "icon.png"
-            
+
         if icon_path.exists():
             from PyQt6.QtGui import QIcon
 
@@ -348,7 +351,7 @@ class ApplicationBootstrap:
         """Show error dialog to user"""
         # Try to create a minimal QApplication for the error dialog
         if not QApplication.instance():
-            app = QApplication(sys.argv)
+            QApplication(sys.argv)
 
         msg_box = QMessageBox()
         msg_box.setIcon(QMessageBox.Icon.Critical)
@@ -376,20 +379,20 @@ class ApplicationBootstrap:
                 "Qt application not initialized. Call initialize() first."
             )
         return self.qt_app
-    
-    def get_profiler(self) -> 'ApplicationProfiler':
+
+    def get_profiler(self) -> "ApplicationProfiler":
         """Get the profiler instance"""
         if not self.profiler:
             raise RuntimeError("Profiler not initialized. Call initialize() first.")
         return self.profiler
-    
-    def get_watchdog(self) -> 'ApplicationWatchdog':
+
+    def get_watchdog(self) -> "ApplicationWatchdog":
         """Get the watchdog instance"""
         if not self.watchdog:
             raise RuntimeError("Watchdog not initialized. Call initialize() first.")
         return self.watchdog
-    
-    def get_health_check(self) -> 'HealthCheckSystem':
+
+    def get_health_check(self) -> "HealthCheckSystem":
         """Get the health check system"""
         if not self.health_check:
             raise RuntimeError("Health check not initialized. Call initialize() first.")

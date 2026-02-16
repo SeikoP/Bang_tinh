@@ -17,6 +17,7 @@ from core.exceptions import AppException, ValidationError
 
 class DecimalEncoder(json.JSONEncoder):
     """Custom JSON encoder to handle Decimal types"""
+
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)
@@ -79,7 +80,9 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                 if not self.server.rate_limiter.is_allowed(client_ip):
                     self.send_error(429, "Too Many Requests")
                     if hasattr(self.server, "logger"):
-                        self.server.logger.warning(f"Rate limit exceeded for {client_ip}")
+                        self.server.logger.warning(
+                            f"Rate limit exceeded for {client_ip}"
+                        )
                     return
 
             # 2. Authentication Check (Crucial for security)
@@ -89,7 +92,7 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                 config = self.server.container.get("config")
                 if config:
                     expected_key = config.secret_key
-            
+
             # Get Authorization header
             auth_header = self.headers.get("Authorization", "")
             provided_key = ""
@@ -105,21 +108,24 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
 
             if expected_key and provided_key != expected_key:
                 if hasattr(self.server, "logger"):
-                    self.server.logger.warning(f"Unauthorized access attempt from {client_ip}")
+                    self.server.logger.warning(
+                        f"Unauthorized access attempt from {client_ip}"
+                    )
                 self.send_error(401, "Unauthorized - Invalid API Key")
                 return
 
             # --- AUTHENTICATED ACCESS GRANTED ---
-            
+
             # --- REMOTE SESSION API ---
             parsed_url = urlparse(self.path)
-            
+
             # GET /api/session - Get current session data
             if self.command == "GET" and parsed_url.path == "/api/session":
                 try:
                     from database.repositories import SessionRepository
+
                     sessions = SessionRepository.get_all()
-                    
+
                     data = {
                         "success": True,
                         "total_amount": float(sum(s.amount for s in sessions)),
@@ -130,19 +136,25 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                                 "large_unit": s.product.large_unit,
                                 "conversion": s.product.conversion,
                                 "unit_price": float(s.product.unit_price),
-                                "unit_char": s.product.unit_char or ("t" if s.product.conversion > 1 else ""),
+                                "unit_char": s.product.unit_char
+                                or ("t" if s.product.conversion > 1 else ""),
                                 "handover_qty": s.handover_qty,
                                 "closing_qty": s.closing_qty,
                                 "used_qty": s.used_qty,
-                                "amount": float(s.amount)
-                            } for s in sessions
-                        ]
+                                "amount": float(s.amount),
+                            }
+                            for s in sessions
+                        ],
                     }
-                    
+
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(json.dumps(data, ensure_ascii=False, cls=DecimalEncoder).encode("utf-8"))
+                    self.wfile.write(
+                        json.dumps(data, ensure_ascii=False, cls=DecimalEncoder).encode(
+                            "utf-8"
+                        )
+                    )
                     return
                 except Exception as e:
                     self.send_error(500, f"Error getting session: {str(e)}")
@@ -155,44 +167,55 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     if content_length == 0:
                         self.send_error(400, "Missing body")
                         return
-                        
+
                     post_data = self.rfile.read(content_length).decode("utf-8")
                     update_data = json.loads(post_data)
-                    
+
                     if "updates" not in update_data:
                         self.send_error(400, "Missing 'updates' in payload")
                         return
-                        
+
                     from database.repositories import SessionRepository
+
                     # Get current state to preserve handover_qty
-                    current_sessions = {s.product.id: s for s in SessionRepository.get_all()}
-                    
+                    current_sessions = {
+                        s.product.id: s for s in SessionRepository.get_all()
+                    }
+
                     success_count = 0
                     for update in update_data["updates"]:
                         pid = update.get("product_id")
                         closing = update.get("closing_qty")
-                        
+
                         if pid in current_sessions:
                             handover = current_sessions[pid].handover_qty
                             SessionRepository.update_qty(pid, handover, int(closing))
                             success_count += 1
-                    
+
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "updated": success_count}).encode("utf-8"))
-                    
+                    self.wfile.write(
+                        json.dumps({"success": True, "updated": success_count}).encode(
+                            "utf-8"
+                        )
+                    )
+
                     # Notify desktop UI that session data has changed
-                    if hasattr(self.server, "message_handler") and self.server.message_handler:
+                    if (
+                        hasattr(self.server, "message_handler")
+                        and self.server.message_handler
+                    ):
                         try:
-                            cmd_json = json.dumps({
-                                "command": "SESSION_UPDATED", 
-                                "count": success_count
-                            })
+                            cmd_json = json.dumps(
+                                {"command": "SESSION_UPDATED", "count": success_count}
+                            )
                             self.server.message_handler(cmd_json)
                         except Exception as handler_err:
                             if hasattr(self.server, "logger"):
-                                self.server.logger.error(f"Error notifying UI: {handler_err}")
+                                self.server.logger.error(
+                                    f"Error notifying UI: {handler_err}"
+                                )
                     return
                 except Exception as e:
                     self.send_error(500, f"Error updating session: {str(e)}")
@@ -239,10 +262,15 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                                     self.send_response(200)
                                     self.send_header("Content-Type", "application/json")
                                     self.end_headers()
-                                    self.wfile.write(b'{"status":"success","message":"pong"}')
-                                    
+                                    self.wfile.write(
+                                        b'{"status":"success","message":"pong"}'
+                                    )
+
                                     # ALSO notify Desktop UI
-                                    if hasattr(self.server, "message_handler") and self.server.message_handler:
+                                    if (
+                                        hasattr(self.server, "message_handler")
+                                        and self.server.message_handler
+                                    ):
                                         self.server.message_handler(post_data)
                                     return
 

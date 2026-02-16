@@ -106,7 +106,7 @@ class CalculatorService:
 
         if total_small_units < 0:
             return "0"
-        
+
         if total_small_units == 0:
             return "0"
 

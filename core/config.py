@@ -7,7 +7,7 @@ from typing import Optional
 
 # Import centralized paths
 try:
-    from app.core.paths import ROOT, DATABASE, LOGS, EXPORTS, BACKUPS
+    from app.core.paths import BACKUPS, DATABASE, EXPORTS, LOGS, ROOT
 except ImportError:
     # Fallback for transition period
     ROOT = Path(__file__).resolve().parents[1]
@@ -56,18 +56,19 @@ class Config:
     def from_env(cls) -> "Config":
         """Load configuration from environment variables"""
         base_dir = Path(os.getenv("APP_BASE_DIR", ROOT))
-        
+
         # Load or generate secret key
         secret_file = base_dir / ".secret_key"
         if secret_file.exists():
             secret_key = secret_file.read_text().strip()
         else:
             import uuid
+
             secret_key = str(uuid.uuid4())
             try:
                 secret_file.write_text(secret_key)
             except Exception:
-                pass # Fail silently if cannot write, key will change on restart (acceptable fallback)
+                pass  # Fail silently if cannot write, key will change on restart (acceptable fallback)
 
         return cls(
             base_dir=base_dir,
