@@ -334,15 +334,13 @@ class ApplicationBootstrap:
 
         # Set application icon if available
         try:
-            from app.core.paths import ASSETS
-
+            from core.config import ASSETS
             icon_path = ASSETS / "icon.png"
         except ImportError:
             icon_path = self.config.base_dir / "assets" / "icon.png"
 
         if icon_path.exists():
             from PyQt6.QtGui import QIcon
-
             self.qt_app.setWindowIcon(QIcon(str(icon_path)))
 
         self.logger.info("Qt application initialized")

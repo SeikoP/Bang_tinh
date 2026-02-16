@@ -129,24 +129,55 @@ jobs:
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: WarehouseManagement-Windows-${{ github.sha }}
-          path: dist/
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Cache Inno Setup
+        id: cache-inno
+        uses: actions/cache@v4
+        with:
+          path: C:\Program Files (x86)\Inno Setup 6
+          key: ${{ runner.os }}-innosetup-6.2
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyinstaller
+      
+      - name: Build executable
+        run: |
+          pyinstaller warehouse_app.spec
+
+      - name: Install Inno Setup
+        if: steps.cache-inno.outputs.cache-hit != 'true'
+        run: |
+          choco install innosetup -y --no-progress
+      
+      - name: Create installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
 
       - name: Create Rolling Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: pc-latest
           name: Latest PC Build (Windows)
-          files: dist/WarehouseManagement.exe
+          files: |
+            dist/WarehouseManagement.exe
+            Output/BangTinhSetup.exe
           body: |
             ## PC Management App (Rolling Build)
             
             Bản build tự động mới nhất cho máy tính Windows.
             
-            ### 📥 Tải về
-            - [Tải WarehouseManagement.exe](https://github.com/${{ github.repository }}/releases/download/pc-latest/WarehouseManagement.exe)
+            ### 📥 Tải về (Chọn 1 trong 2):
+            1. **[WarehouseManagement.exe](https://github.com/${{ github.repository }}/releases/download/pc-latest/WarehouseManagement.exe)** (Bản Portable - Chạy ngay không cần cài đặt)
+            2. **[BangTinhSetup.exe](https://github.com/${{ github.repository }}/releases/download/pc-latest/BangTinhSetup.exe)** (Bản Cài đặt - Có Shortcut màn hình và Start Menu)
             
             _Cập nhật lúc: ${{ github.event.head_commit.timestamp }}_
           draft: false
