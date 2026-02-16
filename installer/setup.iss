@@ -21,8 +21,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\WMS
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=..\
-LICENSE.txt
+LicenseFile=..\LICENSE.txt
 InfoBeforeFile=info_before.txt
 OutputDir=..\Output
 OutputBaseFilename=WMSSetup
