@@ -27,6 +27,8 @@ a = Analysis(
         'runtime.lifecycle',
         'runtime.crash_handler',
         'core.constants',
+        'encodings.idna',
+        'encodings.utf_8',
     ],
     hookspath=[],
     hooksconfig={},
@@ -83,7 +85,6 @@ a = Analysis(
         'PyQt6.Qt3DRender',
         # Encoding modules rarely used
         'encodings.bz2_codec',
-        'encodings.idna',
     ],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
