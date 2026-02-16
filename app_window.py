@@ -522,9 +522,14 @@ class MainWindow(QMainWindow):
         self.settings_view.widget_height_changed.connect(self._on_widget_height_changed)
 
     def _refresh_stock(self):
-        """Refresh stock list in calculation view"""
+        """Refresh stock list in calculation view and stock view"""
         if hasattr(self, "calc_view"):
-            self.calc_view.refresh_stock_list()
+            # Correct method name is refresh_product_list
+            self.calc_view.refresh_product_list()
+        
+        # Also refresh stock view if it exists to keep in sync
+        if hasattr(self, "stock_view"):
+            self.stock_view.refresh_list()
 
     def _start_notification_server(self):
         """Khởi chạy server ngầm để nhận thông báo"""
@@ -759,25 +764,22 @@ class MainWindow(QMainWindow):
         """Handle Ctrl+N - add new item in current view"""
         current_idx = self.content_stack.currentIndex()
 
-        # Calculation view - add product
-        if current_idx == 0 and hasattr(self, "calculation_view"):
-            if hasattr(self.calculation_view, "_add_product"):
-                self.calculation_view._add_product()
+        # Management view - check which tab is active
+        if current_idx == 0:
+            tab_idx = self.management_tabs.currentIndex()
+            # Calculation or Product List Tab
+            if tab_idx in [0, 1] and hasattr(self, "calc_view"):
+                if hasattr(self.calc_view, "_add_product"):
+                    self.calc_view._add_product()
+            # Quick Price / Product View Tab
+            elif tab_idx == 3 and hasattr(self, "product_view"):
+                if hasattr(self.product_view, "_add_quick_price"):
+                    self.product_view._add_quick_price()
 
         # Task view - add task
         elif current_idx == 1 and hasattr(self, "task_view"):
             if hasattr(self.task_view, "_add_task"):
                 self.task_view._add_task()
-
-        # Product view - add product
-        elif current_idx == 3 and hasattr(self, "product_view"):
-            if hasattr(self.product_view, "_add_product"):
-                self.product_view._add_product()
-
-        # Stock view - add product
-        elif current_idx == 4 and hasattr(self, "stock_view"):
-            if hasattr(self.stock_view, "_add_product"):
-                self.stock_view._add_product()
 
     def _on_undo(self):
         """Handle Ctrl+Z - Undo"""
