@@ -71,19 +71,46 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
     """HTTP request handler with validation and security"""
 
     def handle_request(self):
-        """Handle incoming notification request with validation"""
+        """Handle incoming notification request with validation and authentication"""
         try:
-            # Rate limiting
+            # 1. Rate limiting
             client_ip = self.client_address[0]
             if hasattr(self.server, "rate_limiter"):
                 if not self.server.rate_limiter.is_allowed(client_ip):
                     self.send_error(429, "Too Many Requests")
                     if hasattr(self.server, "logger"):
-                        self.server.logger.warning(
-                            f"Rate limit exceeded for {client_ip}"
-                        )
+                        self.server.logger.warning(f"Rate limit exceeded for {client_ip}")
                     return
 
+            # 2. Authentication Check (Crucial for security)
+            # All API calls and notifications require the correct secret_key
+            expected_key = None
+            if hasattr(self.server, "container") and self.server.container:
+                config = self.server.container.get("config")
+                if config:
+                    expected_key = config.secret_key
+            
+            # Get Authorization header
+            auth_header = self.headers.get("Authorization", "")
+            provided_key = ""
+            if auth_header.startswith("Bearer "):
+                provided_key = auth_header[7:]
+
+            # If no Authorization header, check URL (for legacy/simple devices)
+            if not provided_key:
+                parsed_url = urlparse(self.path)
+                query_params = parse_qs(parsed_url.query)
+                if "key" in query_params:
+                    provided_key = query_params["key"][0]
+
+            if expected_key and provided_key != expected_key:
+                if hasattr(self.server, "logger"):
+                    self.server.logger.warning(f"Unauthorized access attempt from {client_ip}")
+                self.send_error(401, "Unauthorized - Invalid API Key")
+                return
+
+            # --- AUTHENTICATED ACCESS GRANTED ---
+            
             # --- REMOTE SESSION API ---
             parsed_url = urlparse(self.path)
             
