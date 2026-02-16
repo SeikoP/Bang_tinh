@@ -23,9 +23,16 @@ class NotificationHandler(BaseHTTPRequestHandler):
     RATE_LIMIT_Window = 60  # seconds
     RATE_LIMIT_MAX = 100    # requests per window
 
+    def _get_rate_limit_params(self):
+        """Get rate limit parameters, allowing overrides from server instance"""
+        window = getattr(self.server, "rate_limit_window", self.RATE_LIMIT_Window)
+        max_reqs = getattr(self.server, "rate_limit_max", self.RATE_LIMIT_MAX)
+        return window, max_reqs
+
     def _check_rate_limit(self, ip_address):
         """Simple token bucket rate limiting with thread safety"""
         time_now = time.time()
+        window, max_reqs = self._get_rate_limit_params()
         
         with self._rate_limit_lock:
             # Initialize or reset if window expired
@@ -35,12 +42,12 @@ class NotificationHandler(BaseHTTPRequestHandler):
             
             start_time, count = self._rate_limit_store[ip_address]
             
-            if time_now - start_time > self.RATE_LIMIT_Window:
+            if time_now - start_time > window:
                 # Reset window
                 self._rate_limit_store[ip_address] = [time_now, 1]
                 return True
             
-            if count >= self.RATE_LIMIT_MAX:
+            if count >= max_reqs:
                 if hasattr(self.server, "logger") and self.server.logger:
                     self.server.logger.warning(f"Rate limit exceeded for {ip_address}")
                 return False
@@ -203,7 +210,7 @@ class NotificationHandler(BaseHTTPRequestHandler):
                     self.server.logger.info(
                         f"Processing notification: {content[:100]}..."
                     )
-                if hasattr(self.server, "signal"):
+                if getattr(self.server, "signal", None):
                     self.server.signal.emit(str(content))
             else:
                 self.wfile.write(b'{"status":"success","message":"no content found"}')
