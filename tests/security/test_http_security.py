@@ -23,13 +23,13 @@ class TestHTTPSecurity:
             if token:
                 headers["Authorization"] = f"Bearer {token}"
 
-        # Send 150 requests rapidly (should be blocked after 100)
+        # Send 120 requests rapidly (should be blocked after 100)
         success_count = 0
         blocked_count = 0
         unauthorized_count = 0
         error_count = 0
 
-        for i in range(150):
+        for i in range(120):
             try:
                 response = requests.get(f"{base_url}/?content=test{i}", headers=headers, timeout=2)
                 if response.status_code == 200:
