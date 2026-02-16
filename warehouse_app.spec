@@ -1,9 +1,3 @@
-# -*- mode: python ; coding: utf-8 -*-
-"""
-PyInstaller spec file for Warehouse Management Application
-This file configures the build process for creating a standalone Windows executable.
-"""
-
 block_cipher = None
 
 a = Analysis(
