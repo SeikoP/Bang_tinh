@@ -1,4 +1,4 @@
-# Production Dependencies for Warehouse Management Application
+# Production Dependencies for WMS
 # Python 3.11+
 # 
 # Install with: pip install -r requirements.txt

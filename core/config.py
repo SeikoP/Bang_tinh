@@ -75,7 +75,7 @@ class Config:
             export_dir=Path(os.getenv("EXPORT_DIR", EXPORTS)),
             backup_dir=Path(os.getenv("BACKUP_DIR", BACKUPS)),
             log_dir=Path(os.getenv("LOG_DIR", LOGS)),
-            app_name=os.getenv("APP_NAME", "Warehouse Management"),
+            app_name=os.getenv("APP_NAME", "WMS"),
             app_version=os.getenv("APP_VERSION", "2.0.0"),
             environment=os.getenv("ENVIRONMENT", "production"),
             window_width=int(os.getenv("WINDOW_WIDTH", "1200")),

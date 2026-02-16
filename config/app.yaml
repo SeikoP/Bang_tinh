@@ -1,8 +1,8 @@
 # Application Configuration
 app:
-  name: "Warehouse Management System"
+  name: "WMS"
   version: "2.0.0"
-  author: "Bang_tinh Team"
+  author: "WAREHOUSE"
   
 window:
   width: 1200

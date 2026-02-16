@@ -71,9 +71,9 @@ WINDOW_MIN_WIDTH = 850
 WINDOW_MIN_HEIGHT = 600
 
 # === App Info ===
-APP_NAME = os.getenv("APP_NAME", "Warehouse Management")
+APP_NAME = os.getenv("APP_NAME", "WMS")
 APP_VERSION = os.getenv("APP_VERSION", "2.0.0")
-APP_AUTHOR = "Team"
+APP_AUTHOR = "WAREHOUSE"
 
 # === Export Settings ===
 EXPORT_DATE_FORMAT = "%Y-%m-%d_%H%M%S"

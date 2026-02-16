@@ -30,13 +30,13 @@ VSVersionInfo(
       [
       StringTable(
         '040904B0',
-        [StringStruct('CompanyName', 'SeikoP'),
-        StringStruct('FileDescription', 'Warehouse Management System'),
+        StringStruct('CompanyName', 'WAREHOUSE'),
+        StringStruct('FileDescription', 'WMS - Warehouse Management'),
         StringStruct('FileVersion', '1.0.0.0'),
-        StringStruct('InternalName', 'BangTinh'),
-        StringStruct('LegalCopyright', 'Copyright (c) 2024 SeikoP'),
-        StringStruct('OriginalFilename', 'WarehouseManagement.exe'),
-        StringStruct('ProductName', 'Warehouse Management'),
+        StringStruct('InternalName', 'WMS'),
+        StringStruct('LegalCopyright', 'Copyright (c) 2024 WAREHOUSE'),
+        StringStruct('OriginalFilename', 'WMS.exe'),
+        StringStruct('ProductName', 'WMS'),
         StringStruct('ProductVersion', '1.0.0.0')])
       ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
