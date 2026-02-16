@@ -7,6 +7,7 @@ import logging
 import os
 import tempfile
 import hashlib
+import re
 from pathlib import Path
 from typing import Optional, Dict, List
 
