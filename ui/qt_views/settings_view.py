@@ -78,7 +78,11 @@ class SettingsView(QWidget):
                 pixmap.loadFromData(buffer.read())
 
                 self.finished.emit(ip, port, secret_key, pixmap)
-            except:
+            except Exception as e:
+                if self.container:
+                    logger = self.container.get("logger")
+                    if logger:
+                        logger.error(f"Failed to generate QR or get IP: {e}", exc_info=True)
                 self.error.emit()
 
     def __init__(self, container=None):
