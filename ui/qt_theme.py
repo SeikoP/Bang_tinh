@@ -120,7 +120,6 @@ class AppTheme:
             font-weight: 600;
             font-size: 12px;
             min-height: 32px;
-            max-height: 32px;
         }}
         
         QPushButton:hover {{
@@ -171,7 +170,6 @@ class AppTheme:
             font-size: 13px;
             border: none;
             min-height: 44px;
-            max-height: 44px;
             letter-spacing: 0.3px;
         }}
         
@@ -217,7 +215,6 @@ class AppTheme:
             font-size: 12px;
             font-weight: 600;
             min-height: 32px;
-            max-height: 32px;
         }}
         
         QPushButton#iconBtn:hover {{
@@ -240,7 +237,6 @@ class AppTheme:
             selection-background-color: {c.PRIMARY};
             font-size: 12px;
             min-height: 32px;
-            max-height: 32px;
         }}
         
         QLineEdit:focus {{
@@ -275,7 +271,6 @@ class AppTheme:
             font-weight: 600;
             font-size: 12px;
             min-height: 32px;
-            max-height: 32px;
         }}
         
         QSpinBox:focus, QDoubleSpinBox:focus {{
@@ -334,7 +329,6 @@ class AppTheme:
             padding: 8px 10px;
             border-radius: 4px;
             min-height: 32px;
-            max-height: 32px;
             color: {c.TEXT};
         }}
         
@@ -396,8 +390,6 @@ class AppTheme:
             padding: 6px 8px;
             border: none;
             min-height: 40px;
-            max-height: 40px;
-            height: 40px;
         }}
         
         QTableWidget::item:selected {{
@@ -421,8 +413,6 @@ class AppTheme:
             border-right: 1px solid {c.BORDER};
             border-bottom: 1px solid {c.BORDER};
             min-height: 44px;
-            max-height: 44px;
-            height: 44px;
         }}
         
         QHeaderView::section:hover {{

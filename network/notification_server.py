@@ -23,6 +23,7 @@ class NotificationServer(QThread):
         self._running = False
 
     def run(self):
+        self._running = True
         try:
             # Sử dụng ThreadingHTTPServer để xử lý đa luồng
             self._server = ThreadingHTTPServer((self.host, self.port), NotificationHandler)

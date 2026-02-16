@@ -30,6 +30,9 @@ class ConnectionPool:
             cursor.execute("SELECT * FROM products")
     """
     
+    # Health check threshold - only check if idle longer than this (seconds)
+    HEALTH_CHECK_IDLE_THRESHOLD = 60.0
+    
     def __init__(
         self,
         db_path: Path,
@@ -38,7 +41,8 @@ class ConnectionPool:
         max_idle_time: float = 300.0  # 5 minutes
     ):
         """
-        Initialize connection pool
+        Initialize connection pool with lazy initialization.
+        Connections are created on demand, not upfront.
         
         Args:
             db_path: Path to database file
@@ -63,14 +67,9 @@ class ConnectionPool:
         self._total_requests = 0
         self._total_waits = 0
         
-        # Initialize pool
-        self._initialize_pool()
-    
-    def _initialize_pool(self):
-        """Create initial connections"""
-        for _ in range(self.pool_size):
-            conn = self._create_connection()
-            self._pool.put((conn, time.time()))
+        # Lazy init: only create 1 connection upfront for immediate availability
+        conn = self._create_connection()
+        self._pool.put((conn, time.time()))
     
     def _create_connection(self) -> sqlite3.Connection:
         """Create new database connection"""
@@ -117,31 +116,32 @@ class ConnectionPool:
                     if time.time() - start_time > 0.1:
                         self._total_waits += 1
                 
+                idle_time = time.time() - last_used
+                
                 # Check if connection is stale
-                if time.time() - last_used > self.max_idle_time:
+                if idle_time > self.max_idle_time:
                     # Close stale connection and create new one
                     try:
                         conn.close()
                     except:
                         pass
                     conn = self._create_connection()
-                
-                # Verify connection is alive
-                try:
-                    conn.execute("SELECT 1")
-                except sqlite3.Error:
-                    # Connection is dead, create new one
+                elif idle_time > self.HEALTH_CHECK_IDLE_THRESHOLD:
+                    # Only health check if idle > threshold (skip for fresh connections)
                     try:
-                        conn.close()
-                    except:
-                        pass
-                    conn = self._create_connection()
+                        conn.execute("SELECT 1")
+                    except sqlite3.Error:
+                        try:
+                            conn.close()
+                        except:
+                            pass
+                        conn = self._create_connection()
                 
                 yield conn
                 conn.commit()
                 
             except Empty:
-                # No connection available, create temporary one
+                # No connection available, create new one (lazy growth)
                 conn = self._create_connection()
                 
                 with self._lock:

@@ -71,57 +71,60 @@ class BaseBanner(QFrame):
 
 class BankNotificationBanner(BaseBanner):
     """
-    Green Gradient Banner for Bank Notifications
-    Replaces 'notif_box' in MainWindow
+    Compact Pill Banner for Bank Notifications
+    Designed to be slim and tidy on the topbar.
     """
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(42)
+        self.setFixedHeight(34) # Slimmer
         
-        # Style
+        # Style: Modern Glassmorphism/Solid blend
         self.setStyleSheet("""
             QFrame {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #10b981, stop:1 #059669);
-                border-radius: 21px;
-                padding: 0 6px;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-            }
-            QFrame:hover {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #059669, stop:1 #047857);
-                border: 2px solid rgba(255, 255, 255, 0.5);
+                    stop:0 #059669, stop:1 #10b981);
+                border-radius: 17px;
+                padding: 0px;
+                border: 1px solid rgba(255, 255, 255, 0.2);
             }
         """)
         
         # Layout
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(16, 0, 8, 0)
-        layout.setSpacing(10)
+        layout.setContentsMargins(12, 0, 4, 0)
+        layout.setSpacing(8)
+        
+        # Icon/Indicator
+        self.dot = QFrame()
+        self.dot.setFixedSize(8, 8)
+        self.dot.setStyleSheet("background: #fdf2f2; border-radius: 4px;")
+        layout.addWidget(self.dot)
         
         # Label
-        self.label = QLabel("Đang chờ giao dịch...")
+        self.label = QLabel("Đang chờ...")
         self.label.setStyleSheet(
-            "color: white; font-weight: 700; font-size: 13px; background: transparent; letter-spacing: 0.3px;"
+            "color: white; font-weight: 700; font-size: 13px; background: transparent;"
         )
         layout.addWidget(self.label)
         
+        layout.addStretch()
+        
         # Close Button
         self.close_btn = QPushButton("✕")
-        self.close_btn.setFixedSize(30, 30)
+        self.close_btn.setFixedSize(26, 26)
         self.close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.close_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(255, 255, 255, 0.25);
+                background: rgba(255, 255, 255, 0.15);
                 color: white;
                 border: none;
-                border-radius: 15px;
+                border-radius: 13px;
                 font-weight: bold;
-                font-size: 14px;
+                font-size: 10px;
             }
             QPushButton:hover {
-                background: rgba(255, 255, 255, 0.4);
+                background: rgba(255, 255, 255, 0.3);
             }
         """)
         self.close_btn.clicked.connect(self.hide_banner)

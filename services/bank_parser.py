@@ -17,63 +17,53 @@ class BankStatementParser:
     - Extracts sender name, amount, datetime, content
     """
     
-    # Noise patterns to remove (Only for content cleaning, AFTER extraction attempt)
-    NOISE_PATTERNS = [
-        r'CT\s+DEN:\w+', 
-        r'CT\s+DI:\w+',  
-        r'MBVCB\.\d+(\.\d+)*', 
-        r'FT\d+',        
-        r'Ref:\w+',      
-        r'GD:\d+',       
-        r'Ma\s+GD:\s*\w+',
-        r'Nap\s+tu\s+the\s+le', # MoMo noise
+    # Pre-compiled noise patterns (only for content cleaning, AFTER extraction)
+    _NOISE_COMPILED = [
+        re.compile(r'CT\s+DEN:\w+', re.IGNORECASE),
+        re.compile(r'CT\s+DI:\w+', re.IGNORECASE),
+        re.compile(r'MBVCB\.\d+(\.\d+)*', re.IGNORECASE),
+        re.compile(r'FT\d+', re.IGNORECASE),
+        re.compile(r'Ref:\w+', re.IGNORECASE),
+        re.compile(r'GD:\d+', re.IGNORECASE),
+        re.compile(r'Ma\s+GD:\s*\w+', re.IGNORECASE),
+        re.compile(r'Nap\s+tu\s+the\s+le', re.IGNORECASE),
     ]
     
-    # Sender name patterns (ordered by priority)
-    SENDER_PATTERNS = [
-        # Format: "CT DEN:xxx NGUYEN VAN A chuyen tien" (Search before cleaning noise)
-        r'CT\s+DEN:\w+\s+([A-Z][A-Z\s]{2,50}?)\s+(?:chuyen|nhan|gui)',
-        
-        # Format: "CT tu 9386565885 DINH CONG LUONG toi ..."
-        r'tu\s+\d+\s+([A-Z][A-Z\s]{2,50}?)(\s+toi|$)',
-        
-        # Format: "tu NGUYEN VAN A" (simple format without phone number)
-        r'tu\s+([A-Z][A-Z\s]{2,50}?)(?:\.|$|\s+SD:)',
-        
-        # Format: "tu [NAME] - ND: ..."
-        r'tu\s+([A-Z][A-Z\s]{2,50}?)(?:\s+-\s+ND:|\s+chuyen|\s+nhan)',
-        
-        # Format: "NGUYEN VAN A chuyen tien"
-        r'([A-Z][A-Z\s]{2,40}?)\s+(?:chuyen\s+tien|nhan\s+tien|gui\s+tien|chuyen\s+khoan)',
-        
-        # Format: "Noi dung: NGUYEN VAN A chuyen tien"
-        r'Noi\s+dung:\s*([A-Z][A-Z\s]{2,40}?)\s+(?:chuyen|nhan|gui)',
-        
-        # Format: "ND: NGUYEN VAN A [CODES]"
-        r'ND:\s*([A-Z][A-Z\s]{2,40}?)(?:\s+chuyen|\s+nhan|\s*FT|\s*MBVCB|\s*;|\.|\s*$)',
-        
-        # Format: "Nhan tien tu NGUYEN VAN A"
-        r'(?:Nhan|Chuyen)\s+tien\s+tu\s+([A-Z][A-Z\s]{2,40}?)',
-
-        # Format: Just uppercase name before transaction codes
-        r'([A-Z][A-Z\s]{2,40}?)\s+(?:FT\d+|MBVCB|Ref:)',
+    # Pre-compiled sender name patterns (ordered by priority)
+    _SENDER_COMPILED = [
+        re.compile(r'CT\s+DEN:\w+\s+([A-Z][A-Z\s]{2,50}?)\s+(?:chuyen|nhan|gui)', re.IGNORECASE),
+        re.compile(r'tu\s+\d+\s+([A-Z][A-Z\s]{2,50}?)(\s+toi|$)', re.IGNORECASE),
+        re.compile(r'tu\s+([A-Z][A-Z\s]{2,50}?)(?:\.|$|\s+SD:)', re.IGNORECASE),
+        re.compile(r'tu\s+([A-Z][A-Z\s]{2,50}?)(?:\s+-\s+ND:|\s+chuyen|\s+nhan)', re.IGNORECASE),
+        re.compile(r'([A-Z][A-Z\s]{2,40}?)\s+(?:chuyen\s+tien|nhan\s+tien|gui\s+tien|chuyen\s+khoan)', re.IGNORECASE),
+        re.compile(r'Noi\s+dung:\s*([A-Z][A-Z\s]{2,40}?)\s+(?:chuyen|nhan|gui)', re.IGNORECASE),
+        re.compile(r'ND:\s*([A-Z][A-Z\s]{2,40}?)(?:\s+chuyen|\s+nhan|\s*FT|\s*MBVCB|\s*;|\.|\s*$)', re.IGNORECASE),
+        re.compile(r'(?:Nhan|Chuyen)\s+tien\s+tu\s+([A-Z][A-Z\s]{2,40}?)', re.IGNORECASE),
+        re.compile(r'([A-Z][A-Z\s]{2,40}?)\s+(?:FT\d+|MBVCB|Ref:)', re.IGNORECASE),
     ]
     
-    # Amount patterns
-    AMOUNT_PATTERNS = [
-        r'Giao\s+dich:\s*([\+\-]?[\d,\.]+)\s*(?:VND|d|dong)?',
-        r'So\s+tien:\s*([\+\-]?[\d,\.]+)\s*(?:VND|d|dong)?',
-        r'([\+\-]\d{1,3}(?:[,\.]\d{3})+)', # +100.000 or -100,000
-        r'([\+\-]?\d{1,3}(?:[,\.]\d{3})+)\s*(?:VND|d|dong)',
+    # Pre-compiled amount patterns
+    _AMOUNT_COMPILED = [
+        # Allow optional space after +/- sign: e.g. "GD: - 1.000.000"
+        re.compile(r'(?:Giao\s+dich|So\s+tien|GD|ST):\s*([\+\-]?\s*[\d,\.]{3,15})\s*(?:VND|d|dong)?', re.IGNORECASE),
+        re.compile(r'([\+\-]\s*\d{1,3}(?:[,\.]\d{3})+)', re.IGNORECASE),
+        re.compile(r'([\+\-]?\s*\d{1,3}(?:[,\.]\d{3})+)\s*(?:VND|d|dong)', re.IGNORECASE),
+        re.compile(r'([\+\-]\s*\d{4,12})', re.IGNORECASE), # Plain +/- numbers without separators
     ]
     
-    # Datetime patterns
-    DATETIME_PATTERNS = [
-        (r'Thoi\s+gian:\s*(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', '%d/%m/%Y %H:%M'),
-        (r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2})', '%d/%m/%Y %H:%M:%S'),
-        (r'(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2})', '%d-%m-%Y %H:%M'),
-        (r'(\d{2}/\d{2}/\d{2}\s+\d{2}:\d{2})', '%d/%m/%y %H:%M'),
+    # Pre-compiled datetime patterns
+    _DATETIME_COMPILED = [
+        (re.compile(r'Thoi\s+gian:\s*(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2})', re.IGNORECASE), '%d/%m/%Y %H:%M'),
+        (re.compile(r'(\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}:\d{2})', re.IGNORECASE), '%d/%m/%Y %H:%M:%S'),
+        (re.compile(r'(\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2})', re.IGNORECASE), '%d-%m-%Y %H:%M'),
+        (re.compile(r'(\d{2}/\d{2}/\d{2}\s+\d{2}:\d{2})', re.IGNORECASE), '%d/%m/%y %H:%M'),
     ]
+    
+    # Pre-compiled name cleanup patterns
+    _NAME_TRAILING_RE = re.compile(r'\s+(chuyen|nhan|gui|tien|khoan|tu|den|so|tien|gd|ma|ref).*$', re.IGNORECASE)
+    _NAME_TXCODE_RE = re.compile(r'\s+(FT\d+|MBVCB|Ref:).*$', re.IGNORECASE)
+    _NAME_NONALPHA_RE = re.compile(r'[^a-zA-Z\s]')
+    _WHITESPACE_RE = re.compile(r'\s+')
     
     @classmethod
     def parse(cls, raw_message: str) -> Dict[str, Any]:
@@ -106,13 +96,10 @@ class BankStatementParser:
         """Remove noise patterns and normalize text for display"""
         cleaned = normalized_msg
         
-        # Remove noise patterns
-        for pattern in cls.NOISE_PATTERNS:
-            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE)
+        for compiled_re in cls._NOISE_COMPILED:
+            cleaned = compiled_re.sub('', cleaned)
         
-        # Normalize whitespace
-        cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-        
+        cleaned = cls._WHITESPACE_RE.sub(' ', cleaned).strip()
         return cleaned
 
     @staticmethod
@@ -126,8 +113,8 @@ class BankStatementParser:
         """
         Extract sender name from message
         """
-        for pattern in cls.SENDER_PATTERNS:
-            match = re.search(pattern, message, re.IGNORECASE)
+        for compiled_re in cls._SENDER_COMPILED:
+            match = compiled_re.search(message)
             if match:
                 name = match.group(1).strip()
                 
@@ -148,15 +135,10 @@ class BankStatementParser:
     @classmethod
     def _clean_sender_name(cls, name: str) -> str:
         """Clean and validate sender name"""
-        # Remove trailing noises caught in capture group
-        name = re.sub(r'\s+(chuyen|nhan|gui|tien|khoan|tu|den|so|tien|gd|ma|ref).*$', '', name, flags=re.IGNORECASE)
-        
-        # Remove transaction codes
-        name = re.sub(r'\s+(FT\d+|MBVCB|Ref:).*$', '', name, flags=re.IGNORECASE)
-        
-        # Final cleanup
-        name = re.sub(r'[^a-zA-Z\s]', '', name)
-        name = re.sub(r'\s+', ' ', name).strip()
+        name = cls._NAME_TRAILING_RE.sub('', name)
+        name = cls._NAME_TXCODE_RE.sub('', name)
+        name = cls._NAME_NONALPHA_RE.sub('', name)
+        name = cls._WHITESPACE_RE.sub(' ', name).strip()
         
         # Title case (Nguyen Van A)
         if name:
@@ -172,8 +154,8 @@ class BankStatementParser:
         Returns:
             Amount string with +/- prefix or None
         """
-        for pattern in cls.AMOUNT_PATTERNS:
-            match = re.search(pattern, message, re.IGNORECASE)
+        for compiled_re in cls._AMOUNT_COMPILED:
+            match = compiled_re.search(message)
             if match:
                 amount = match.group(1)
                 
@@ -192,13 +174,31 @@ class BankStatementParser:
     @classmethod
     def _is_incoming_transaction(cls, message: str) -> bool:
         """Detect if transaction is incoming (receiving money)"""
-        incoming_keywords = [
-            'nhan tien', 'cong tien', 'tien vao', 'nap tien',
-            'hoan tien', 'received', 'credit'
-        ]
+        msg_lower = message.lower()
         
-        message_lower = message.lower()
-        return any(keyword in message_lower for keyword in incoming_keywords)
+        # Explicit incoming keywords
+        incoming = [
+            'nhan tien', 'cong tien', 'tien vao', 'nap tien',
+            'hoan tien', 'received', 'credit', 'vua nhan'
+        ]
+        if any(k in msg_lower for k in incoming):
+            return True
+            
+        # Contextual indicators
+        # "tu [NAME]" usually means incoming
+        if re.search(r'tu\s+[A-Z]', message): 
+            return True
+            
+        # Explicit outgoing indicators
+        outgoing = [
+            'chuyen tien den', 'chuyen den', 'thanh toan', 'rut tien',
+            'phi dich vu', 'debit', 'chuyen di', 'chuyen toi'
+        ]
+        if any(k in msg_lower for k in outgoing):
+            return False
+            
+        # Default to incoming as most notifications are for deposits in these cafes
+        return True
     
     @classmethod
     def _extract_datetime(cls, message: str) -> Optional[datetime]:
@@ -208,8 +208,8 @@ class BankStatementParser:
         Returns:
             datetime object or None
         """
-        for pattern, date_format in cls.DATETIME_PATTERNS:
-            match = re.search(pattern, message, re.IGNORECASE)
+        for compiled_re, date_format in cls._DATETIME_COMPILED:
+            match = compiled_re.search(message)
             if match:
                 try:
                     dt_str = match.group(1)

@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QFrame,
                              QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-                             QMessageBox, QPushButton, QTableWidget,
+                             QMessageBox, QPushButton, QSizePolicy, QTableWidget,
                              QTableWidgetItem, QTabWidget, QTextEdit,
                              QVBoxLayout, QWidget)
 
@@ -139,6 +139,7 @@ class CalculationView(QWidget):
         # Loading state flags to prevent duplicate actions
         self._is_loading = False
         self._is_saving = False
+        self._last_report_data = {}  # Store HTML report data for sidebar re-renders
 
         self._setup_ui()
         self.refresh_table()
@@ -278,11 +279,9 @@ class CalculationView(QWidget):
         layout.addWidget(self.prod_table, 1)
 
     def _setup_calc_table(self):
-        self.table.setColumnCount(8)
+        self.table.setColumnCount(6)
         self.table.setHorizontalHeaderLabels(
             [
-                "Đ.Vị",
-                "Quy đổi",
                 "Tên sản phẩm",
                 "Giao ca",
                 "Chốt ca",
@@ -293,25 +292,30 @@ class CalculationView(QWidget):
         )
 
         header = self.table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
-        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        for i in [3, 4, 5, 6, 7]:
-            header.setSectionResizeMode(i, QHeaderView.ResizeMode.Fixed)
+        # "Tên sản phẩm" stretches to fill, but is also interactive
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        
+        # Numerical columns: Interactive (Excel-like) with min-width
+        for i in [1, 2, 3, 4, 5]:
+            header.setSectionResizeMode(i, QHeaderView.ResizeMode.Interactive)
+            header.setMinimumSectionSize(80)
 
-        self.table.setColumnWidth(0, 60)  # Đ.Vị - giảm từ 70
-        self.table.setColumnWidth(1, 65)  # Quy đổi - giảm từ 75
-        self.table.setColumnWidth(3, 80)  # Giao ca - giảm từ 120
-        self.table.setColumnWidth(4, 80)  # Chốt ca - giảm từ 120
-        self.table.setColumnWidth(5, 75)  # Đã dùng - giảm từ 85
-        self.table.setColumnWidth(6, 90)  # Đơn giá - giảm từ 105
-        self.table.setColumnWidth(7, 100)  # Thành tiền - giảm từ 120
+        # Initial default widths
+        self.table.setColumnWidth(1, 100)  # Giao ca
+        self.table.setColumnWidth(2, 100)  # Chốt ca
+        self.table.setColumnWidth(3, 90)   # Đã dùng
+        self.table.setColumnWidth(4, 110)  # Đơn giá
+        self.table.setColumnWidth(5, 120)  # Thành tiền
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        self.table.setWordWrap(False)
+        self.table.setWordWrap(True)
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setDefaultSectionSize(70)
+        
+        # Allow double-click to auto-fit (Qt default for Interactive)
+        header.setSectionsClickable(True)
+        header.setSectionsMovable(True)
 
     def _setup_prod_table(self):
         self.prod_table.setColumnCount(6)
@@ -372,115 +376,116 @@ class CalculationView(QWidget):
                 has_data = s.used_qty > 0
                 row_bg = None # Use white background for clarity
 
-                unit_item = QTableWidgetItem(p.large_unit)
-                unit_item.setFlags(unit_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-                unit_item.setTextAlignment(
-                    Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter
+                # Col 0: Product name (with unit hint)
+                name_text = f"{p.name}"
+                name_item = QTableWidgetItem(name_text)
+                name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                name_item.setTextAlignment(
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
                 )
-                unit_item.setBackground(QColor("white"))
-                unit_item.setForeground(QColor(AppColors.PRIMARY))
-                font = unit_item.font()
+                font = name_item.font()
                 font.setBold(True)
-                unit_item.setFont(font)
-                self.table.setItem(row, 0, unit_item)
-                self._set_cell_helper(
-                    self.table,
-                    row,
-                    1,
-                    str(p.conversion),
-                    right=True,
-                    fg=AppColors.TEXT,
-                    bg=row_bg,
-                )
-                self._set_cell_helper(
-                    self.table, row, 2, p.name, bold=True, fg=AppColors.TEXT, bg=row_bg
-                )
+                name_item.setFont(font)
+                name_item.setForeground(QColor(AppColors.TEXT))
+                self.table.setItem(row, 0, name_item)
 
+                # Col 1: Giao ca (editable)
                 handover_container = QWidget()
                 handover_layout = QVBoxLayout(handover_container)
-                handover_layout.setContentsMargins(
-                    10, 8, 10, 8
-                )  # Tăng margin để widget không bị overflow
-                handover_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                handover_layout.setContentsMargins(4, 4, 4, 4)
+                handover_layout.setSpacing(0)
+                
                 handover_edit = QLineEdit(handover_disp if s.handover_qty > 0 else "0")
                 handover_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                handover_edit.setFixedHeight(self._widget_height)
-                # Set stylesheet trực tiếp với specificity cao
+                handover_edit.setMinimumHeight(self._widget_height)
+                # Ensure it expands to fill column width
+                handover_edit.setSizePolicy(
+                    QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+                )
                 handover_edit.setStyleSheet(f"""
                     QLineEdit {{
                         border: 2px solid {AppColors.BORDER};
                         border-radius: 5px;
-                        padding: 2px 6px;
+                        padding: 0px;
                         font-weight: 700;
                         font-size: 13px;
                         background: white;
+                    }}
+                    QLineEdit:focus {{
+                        border-color: {AppColors.PRIMARY};
                     }}
                 """)
                 handover_edit.setProperty("product_id", p.id)
                 handover_edit.setProperty("conversion", p.conversion)
                 handover_edit.setProperty("row", row)
-                handover_edit.setProperty("col", 3)
+                handover_edit.setProperty("col", 1)
                 handover_edit.editingFinished.connect(self._on_handover_change)
                 handover_edit.returnPressed.connect(self._on_return_pressed)
                 handover_layout.addWidget(handover_edit)
-                self.table.setCellWidget(row, 3, handover_container)
+                self.table.setCellWidget(row, 1, handover_container)
 
+                # Col 2: Chốt ca (editable)
                 closing_container = QWidget()
                 closing_layout = QVBoxLayout(closing_container)
-                closing_layout.setContentsMargins(
-                    10, 8, 10, 8
-                )  # Tăng margin để widget không bị overflow
-                closing_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                closing_layout.setContentsMargins(4, 4, 4, 4)
+                closing_layout.setSpacing(0)
+                
                 closing_edit = QLineEdit(closing_disp if s.closing_qty > 0 else "0")
                 closing_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                closing_edit.setFixedHeight(self._widget_height)
-                # Set stylesheet trực tiếp với specificity cao
+                closing_edit.setMinimumHeight(self._widget_height)
+                # Ensure it expands to fill column width
+                closing_edit.setSizePolicy(
+                    QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+                )
                 closing_edit.setStyleSheet(f"""
                     QLineEdit {{
                         border: 2px solid {AppColors.BORDER};
                         border-radius: 5px;
-                        padding: 2px 6px;
+                        padding: 0px;
                         font-weight: 700;
                         font-size: 13px;
                         background: white;
+                    }}
+                    QLineEdit:focus {{
+                        border-color: {AppColors.PRIMARY};
                     }}
                 """)
                 closing_edit.setProperty("product_id", p.id)
                 closing_edit.setProperty("conversion", p.conversion)
                 closing_edit.setProperty("row", row)
-                closing_edit.setProperty("col", 4)
+                closing_edit.setProperty("col", 2)
                 closing_edit.editingFinished.connect(self._on_closing_change)
                 closing_edit.returnPressed.connect(self._on_return_pressed)
                 closing_layout.addWidget(closing_edit)
-                self.table.setCellWidget(row, 4, closing_container)
+                self.table.setCellWidget(row, 2, closing_container)
 
-                # Used Column: Highlight non-zero as a badge
+                # Col 3: Used Column - Highlight non-zero as a badge
                 if s.used_qty > 0:
                     self._set_cell_helper(
-                        self.table, row, 5, str(s.used_qty),
+                        self.table, row, 3, str(s.used_qty),
                         right=True, fg="white", bold=True, bg=AppColors.ERROR
                     )
                 else:
                     self._set_cell_helper(
-                        self.table, row, 5, "0",
+                        self.table, row, 3, "0",
                         right=True, fg=AppColors.TEXT_SECONDARY, bg=None
                     )
 
-                # Unit Price: Standard text
+                # Col 4: Unit Price
                 self._set_cell_helper(
-                    self.table, row, 6, f"{p.unit_price:,.0f}",
+                    self.table, row, 4, f"{p.unit_price:,.0f}",
                     right=True, fg=AppColors.TEXT, bg=None
                 )
                 
-                # Amount: Highlight non-zero with Primary badge
+                # Col 5: Amount - Highlight non-zero with Primary badge
                 if s.amount > 0:
                     self._set_cell_helper(
-                        self.table, row, 7, f"{s.amount:,.0f}",
+                        self.table, row, 5, f"{s.amount:,.0f}",
                         right=True, fg="white", bold=True, bg=AppColors.PRIMARY
                     )
                 else:
                     self._set_cell_helper(
-                        self.table, row, 7, "0",
+                        self.table, row, 5, "0",
                         right=True, fg=AppColors.TEXT_SECONDARY, bg=None
                     )
 
@@ -699,6 +704,7 @@ class CalculationView(QWidget):
             SessionRepository.update_qty(pid, h, c)
 
         self.refresh_table()
+        self._show_report(getattr(self, '_last_report_data', {}))
         if self.on_refresh_stock:
             self.on_refresh_stock()
 
@@ -856,141 +862,232 @@ class CalculationView(QWidget):
             return
         res = self.report_service.parse_html_report(path)
         if res["success"]:
+            self._last_report_data = res
             self._show_report(res)
         else:
             QMessageBox.warning(self, "Lỗi", f"Không thể đọc file: {res['error']}")
 
     def _show_report(self, data: dict):
-        """Build a modern, premium summary sidebar"""
+        """
+        Render the shift summary sidebar.
+
+        Design principles:
+        - Max 3 info blocks: revenue → warning (conditional) → detail (collapsed)
+        - 3 colors only: MUTED (gray), ACCENT (soft green), WARN (soft orange)
+        - No icons, no colored borders, whitespace > decoration
+        - Readable in 3 seconds by fatigued operator
+        """
+        # --- Palette (2 colors) ---
+        CLR_MUTED = AppColors.TEXT_SECONDARY   # #6B7280
+        CLR_ACCENT = "#16a34a"                 # soft green (revenue)
+
+        # --- Computation (separated from rendering) ---
+        summary = self._compute_shift_summary(data)
+
+        # --- Clear previous layout ---
         if self.report_frame.layout():
             layout = self.report_frame.layout()
             while layout.count():
                 item = layout.takeAt(0)
-                if item.widget(): item.widget().deleteLater()
+                w = item.widget()
+                if w:
+                    w.deleteLater()
                 elif item.layout():
                     sub = item.layout()
                     while sub.count():
                         si = sub.takeAt(0)
-                        if si.widget(): si.widget().deleteLater()
+                        if si.widget():
+                            si.widget().deleteLater()
         else:
             layout = QVBoxLayout(self.report_frame)
-            layout.setContentsMargins(16, 20, 16, 20)
-            layout.setSpacing(14)
 
-        # Header with pulse-like indicator
-        header = QHBoxLayout()
-        header.setContentsMargins(0, 0, 0, 5)
-        
-        status_dot = QLabel("●")
-        status_dot.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 16px; margin-right: 2px;")
-        header.addWidget(status_dot)
-        
-        title = QLabel("TỔNG HỢP CA")
-        title.setStyleSheet(f"font-weight: 800; font-size: 14px; color: {AppColors.TEXT_SECONDARY}; letter-spacing: 1px;")
-        header.addWidget(title)
-        header.addStretch()
-        
-        if data:
-            reset_btn = QPushButton("✕")
-            reset_btn.setFixedSize(24, 24)
-            reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            reset_btn.setStyleSheet(f"""
-                QPushButton {{
-                    border: none; background: transparent; color: {AppColors.TEXT_SECONDARY}; font-weight: bold;
-                }}
-                QPushButton:hover {{ color: {AppColors.ERROR}; }}
-            """)
-            reset_btn.clicked.connect(lambda: self._show_report({}))
-            header.addWidget(reset_btn)
-            
-        layout.addLayout(header)
+        layout.setContentsMargins(20, 24, 20, 24)
+        layout.setSpacing(0)
 
-        # Divider
-        line = QFrame()
-        line.setFrameShape(QFrame.Shape.HLine)
-        line.setStyleSheet(f"background-color: {AppColors.BORDER}; max-height: 1px; min-height: 1px;")
-        layout.addWidget(line)
-        layout.addSpacing(5)
-
-        # Actual Total Card - Large and prominent
-        actual_val = data.get('actual_total', 0)
-        total_card = self._create_stat_card(
-            "💰 Tiền thực tế",
-            f"{actual_val:,.0f} đ",
-            AppColors.PRIMARY,
-            is_large=True
+        # ── Block 1: Header + Revenue ──
+        title = QLabel("Tổng hợp ca")
+        title.setStyleSheet(
+            f"font-size: 11px; font-weight: 600; color: {CLR_MUTED};"
+            " letter-spacing: 0.5px; text-transform: uppercase;"
+            " background: transparent; border: none;"
         )
-        layout.addWidget(total_card)
+        layout.addWidget(title)
+        layout.addSpacing(10)
 
-        # 50K Count Card
-        count_50k = data.get('count_50k', 0)
-        card_50k = self._create_stat_card(
-            "🎰 Lượt quay 50K",
-            f"{count_50k} lượt",
-            AppColors.WARNING
+        revenue_val = summary["total_amount"]
+        revenue_lbl = QLabel(f"{revenue_val:,.0f} đ" if revenue_val > 0 else "0 đ")
+        revenue_lbl.setStyleSheet(
+            f"font-size: 22px; font-weight: 800; color: {CLR_ACCENT};"
+            " background: transparent; border: none;"
         )
-        layout.addWidget(card_50k)
+        layout.addWidget(revenue_lbl)
 
-        # Products Sold Count (Calculated from table)
-        sold_count = 0
-        for row in range(self.table.rowCount()):
-            # Assuming used_qty is in a way we can check
-            # For now just use sessions if available
-            pass
-        
-        # Add a sub-stat for variety
-        if actual_val > 0:
-            extra_info = QLabel(f"✨ Phiên này thu về triệu đồng...")
-            extra_info.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-style: italic; font-size: 11px;")
-            extra_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            layout.addSpacing(10)
-            # layout.addWidget(extra_info)
+        # Subtitle: product count (only if there's usage)
+        used_count = summary["used_product_count"]
+        total_count = summary["total_product_count"]
+        if used_count > 0:
+            subtitle = QLabel(f"{used_count} / {total_count} sản phẩm đã dùng")
+            subtitle.setStyleSheet(
+                f"font-size: 11px; color: {CLR_MUTED};"
+                " background: transparent; border: none; margin-top: 2px;"
+            )
+            layout.addWidget(subtitle)
+
+        # ── Block 2: HTML report data (only when imported) ──
+        html_total = summary.get("html_actual_total", 0)
+        count_50k = summary.get("html_count_50k", 0)
+
+        if html_total > 0 or count_50k > 0:
+            layout.addSpacing(16)
+
+            sep = QLabel("Báo cáo HTML")
+            sep.setStyleSheet(
+                f"font-size: 10px; font-weight: 600; color: {CLR_MUTED};"
+                " letter-spacing: 0.5px; text-transform: uppercase;"
+                " background: transparent; border: none;"
+            )
+            layout.addWidget(sep)
+            layout.addSpacing(6)
+
+            if html_total > 0:
+                row_html = QHBoxLayout()
+                row_html.setContentsMargins(0, 0, 0, 0)
+                lbl_actual = QLabel("Doanh thu thực tế")
+                lbl_actual.setStyleSheet(
+                    f"font-size: 11px; color: {AppColors.TEXT};"
+                    " background: transparent; border: none;"
+                )
+                row_html.addWidget(lbl_actual)
+                row_html.addStretch()
+                val_actual = QLabel(f"{html_total:,.0f} đ")
+                val_actual.setStyleSheet(
+                    f"font-size: 13px; font-weight: 700; color: {CLR_ACCENT};"
+                    " background: transparent; border: none;"
+                )
+                row_html.addWidget(val_actual)
+                layout.addLayout(row_html)
+
+            if count_50k > 0:
+                layout.addSpacing(4)
+                row_50k = QHBoxLayout()
+                row_50k.setContentsMargins(0, 0, 0, 0)
+                lbl_50k = QLabel("Lượt quay 50K")
+                lbl_50k.setStyleSheet(
+                    f"font-size: 11px; color: {AppColors.TEXT};"
+                    " background: transparent; border: none;"
+                )
+                row_50k.addWidget(lbl_50k)
+                row_50k.addStretch()
+                val_50k = QLabel(f"{count_50k} lượt")
+                val_50k.setStyleSheet(
+                    f"font-size: 13px; font-weight: 700; color: {AppColors.TEXT};"
+                    " background: transparent; border: none;"
+                )
+                row_50k.addWidget(val_50k)
+                layout.addLayout(row_50k)
+
+        # ── Block 3: Product detail (collapsible, default collapsed) ──
+        products = summary["used_products"]
+        if products:
+            layout.addSpacing(16)
+
+            toggle_btn = QPushButton(f"Chi tiết  ({len(products)} SP)")
+            toggle_btn.setStyleSheet(
+                f"font-size: 11px; font-weight: 600; color: {CLR_MUTED};"
+                " background: transparent; border: none; text-align: left;"
+                " padding: 0;"
+            )
+            toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            layout.addWidget(toggle_btn)
+
+            detail_container = QWidget()
+            detail_container.setVisible(False)  # collapsed by default
+            detail_layout = QVBoxLayout(detail_container)
+            detail_layout.setContentsMargins(0, 8, 0, 0)
+            detail_layout.setSpacing(6)
+
+            for item in products:
+                row = QHBoxLayout()
+                row.setContentsMargins(0, 0, 0, 0)
+
+                name_lbl = QLabel(item["name"])
+                name_lbl.setStyleSheet(
+                    f"font-size: 11px; color: {AppColors.TEXT};"
+                    " font-weight: 500; background: transparent; border: none;"
+                )
+                name_lbl.setWordWrap(True)
+                row.addWidget(name_lbl, 1)
+
+                amt_lbl = QLabel(f"{item['amount']:,.0f}")
+                amt_lbl.setStyleSheet(
+                    f"font-size: 11px; font-weight: 700; color: {AppColors.TEXT};"
+                    " background: transparent; border: none;"
+                )
+                amt_lbl.setAlignment(
+                    Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+                )
+                row.addWidget(amt_lbl)
+
+                detail_layout.addLayout(row)
+
+            layout.addWidget(detail_container)
+
+            # Toggle behavior
+            def _toggle(_checked=False, container=detail_container, btn=toggle_btn):
+                visible = not container.isVisible()
+                container.setVisible(visible)
+                arrow = "▾" if visible else "▸"
+                btn.setText(f"{arrow} Chi tiết  ({len(products)} SP)")
+
+            toggle_btn.setText(f"▸ Chi tiết  ({len(products)} SP)")
+            toggle_btn.clicked.connect(_toggle)
+
+        elif revenue_val == 0:
+            # Empty state — single muted line
+            layout.addSpacing(24)
+            empty = QLabel("Chưa có dữ liệu ca")
+            empty.setStyleSheet(
+                f"font-size: 11px; color: {CLR_MUTED};"
+                " background: transparent; border: none;"
+            )
+            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(empty)
 
         layout.addStretch()
-        
-        # Quick Actions at bottom of sidebar
-        if data:
-            print_btn = QPushButton("🖨️ In báo cáo (Thử nghiệm)")
-            print_btn.setObjectName("secondary")
-            print_btn.setFixedHeight(36)
-            layout.addWidget(print_btn)
-
         self.report_frame.show()
 
-    def _create_stat_card(self, label, value, color, is_large=False):
-        card = QFrame()
-        height = 80 if is_large else 65
-        
-        card.setFixedHeight(height)
-        card.setStyleSheet(f"""
-            QFrame {{
-                background-color: white;
-                border: none;
-                border-left: 4px solid {color};
-                border-radius: 8px;
-            }}
-            QFrame:hover {{
-                background-color: #FFFFFF;
-                border-left-width: 6px;
-            }}
-        """)
-        
-        # Shadow effect logic omitted for simplicity but styling is clean
-        layout = QVBoxLayout(card)
-        layout.setContentsMargins(15, 8, 15, 8)
-        layout.setSpacing(1)
-        
-        label_text = label.upper()
-        l_lbl = QLabel(label_text)
-        l_lbl.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; font-weight: 700; letter-spacing: 0.5px;")
-        layout.addWidget(l_lbl)
-        
-        v_lbl = QLabel(value)
-        v_font_size = "20px" if is_large else "16px"
-        v_lbl.setStyleSheet(f"color: {color}; font-size: {v_font_size}; font-weight: 900;")
-        layout.addWidget(v_lbl)
-        
-        return card
+    # ── Computation (separated from rendering) ──
+
+    def _compute_shift_summary(self, html_data: dict) -> dict:
+        """
+        Pure computation for shift summary. No UI, no logging of financial values.
+
+        Returns dict with keys:
+            total_amount, used_product_count, total_product_count,
+            html_actual_total, html_count_50k, used_products
+        """
+        try:
+            if self.container:
+                sessions = self.session_repo.get_all()
+            else:
+                sessions = SessionRepository.get_all()
+        except Exception:
+            sessions = []
+
+        total_amount = sum(s.amount for s in sessions)
+        used = [s for s in sessions if s.used_qty > 0]
+
+        return {
+            "total_amount": total_amount,
+            "used_product_count": len(used),
+            "total_product_count": len(sessions),
+            "html_actual_total": html_data.get("actual_total", 0) if html_data else 0,
+            "html_count_50k": html_data.get("count_50k", 0) if html_data else 0,
+            "used_products": [
+                {"name": s.product.name, "amount": s.amount}
+                for s in used
+            ],
+        }
 
     def _hex_to_rgb(self, h):
         h = h.lstrip("#")
@@ -1032,6 +1129,8 @@ class CalculationView(QWidget):
                     SessionRepository.reset_all()
 
                 self.refresh_table()
+                self._last_report_data = {}  # Clear report data on shift reset
+                self._show_report({})  # Refresh sidebar with empty data
                 if self.on_refresh_stock:
                     self.on_refresh_stock()
                 QMessageBox.information(self, "Thành công", "Đã lưu phiên làm việc!")

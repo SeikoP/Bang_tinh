@@ -15,7 +15,6 @@ from PyQt6.QtWidgets import (
     QMainWindow, QPushButton, QStackedWidget, QTabWidget, QVBoxLayout, QWidget, QGraphicsOpacityEffect
 )
 
-from database.connection import init_db
 from config import (
     APP_NAME, APP_VERSION, WINDOW_HEIGHT,
     WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH, WINDOW_WIDTH
@@ -44,10 +43,8 @@ from ui.widgets.quick_bank_peek import QuickBankPeek
 
 # Import network components
 from network.notification_server import NotificationServer
+from ui.widgets.status_indicator import StatusIndicator
 from workers.notification_processor import NotificationProcessor
-
-# Initialize database
-init_db()
 
 
 # BankView, NotificationHandler, NotificationServer, QuickBankPeek
@@ -132,6 +129,14 @@ class MainWindow(QMainWindow):
         self._backup_timer.timeout.connect(self._check_daily_backup)
         self._backup_timer.start(3600000)  # 1 hour
         
+        # Timer for status indicator polling (every 10 seconds)
+        self._status_timer = QTimer()
+        self._status_timer.timeout.connect(self._poll_server_status)
+        self._status_timer.start(10000)  # 10 seconds
+        
+        # Track last notification time for health monitoring
+        self._last_notification_at = None
+        
         # Create startup backup
         if self.backup_service:
             try:
@@ -147,11 +152,17 @@ class MainWindow(QMainWindow):
         self.fade_effect = QGraphicsOpacityEffect(self.content_stack)
         self.content_stack.setGraphicsEffect(self.fade_effect)
         
+        # Fade-in animation (reused)
         self.fade_animation = QPropertyAnimation(self.fade_effect, b"opacity")
         self.fade_animation.setDuration(300)
         self.fade_animation.setStartValue(0.0)
         self.fade_animation.setEndValue(1.0)
         self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        
+        # Fade-out animation (reused instead of creating new each switch)
+        self.fade_out_animation = QPropertyAnimation(self.fade_effect, b"opacity")
+        self.fade_out_animation.setDuration(150)
+        self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InCubic)
         
 
     def _setup_window(self):
@@ -222,6 +233,12 @@ class MainWindow(QMainWindow):
         self._add_nav_btn(sidebar_layout, "🔢 Máy tính", 5)
 
         sidebar_layout.addStretch()
+        
+        # Status indicator - shows server state
+        self.status_indicator = StatusIndicator()
+        self.status_indicator.mousePressEvent = lambda e: self._switch_view(4)  # Click → Settings
+        sidebar_layout.addWidget(self.status_indicator)
+        
         version = QLabel(f"v{APP_VERSION}")
         version.setStyleSheet(f"""
             color: {AppColors.SIDEBAR_TEXT}; 
@@ -420,18 +437,6 @@ class MainWindow(QMainWindow):
         self.quick_peek.show()
         self._peek_timer.stop()
 
-    def _on_bank_hold_success(self):
-        """Khi nhấn giữ đủ lâu, hiện cửa sổ xem nhanh"""
-        if not hasattr(self, "quick_peek"):
-            self.quick_peek = QuickBankPeek(self)
-
-        self.quick_peek.update_data(self.bank_view.table)
-
-        # Tính toán vị trí hiển thị ngay cạnh sidebar
-        btn_pos = self.bank_btn.mapToGlobal(self.bank_btn.rect().topRight())
-        self.quick_peek.move(btn_pos.x() + 10, btn_pos.y())
-        self.quick_peek.show()
-
     def _switch_view(self, index):
         """Switch view with fade animation"""
         if self.content_stack.currentIndex() == index:
@@ -444,12 +449,9 @@ class MainWindow(QMainWindow):
                 self._switch_view_direct(index)
                 return
             
-            # Fade out current view
-            self._fade_out_anim = QPropertyAnimation(self.fade_effect, b"opacity")
-            self._fade_out_anim.setDuration(150)
-            self._fade_out_anim.setStartValue(1.0)
-            self._fade_out_anim.setEndValue(0.0)
-            self._fade_out_anim.setEasingCurve(QEasingCurve.Type.InCubic)
+            # Fade out current view (reuse animation object)
+            self.fade_out_animation.setStartValue(1.0)
+            self.fade_out_animation.setEndValue(0.0)
             
             def switch_and_fade_in():
                 self.content_stack.setCurrentIndex(index)
@@ -466,8 +468,8 @@ class MainWindow(QMainWindow):
                 # Fade in new view
                 self.fade_animation.start()
             
-            self._fade_out_anim.finished.connect(switch_and_fade_in)
-            self._fade_out_anim.start()
+            self.fade_out_animation.finished.connect(switch_and_fade_in)
+            self.fade_out_animation.start()
         except Exception as e:
             # Fallback to direct switch if animation fails
             self.logger.error(f"Animation error: {e}")
@@ -572,6 +574,12 @@ class MainWindow(QMainWindow):
         sender_name = data.get('sender_name', '')
         content = data.get('content', '')
         has_amount = data.get('has_amount', False)
+        
+        # Record notification for health monitoring
+        import time
+        self._last_notification_at = int(time.time() * 1000)
+        if hasattr(self, 'status_indicator'):
+            self.status_indicator.record_notification()
 
         if has_amount:
             import html
@@ -580,9 +588,9 @@ class MainWindow(QMainWindow):
             safe_amount = html.escape(amount)
 
             if safe_sender:
-                rich_text = f"<b style='font-size:15px; color:white;'>{timestamp}</b> | <b style='font-size:15px; color:white;'>{safe_amount}</b> | <span style='font-size:12px; color:#e1f5fe;'>{safe_sender}</span>"
+                rich_text = f"<span style='font-size:13px; color:white;'>{timestamp} | <b>{safe_amount}</b> | {safe_sender}</span>"
             else:
-                rich_text = f"<b style='font-size:15px; color:white;'>{timestamp}</b> | <b style='font-size:15px; color:white;'>{safe_amount}</b> | <span style='font-size:11px; color:#e1f5fe;'>{safe_source}</span>"
+                rich_text = f"<span style='font-size:13px; color:white;'>{timestamp} | <b>{safe_amount}</b> | {safe_source}</span>"
 
             # Show banner (Bank notifications stay until closed or replaced)
             self.notif_banner.show_message(rich_text)
@@ -610,27 +618,9 @@ class MainWindow(QMainWindow):
     def _on_tts_error(self, error_msg: str):
         """Handle TTS errors"""
         self.logger.error(f"TTS error: {error_msg}")
-        # Show error in notification box instead of blocking dialog
+        # Show error in task banner
         try:
-            self.notif_label.setText(f"⚠️ TTS Error: {error_msg[:50]}")
-            self.notif_box.setStyleSheet(f"""
-                QFrame {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #F59E0B, stop:1 #D97706);
-                    border-radius: 21px;
-                    padding: 0 6px;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
-                }}
-                QFrame:hover {{
-                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                        stop:0 #D97706, stop:1 #B45309);
-                    border: 2px solid rgba(255, 255, 255, 0.5);
-                }}
-            """)
-            self.notif_box.show()
-            
-            # Auto-hide after 5 seconds
-            QTimer.singleShot(5000, lambda: self.notif_box.hide())
+            self.task_banner.show_message(f"⚠️ TTS Error: {error_msg[:50]}", duration=5000)
         except:
             pass
 
@@ -738,10 +728,10 @@ class MainWindow(QMainWindow):
     
     def _on_escape(self):
         """Handle Escape key - close notifications"""
-        if self.notif_box.isVisible():
-            self.notif_box.hide()
-        if self.task_notif_box.isVisible():
-            self.task_notif_box.hide()
+        if hasattr(self, 'notif_banner') and self.notif_banner.isVisible():
+            self.notif_banner.hide_banner()
+        if hasattr(self, 'task_banner') and self.task_banner.isVisible():
+            self.task_banner.hide_banner()
     
     def _on_find(self):
         """Handle Ctrl+F - focus search in current view"""
@@ -783,19 +773,9 @@ class MainWindow(QMainWindow):
                 self.command_history.undo()
                 self._refresh_all_views()
                 
-                # Show notification
                 desc = self.command_history.get_redo_description()
                 if desc:
-                    self.notif_label.setText(f"↶ Đã hoàn tác: {desc}")
-                    self.notif_box.setStyleSheet(f"""
-                        QFrame {{
-                            background: {AppColors.PRIMARY};
-                            border-radius: 19px;
-                            padding: 0 4px;
-                        }}
-                    """)
-                    self.notif_box.show()
-                    QTimer.singleShot(2000, lambda: self.notif_box.hide())
+                    self.task_banner.show_message(f"↶ Đã hoàn tác: {desc}", duration=2000)
             except Exception as e:
                 self.logger.error(f"Undo failed: {e}")
     
@@ -806,19 +786,9 @@ class MainWindow(QMainWindow):
                 self.command_history.redo()
                 self._refresh_all_views()
                 
-                # Show notification
                 desc = self.command_history.get_undo_description()
                 if desc:
-                    self.notif_label.setText(f"↷ Đã làm lại: {desc}")
-                    self.notif_box.setStyleSheet(f"""
-                        QFrame {{
-                            background: {AppColors.PRIMARY};
-                            border-radius: 19px;
-                            padding: 0 4px;
-                        }}
-                    """)
-                    self.notif_box.show()
-                    QTimer.singleShot(2000, lambda: self.notif_box.hide())
+                    self.task_banner.show_message(f"↷ Đã làm lại: {desc}", duration=2000)
             except Exception as e:
                 self.logger.error(f"Redo failed: {e}")
     
@@ -827,32 +797,14 @@ class MainWindow(QMainWindow):
         if self.backup_service:
             try:
                 backup_file = self.backup_service.create_backup(prefix="manual")
-                self.notif_label.setText(f"💾 Đã lưu: {backup_file.name}")
-                self.notif_box.setStyleSheet(f"""
-                    QFrame {{
-                        background: {AppColors.SUCCESS};
-                        border-radius: 19px;
-                        padding: 0 4px;
-                    }}
-                """)
-                self.notif_box.show()
-                QTimer.singleShot(3000, lambda: self.notif_box.hide())
+                self.task_banner.show_message(f"💾 Đã lưu: {backup_file.name}", duration=3000)
             except Exception as e:
                 self.logger.error(f"Manual backup failed: {e}")
     
     def _on_refresh(self):
         """Handle F5 - Refresh all views"""
         self._refresh_all_views()
-        self.notif_label.setText("🔄 Đã làm mới")
-        self.notif_box.setStyleSheet(f"""
-            QFrame {{
-                background: {AppColors.PRIMARY};
-                border-radius: 19px;
-                padding: 0 4px;
-            }}
-        """)
-        self.notif_box.show()
-        QTimer.singleShot(1000, lambda: self.notif_box.hide())
+        self.task_banner.show_message("🔄 Đã làm mới", duration=1000)
     
     def _refresh_all_views(self):
         """Refresh all views"""
@@ -888,25 +840,7 @@ class MainWindow(QMainWindow):
     
     def _on_alert_triggered(self, alert):
         """Handle alert notification"""
-        from services.alert_service import AlertLevel
-        
-        # Show alert in notification box
-        if alert.level == AlertLevel.CRITICAL:
-            bg_color = "#DC2626"  # Red
-        elif alert.level == AlertLevel.WARNING:
-            bg_color = AppColors.WARNING
-        else:
-            bg_color = AppColors.PRIMARY
-        
-        self.notif_label.setText(f"⚠️ {alert.title}: {alert.message}")
-        self.notif_box.setStyleSheet(f"""
-            QFrame {{
-                background: {bg_color};
-                border-radius: 19px;
-                padding: 0 4px;
-            }}
-        """)
-        self.notif_box.show()
+        self.task_banner.show_message(f"⚠️ {alert.title}: {alert.message}")
     
     def _check_daily_backup(self):
         """Check and create daily backup if needed"""
@@ -917,6 +851,36 @@ class MainWindow(QMainWindow):
                     self.logger.info(f"Daily backup created: {backup_file.name}")
             except Exception as e:
                 self.logger.error(f"Daily backup failed: {e}")
+    
+    def _poll_server_status(self):
+        """Poll notification server state and update status indicator"""
+        if not hasattr(self, 'status_indicator'):
+            return
+        
+        try:
+            # Check if notification service is running
+            notification_service = self.container.get("notification")
+            if notification_service and hasattr(notification_service, 'is_running'):
+                if notification_service.is_running():
+                    # Server is running — check for no-data timeout
+                    self.status_indicator.check_no_data()
+                    if self.status_indicator._state != StatusIndicator.STATE_NO_DATA:
+                        self.status_indicator.set_state(StatusIndicator.STATE_RUNNING)
+                else:
+                    self.status_indicator.set_state(StatusIndicator.STATE_STOPPED)
+            elif hasattr(self, 'notif_thread'):
+                # Fallback: check thread-based server
+                if self.notif_thread.isRunning():
+                    self.status_indicator.check_no_data()
+                    if self.status_indicator._state != StatusIndicator.STATE_NO_DATA:
+                        self.status_indicator.set_state(StatusIndicator.STATE_RUNNING)
+                else:
+                    self.status_indicator.set_state(StatusIndicator.STATE_STOPPED)
+            else:
+                self.status_indicator.set_state(StatusIndicator.STATE_STOPPED)
+        except Exception as e:
+            self.logger.debug(f"Status poll error: {e}")
+            self.status_indicator.set_state(StatusIndicator.STATE_STOPPED)
 
     def closeEvent(self, event):
         """Handle window close event - cleanup resources"""
@@ -936,6 +900,8 @@ class MainWindow(QMainWindow):
             self._alert_timer.stop()
         if hasattr(self, '_backup_timer'):
             self._backup_timer.stop()
+        if hasattr(self, '_status_timer'):
+            self._status_timer.stop()
         
         # Stop TTS
         if hasattr(self, '_tts_service'):
@@ -993,7 +959,7 @@ def main():
     # Load custom fonts from assets
     from PyQt6.QtGui import QFontDatabase
 
-    fonts_dir = BASE_DIR / "assets" / "fonts"
+    fonts_dir = ASSETS / "fonts"
 
     # Load Roboto fonts
     roboto_dir = fonts_dir / "Roboto"

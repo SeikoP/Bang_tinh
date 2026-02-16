@@ -37,13 +37,7 @@ class TTSWorker(QThread):
             import edge_tts
             import asyncio
             
-            # Mapping internal names to Edge-TTS voice IDs
-            VOICES = {
-                "edge_female": "vi-VN-HoaiMyNeural",
-                "edge_male": "vi-VN-NamMinhNeural",
-                "edge_north_female": "vi-VN-ThuongNeural",
-            }
-            voice_id = VOICES.get(self.voice, "vi-VN-HoaiMyNeural")
+            voice_id = TTSService.VOICES.get(self.voice, "vi-VN-HoaiMyNeural")
             
             # Remove existing file if it's 0 bytes or corrupted
             if cache_file.exists() and cache_file.stat().st_size < 500:
@@ -69,6 +63,52 @@ class TTSWorker(QThread):
             self.error.emit(str(e))
 
 
+class TTSBatchWorker(QThread):
+    """Worker that generates multiple TTS files in a single asyncio event loop"""
+    
+    item_generated = pyqtSignal(str, str)  # cache_key, file_path
+    all_done = pyqtSignal()
+    error = pyqtSignal(str)
+    
+    def __init__(self, items: list, voice: str):
+        """items: list of (cache_key, text) tuples"""
+        super().__init__()
+        self.items = items
+        self.voice = voice
+    
+    def run(self):
+        """Generate all audio files in one asyncio session"""
+        try:
+            import edge_tts
+            import asyncio
+            
+            voice_id = TTSService.VOICES.get(self.voice, "vi-VN-HoaiMyNeural")
+            
+            async def generate_all():
+                for cache_key, text in self.items:
+                    cache_file = CACHE_DIR / f"{cache_key}.mp3"
+                    try:
+                        if cache_file.exists() and cache_file.stat().st_size < 500:
+                            try: os.unlink(str(cache_file))
+                            except: pass
+                        
+                        communicate = edge_tts.Communicate(text, voice_id)
+                        await communicate.save(str(cache_file))
+                        
+                        if cache_file.exists() and cache_file.stat().st_size > 500:
+                            self.item_generated.emit(cache_key, str(cache_file))
+                    except Exception as e:
+                        if cache_file.exists():
+                            try: os.unlink(str(cache_file))
+                            except: pass
+            
+            asyncio.run(generate_all())
+            self.all_done.emit()
+            
+        except Exception as e:
+            self.error.emit(str(e))
+
+
 class TTSService(QObject):
     """
     High-Performance Text-to-Speech Service
@@ -82,9 +122,9 @@ class TTSService(QObject):
     error_occurred = pyqtSignal(str)
     
     VOICES = {
-        "edge_female": "vi-VN-HoaiMyNeural",   # South Female
-        "edge_male": "vi-VN-NamMinhNeural",     # North Male
-        "edge_north_female": "vi-VN-ThuongNeural", # North Female
+        "edge_female": "vi-VN-HoaiMyNeural",      # South Female (Default)
+        "edge_male": "vi-VN-NamMinhNeural",        # North Male
+        "edge_north_female": "vi-VN-NamMinhNeural", # North Fallback (ThuongNeural missing in current API)
     }
     
     def __init__(self, logger: Optional[logging.Logger] = None):
@@ -100,13 +140,22 @@ class TTSService(QObject):
         self._player.setAudioOutput(self._audio_output)
         self.set_volume(self.volume)
         
+        # Pre-compiled amount patterns for parsing transaction amounts
+        self._AMOUNT_COMPILED = [
+            # Allow optional space after +/- sign: e.g. "GD: - 1.000.000"
+            re.compile(r'(?:Giao\s+dich|So\s+tien|GD|ST):\s*([\+\-]?\s*[\d,\.]{3,15})\s*(?:VND|d|dong)?', re.IGNORECASE),
+            re.compile(r'([\+\-]\s*\d{1,3}(?:[,\.]\d{3})+)', re.IGNORECASE),
+            re.compile(r'([\+\-]?\s*\d{1,3}(?:[,\.]\d{3})+)\s*(?:VND|d|dong)', re.IGNORECASE),
+            re.compile(r'([\+\-]\s*\d{4,12})', re.IGNORECASE), # Plain +/- numbers without separators
+        ]
+        
         # Cache management
         self._cache = {}
         self._workers: List[TTSWorker] = [] # Keep refs to workers to avoid GC
         self._load_existing_cache()
         
-        # Start pre-generation in 3 seconds to not block startup
-        QTimer.singleShot(3000, self._pregenerate_common_amounts)
+        # Start pre-generation in 1 second to not block startup
+        QTimer.singleShot(1000, self._pregenerate_common_amounts)
 
     def _load_existing_cache(self):
         """Scan cache directory for existing files and clean up invalid ones"""
@@ -154,12 +203,30 @@ class TTSService(QObject):
         if not self.enabled: return
         
         try:
-            # Clean amount
+            # Detect transaction direction
+            amount_str = amount.strip()
+            is_outgoing = amount_str.startswith('-')
+            
+            # Explicitly set action word based on sign
+            action_text = "Đã chuyển" if is_outgoing else "Đã nhận"
+            action_key = "out" if is_outgoing else "in"
+
+            # Clean amount (keep digits)
             amount_clean = "".join(filter(str.isdigit, amount))
             if not amount_clean: return
             
             amount_int = int(amount_clean)
-            cache_key = f"amt_{self.voice}_{amount_int}"
+            
+            # For the "1m dong thi input -000,000" request:
+            # If the user literally provides "000,000" and says it's 1 million,
+            # we check if it's exactly 0 and if the original string has many zeros.
+            if amount_int == 0 and "000,000" in amount and len(amount_clean) >= 6:
+                # Interpret as 1,000,000 if it's exactly 6 zeros
+                amount_int = 1000000
+                self.logger.warning(f"TTS: Interpreting {amount} as 1,000,000 based on user request")
+
+            # Cache key must include action type
+            cache_key = f"amt_{action_key}_{self.voice}_{amount_int}"
             
             # Generating message
             from num2words import num2words
@@ -167,14 +234,16 @@ class TTSService(QObject):
                 words = num2words(amount_int, lang='vi')
             except:
                 words = str(amount_int)
-            message = f"Đã nhận {words} đồng"
+            
+            # Full message with action prefix
+            message = f"{action_text} {words} đồng"
 
             if cache_key in self._cache:
-                self.logger.info(f"TTS Latency: ZERO (Cache hit for {amount_int})")
+                self.logger.info(f"TTS Latency: ZERO (Cache hit for {action_key} {amount_int})")
                 self._play_file(self._cache[cache_key], message, cache_key)
                 return
 
-            self.logger.info(f"TTS: Generating for {amount_int}")
+            self.logger.info(f"TTS: Generating for {action_key} {amount_int} -> '{message}'")
             self._generate_and_play(message, cache_key)
             
         except Exception as e:
@@ -220,7 +289,7 @@ class TTSService(QObject):
             self._workers.remove(worker)
 
     def _pregenerate_common_amounts(self):
-        """Silent pre-generation of common amounts with proper worker management"""
+        """Silent pre-generation of common amounts using single batch worker"""
         try:
             from num2words import num2words
         except ImportError:
@@ -229,45 +298,31 @@ class TTSService(QObject):
             
         common = [10000, 20000, 30000, 50000, 100000, 200000, 500000]
         
-        self.logger.info("TTS: Starting predictive background caching...")
-        
-        def process_next(index):
-            if index >= len(common):
-                self.logger.info("TTS: Predictive caching completed.")
-                return
-            
-            amt = common[index]
+        # Build list of items to generate (skip already cached)
+        items_to_generate = []
+        for amt in common:
             cache_key = f"amt_{self.voice}_{amt}"
-            
-            if cache_key in self._cache:
-                # Already exists, move to next
-                process_next(index + 1)
-                return
-                
-            try:
-                words = num2words(amt, lang='vi')
-                text = f"Đã nhận {words} đồng"
-                worker = TTSWorker(text, self.voice, cache_key)
-                
-                def on_success(key, path):
-                    self._cache[key] = path
-                    QTimer.singleShot(1000, lambda: process_next(index + 1))
-                
-                def on_error(err):
-                    self.logger.debug(f"Pre-gen failed for {amt}: {err}")
-                    QTimer.singleShot(1000, lambda: process_next(index + 1))
-
-                worker.finished_generating.connect(on_success)
-                worker.error.connect(on_error)
-                worker.finished.connect(lambda: self._cleanup_worker(worker))
-                self._workers.append(worker)
-                worker.start()
-            except Exception as e:
-                self.logger.debug(f"Pre-gen init failed for {amt}: {e}")
-                process_next(index + 1)
-
-        # Start the sequential processing
-        process_next(0)
+            if cache_key not in self._cache:
+                try:
+                    words = num2words(amt, lang='vi')
+                    items_to_generate.append((cache_key, f"Đã nhận {words} đồng"))
+                except Exception:
+                    pass
+        
+        if not items_to_generate:
+            self.logger.info("TTS: All common amounts already cached.")
+            return
+        
+        self.logger.info(f"TTS: Batch pre-generating {len(items_to_generate)} amounts...")
+        
+        # Single worker for all items (1 asyncio event loop instead of N)
+        worker = TTSBatchWorker(items_to_generate, self.voice)
+        worker.item_generated.connect(lambda key, path: self._cache.update({key: path}))
+        worker.all_done.connect(lambda: self.logger.info("TTS: Batch pre-generation completed."))
+        worker.error.connect(lambda e: self.logger.error(f"TTS batch pre-gen error: {e}"))
+        worker.finished.connect(lambda: self._cleanup_worker(worker))
+        self._workers.append(worker)
+        worker.start()
 
     def stop(self):
         self._player.stop()
