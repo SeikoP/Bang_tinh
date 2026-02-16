@@ -20,8 +20,8 @@ from core.container import Container
 def valid_config_dict(draw):
     """Generate valid configuration dictionary."""
     return {
-        "APP_NAME": draw(st.text(min_size=1, max_size=50)),
-        "APP_VERSION": draw(st.text(min_size=1, max_size=20)),
+        "APP_NAME": draw(st.text(min_size=1, max_size=50).filter(lambda x: "\x00" not in x)),
+        "APP_VERSION": draw(st.text(min_size=1, max_size=20).filter(lambda x: "\x00" not in x)),
         "NOTIFICATION_PORT": str(draw(st.integers(min_value=1024, max_value=65535))),
         "LOG_LEVEL": draw(
             st.sampled_from(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
@@ -53,9 +53,9 @@ def invalid_config_dict(draw):
         )
     elif invalid_type == "invalid_log_level":
         base_config["LOG_LEVEL"] = draw(
-            st.text(min_size=1, max_size=20).filter(
-                lambda x: x not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-            )
+            st.text(min_size=1, max_size=20)
+            .filter(lambda x: x not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+            .filter(lambda x: "\x00" not in x)  # Exclude null bytes
         )
     else:  # small_window
         base_config["WINDOW_WIDTH"] = str(
@@ -282,7 +282,11 @@ def test_property_9_cyclomatic_complexity_threshold(func_code):
 @pytest.mark.property
 @settings(max_examples=50)
 @given(
-    service_name=st.text(min_size=1, max_size=50),
+    service_name=st.text(
+        min_size=1, 
+        max_size=50, 
+        alphabet=st.characters(whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="_")
+    ).filter(lambda x: x.isidentifier()),
     dependency_count=st.integers(min_value=0, max_value=5),
 )
 def test_property_container_registration(service_name, dependency_count):

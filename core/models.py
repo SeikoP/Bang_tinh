@@ -3,15 +3,11 @@ Enhanced domain models with validation.
 Uses dataclasses with __post_init__ validation and Decimal for monetary values.
 """
 
-import os
-import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 
-# Import custom exceptions
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.exceptions import ValidationError
 
 

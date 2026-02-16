@@ -271,7 +271,10 @@ def test_property_foreign_key_constraint_enforcement(
             ), "Should prevent insertion with invalid parent reference"
 
         finally:
+            cursor.close()
             conn.close()
+            import gc
+            gc.collect()
 
 
 @pytest.mark.property

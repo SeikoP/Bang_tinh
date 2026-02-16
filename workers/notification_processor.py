@@ -2,7 +2,10 @@
 Notification Processor Worker - Process notifications in background
 """
 
+import json
 from datetime import datetime
+
+from typing import Optional
 
 from PyQt6.QtCore import QObject, pyqtSignal
 
@@ -34,8 +37,6 @@ class NotificationProcessor(QObject):
 
             # --- SPECIAL COMMANDS ---
             try:
-                import json
-
                 data = json.loads(message)
                 if isinstance(data, dict):
                     # Connection Test from Android
@@ -78,8 +79,6 @@ class NotificationProcessor(QObject):
 
             # Extract package name if JSON
             package_name = None
-            parsed["raw_content"]
-
             try:
                 data = json.loads(message)
                 if isinstance(data, dict):
@@ -122,34 +121,11 @@ class NotificationProcessor(QObject):
                 self.logger.error(error_msg, exc_info=True)
             self.error_occurred.emit(error_msg)
 
-    def _get_source_from_package(self, package_name: str) -> str:
+    def _get_source_from_package(self, package_name: str) -> Optional[str]:
         """Map package name to bank/app name"""
         if not package_name:
             return None
 
-        package_map = {
-            "com.mservice.momotransfer": "MoMo",
-            "com.vnpay.wallet": "VNPay",
-            "com.vietcombank.mobile": "Vietcombank",
-            "com.vietinbank.ipay": "VietinBank",
-            "com.techcombank.bb.app": "Techcombank",
-            "com.mbmobile": "MB Bank",
-            "com.vnpay.bidv": "BIDV",
-            "com.acb.acbmobile": "ACB",
-            "com.tpb.mb.gprsandroid": "TPBank",
-            "com.msb.mbanking": "MSB",
-            "com.agribank.mobilebanking": "Agribank",
-            "com.sacombank.mbanking": "Sacombank",
-            "com.hdbank.mobilebanking": "HDBank",
-            "com.vpbank.mobilebanking": "VPBank",
-            "com.ocb.mobilebanking": "OCB",
-            "com.shb.mobilebanking": "SHB",
-            "com.scb.mobilebanking": "SCB",
-            "com.seabank.mobilebanking": "SeaBank",
-            "com.vib.mobilebanking": "VIB",
-            "com.lienvietpostbank.mobilebanking": "LienVietPostBank",
-            "com.bvbank.mobilebanking": "BaoVietBank",
-            "com.pvcombank.mobilebanking": "PVcomBank",
-        }
+        from core.constants import BANK_PACKAGE_MAP
 
-        return package_map.get(package_name)
+        return BANK_PACKAGE_MAP.get(package_name)

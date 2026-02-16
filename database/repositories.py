@@ -3,13 +3,8 @@ Repositories - CRUD operations cho database
 Implements core interfaces with proper error handling and transaction management
 """
 
-import os
-import sys
 from datetime import date
 from typing import List, Optional
-
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.exceptions import DatabaseError, ValidationError
 from core.interfaces import (IHistoryRepository, IProductRepository,
@@ -234,10 +229,21 @@ class SessionRepository(ISessionRepository):
 
     @staticmethod
     def get_total_amount() -> float:
-        """Tính tổng tiền của phiên hiện tại"""
+        """Tính tổng tiền của phiên hiện tại - optimized with SQL aggregate"""
         try:
-            sessions = SessionRepository.get_all()
-            return float(sum(s.amount for s in sessions))
+            with get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COALESCE(SUM(
+                        (COALESCE(s.handover_qty, 0) - COALESCE(s.closing_qty, 0)) * p.unit_price
+                    ), 0) as total
+                    FROM products p
+                    LEFT JOIN session_data s ON p.id = s.product_id
+                    WHERE p.is_active = 1
+                      AND COALESCE(s.handover_qty, 0) > COALESCE(s.closing_qty, 0)
+                """)
+                row = cursor.fetchone()
+                return float(row["total"]) if row else 0.0
         except Exception as e:
             raise DatabaseError(
                 f"Failed to calculate total amount: {str(e)}", "get_total_amount"
@@ -248,7 +254,7 @@ class HistoryRepository(IHistoryRepository):
     """Repository cho quản lý lịch sử phiên"""
 
     @staticmethod
-    def save_current_session(shift_name: str = None, notes: str = None) -> int:
+    def save_current_session(shift_name: Optional[str] = None, notes: Optional[str] = None) -> int:
         """Lưu phiên hiện tại vào lịch sử"""
         try:
             sessions = SessionRepository.get_all()

@@ -150,6 +150,17 @@ def init_db():
         except sqlite3.OperationalError:
             pass
 
+        try:
+            cursor.execute(
+                "ALTER TABLE products ADD COLUMN display_order INTEGER DEFAULT 0"
+            )
+            # Set initial order based on ID if adding column to existing table
+            cursor.execute(
+                "UPDATE products SET display_order = id WHERE display_order = 0"
+            )
+        except sqlite3.OperationalError:
+            pass
+
         # Bảng bank_history (lưu lịch sử thông báo ngân hàng)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS bank_history (

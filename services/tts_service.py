@@ -280,7 +280,7 @@ class TTSService(QObject):
             self.logger.error(f"TTS Transaction error: {e}")
 
     def _play_file(
-        self, file_path: str, text_fallback: str = None, cache_key_fallback: str = None
+        self, file_path: str, text_fallback: Optional[str] = None, cache_key_fallback: Optional[str] = None
     ):
         """Instant playback using QMediaPlayer with validation"""
         try:
@@ -335,15 +335,17 @@ class TTSService(QObject):
         common = [10000, 20000, 30000, 50000, 100000, 200000, 500000]
 
         # Build list of items to generate (skip already cached)
+        # Generate both "in" (received) and "out" (sent) variants
         items_to_generate = []
         for amt in common:
-            cache_key = f"amt_{self.voice}_{amt}"
-            if cache_key not in self._cache:
-                try:
-                    words = num2words(amt, lang="vi")
-                    items_to_generate.append((cache_key, f"Đã nhận {words} đồng"))
-                except Exception:
-                    pass
+            for action_key, action_text in [("in", "Đã nhận"), ("out", "Đã chuyển")]:
+                cache_key = f"amt_{action_key}_{self.voice}_{amt}"
+                if cache_key not in self._cache:
+                    try:
+                        words = num2words(amt, lang="vi")
+                        items_to_generate.append((cache_key, f"{action_text} {words} đồng"))
+                    except Exception:
+                        pass
 
         if not items_to_generate:
             self.logger.info("TTS: All common amounts already cached.")

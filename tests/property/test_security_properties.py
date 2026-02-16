@@ -147,7 +147,8 @@ def license_key_format(draw):
                 min_size=32,
                 max_size=64,
                 alphabet=st.characters(
-                    whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="+/="
+                    whitelist_categories=(),
+                    whitelist_characters="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
                 ),
             )
         )
@@ -156,7 +157,8 @@ def license_key_format(draw):
                 min_size=32,
                 max_size=64,
                 alphabet=st.characters(
-                    whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="+/="
+                    whitelist_categories=(),
+                    whitelist_characters="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
                 ),
             )
         )

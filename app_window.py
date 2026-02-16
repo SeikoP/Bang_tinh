@@ -3,7 +3,9 @@ Main Application - Phần mềm Quản lý Xuất kho & Dịch vụ
 PyQt6 Version - Modern Premium Design - Refactored
 """
 
+import html
 import sys
+import time
 from pathlib import Path
 
 from PyQt6.QtCore import (QEasingCurve, QEvent, QPropertyAnimation, Qt, QTimer,
@@ -472,6 +474,11 @@ class MainWindow(QMainWindow):
                 # Fade in new view
                 self.fade_animation.start()
 
+            # Disconnect previous connections to avoid signal accumulation
+            try:
+                self.fade_out_animation.finished.disconnect()
+            except TypeError:
+                pass  # No connections to disconnect
             self.fade_out_animation.finished.connect(switch_and_fade_in)
             self.fade_out_animation.start()
         except Exception as e:
@@ -582,15 +589,11 @@ class MainWindow(QMainWindow):
         has_amount = data.get("has_amount", False)
 
         # Record notification for health monitoring
-        import time
-
         self._last_notification_at = int(time.time() * 1000)
         if hasattr(self, "status_indicator"):
             self.status_indicator.record_notification()
 
         if has_amount:
-            import html
-
             safe_sender = html.escape(sender_name[:30]) if sender_name else ""
             safe_source = html.escape(source)
             safe_amount = html.escape(amount)
@@ -641,10 +644,6 @@ class MainWindow(QMainWindow):
     def _refresh_calc(self):
         if hasattr(self, "calc_view"):
             self.calc_view.refresh_table(force=True)
-
-    def _refresh_stock(self):
-        if hasattr(self, "stock_view"):
-            self.stock_view.refresh_list()
 
     def _on_row_height_changed(self, height: int):
         """Cập nhật chiều cao row cho tất cả tables"""
@@ -1010,9 +1009,6 @@ def main():
         icon = QIcon(str(icon_path))
         if not icon.isNull():
             app.setWindowIcon(icon)
-
-    font = QFont("Segoe UI", 10)
-    app.setFont(font)
 
     # Initialize container with configuration
     from PyQt6.QtWidgets import QMessageBox

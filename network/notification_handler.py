@@ -3,43 +3,53 @@ Notification Handler - HTTP request handler for Android notifications
 """
 
 import json
+import time
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
+
+from core.constants import ALL_BANK_PACKAGES
 
 
 class NotificationHandler(BaseHTTPRequestHandler):
     """Server xử lý thông báo từ app Android - Filter tại PC"""
 
-    # Danh sách package name của các app ngân hàng Việt Nam + test packages
-    BANK_PACKAGES = {
-        "com.vnpay.wallet",  # VNPay
-        "com.vietcombank.mobile",  # Vietcombank
-        "com.techcombank.bb.app",  # Techcombank
-        "com.mbmobile",  # MB Bank
-        "com.vnpay.bidv",  # BIDV
-        "com.acb.acbmobile",  # ACB
-        "com.tpb.mb.gprsandroid",  # TPBank
-        "com.msb.mbanking",  # MSB
-        "com.vietinbank.ipay",  # VietinBank
-        "com.agribank.mobilebanking",  # Agribank
-        "com.sacombank.mbanking",  # Sacombank
-        "com.hdbank.mobilebanking",  # HDBank
-        "com.vpbank.mobilebanking",  # VPBank
-        "com.ocb.mobilebanking",  # OCB
-        "com.shb.mobilebanking",  # SHB
-        "com.scb.mobilebanking",  # SCB
-        "com.seabank.mobilebanking",  # SeaBank
-        "com.vib.mobilebanking",  # VIB
-        "com.lienvietpostbank.mobilebanking",  # LienVietPostBank
-        "com.bvbank.mobilebanking",  # BaoVietBank
-        "com.pvcombank.mobilebanking",  # PVcomBank
-        "com.mservice.momotransfer",  # MoMo
-        # Test packages ONLY for adb testing - remove in production
-        "android",  # For adb test notifications
-        "com.android.shell",  # For adb test notifications
-    }
+    # Bank packages imported from centralized constants
+    BANK_PACKAGES = ALL_BANK_PACKAGES
+
+    # Rate limiting: IP -> [timestamp, count]
+    _rate_limit_store = {}
+    RATE_LIMIT_Window = 60  # seconds
+    RATE_LIMIT_MAX = 100    # requests per window
+
+    def _check_rate_limit(self, ip_address):
+        """Simple token bucket rate limiting"""
+        time_now = time.time()
+        
+        # Initialize or reset if window expired
+        if ip_address not in self._rate_limit_store:
+            self._rate_limit_store[ip_address] = [time_now, 1]
+            return True
+        
+        start_time, count = self._rate_limit_store[ip_address]
+        
+        if time_now - start_time > self.RATE_LIMIT_Window:
+            # Reset window
+            self._rate_limit_store[ip_address] = [time_now, 1]
+            return True
+        
+        if count >= self.RATE_LIMIT_MAX:
+            return False
+            
+        self._rate_limit_store[ip_address][1] += 1
+        return True
 
     def handle_request(self):
+        # Check rate limit
+        if not self._check_rate_limit(self.client_address[0]):
+            self.send_error(429, "Too Many Requests")
+            return
+
+
         try:
             msg = None
             # Log incoming request
