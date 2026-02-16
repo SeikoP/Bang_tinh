@@ -11,25 +11,43 @@ class TestHTTPSecurity:
 
     BASE_URL = "http://localhost:5005"
 
-    def test_rate_limiting(self):
+    def test_rate_limiting(self, http_server):
         """Test if rate limiting works"""
+        # Get host and port from http_server fixture if possible
+        base_url = f"http://localhost:{http_server.port}"
+        
+        # Get authentication token from config
+        headers = {}
+        if hasattr(http_server, "httpd") and hasattr(http_server.httpd, "secret_key"):
+            token = http_server.httpd.secret_key
+            if token:
+                headers["Authorization"] = f"Bearer {token}"
+
         # Send 150 requests rapidly (should be blocked after 100)
         success_count = 0
         blocked_count = 0
+        unauthorized_count = 0
+        error_count = 0
 
         for i in range(150):
             try:
-                response = requests.get(f"{self.BASE_URL}/?content=test{i}", timeout=1)
+                response = requests.get(f"{base_url}/?content=test{i}", headers=headers, timeout=2)
                 if response.status_code == 200:
                     success_count += 1
                 elif response.status_code == 429:
                     blocked_count += 1
-            except:
-                pass
+                elif response.status_code == 401:
+                    unauthorized_count += 1
+            except Exception as e:
+                error_count += 1
+                if i < 5: # Log first few errors
+                     print(f"Request error: {e}")
 
+        print(f"Rate limit test: {success_count} success, {blocked_count} blocked, {unauthorized_count} unauthorized, {error_count} errors")
+        
         # Should have some blocked requests
-        assert blocked_count > 0, "Rate limiting not working - all requests succeeded"
-        print(f"Rate limit test: {success_count} success, {blocked_count} blocked")
+        assert blocked_count > 0, f"Rate limiting not working - blocked: {blocked_count}, success: {success_count}, unauthorized: {unauthorized_count}, errors: {error_count}"
+
 
     def test_xss_injection(self):
         """Test XSS injection in notification content"""

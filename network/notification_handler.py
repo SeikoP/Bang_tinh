@@ -4,6 +4,7 @@ Notification Handler - HTTP request handler for Android notifications
 
 import json
 import time
+import threading
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
@@ -18,36 +19,37 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
     # Rate limiting: IP -> [timestamp, count]
     _rate_limit_store = {}
+    _rate_limit_lock = threading.Lock()
     RATE_LIMIT_Window = 60  # seconds
     RATE_LIMIT_MAX = 100    # requests per window
 
     def _check_rate_limit(self, ip_address):
-        """Simple token bucket rate limiting"""
+        """Simple token bucket rate limiting with thread safety"""
         time_now = time.time()
         
-        # Initialize or reset if window expired
-        if ip_address not in self._rate_limit_store:
-            self._rate_limit_store[ip_address] = [time_now, 1]
-            return True
-        
-        start_time, count = self._rate_limit_store[ip_address]
-        
-        if time_now - start_time > self.RATE_LIMIT_Window:
-            # Reset window
-            self._rate_limit_store[ip_address] = [time_now, 1]
-            return True
-        
-        if count >= self.RATE_LIMIT_MAX:
-            return False
+        with self._rate_limit_lock:
+            # Initialize or reset if window expired
+            if ip_address not in self._rate_limit_store:
+                self._rate_limit_store[ip_address] = [time_now, 1]
+                return True
             
-        self._rate_limit_store[ip_address][1] += 1
-        return True
+            start_time, count = self._rate_limit_store[ip_address]
+            
+            if time_now - start_time > self.RATE_LIMIT_Window:
+                # Reset window
+                self._rate_limit_store[ip_address] = [time_now, 1]
+                return True
+            
+            if count >= self.RATE_LIMIT_MAX:
+                if hasattr(self.server, "logger") and self.server.logger:
+                    self.server.logger.warning(f"Rate limit exceeded for {ip_address}")
+                return False
+                
+            self._rate_limit_store[ip_address][1] += 1
+            return True
 
     def handle_request(self):
-        # Check rate limit
-        if not self._check_rate_limit(self.client_address[0]):
-            self.send_error(429, "Too Many Requests")
-            return
+        # NOTE: Rate limiting is now checked in do_GET/do_POST to cover all endpoints
 
 
         try:
@@ -221,6 +223,11 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Handle GET requests"""
+        # Check rate limit first for ALL requests
+        if not self._check_rate_limit(self.client_address[0]):
+            self.send_error(429, "Too Many Requests")
+            return
+
         if self.path.startswith("/api/session"):
             self.handle_get_session()
         else:
@@ -228,6 +235,11 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Handle POST requests"""
+        # Check rate limit first for ALL requests
+        if not self._check_rate_limit(self.client_address[0]):
+            self.send_error(429, "Too Many Requests")
+            return
+
         if self.path.startswith("/api/session"):
             self.handle_post_session()
         else:
