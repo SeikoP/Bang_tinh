@@ -3,6 +3,9 @@
 import requests
 
 
+import pytest
+
+@pytest.mark.usefixtures("http_server")
 class TestHTTPSecurity:
     """Test HTTP server security"""
 

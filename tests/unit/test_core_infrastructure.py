@@ -20,9 +20,10 @@ class TestConfig:
 
     def test_config_from_env_with_defaults(self):
         """Test configuration loads with default values"""
-        config = Config.from_env()
+        with patch.dict(os.environ, {}, clear=True):
+            config = Config.from_env()
 
-        assert config.app_name == "Warehouse Management"
+        assert config.app_name == "WMS"
         assert config.app_version == "2.0.0"
         assert config.environment == "production"
         assert config.notification_port == 5005

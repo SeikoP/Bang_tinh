@@ -84,7 +84,7 @@ class ArchitectureAnalyzer(CodeAnalyzer):
 
     def _get_layer(self, file_path: str) -> str:
         """Determine which layer a file belongs to."""
-        path_lower = file_path.lower()
+        path_lower = file_path.lower().replace("\\", "/")
 
         if "ui/" in path_lower or "qt_views/" in path_lower:
             return "ui"

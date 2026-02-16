@@ -215,61 +215,63 @@ def test_property_foreign_key_constraint_enforcement(
         conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
 
-        # Create tables with FK constraint
-        cursor.execute("""
-            CREATE TABLE parent (
-                id INTEGER PRIMARY KEY,
-                name TEXT
-            )
-        """)
-
-        cursor.execute("""
-            CREATE TABLE child (
-                id INTEGER PRIMARY KEY,
-                parent_id INTEGER NOT NULL,
-                data TEXT,
-                FOREIGN KEY (parent_id) REFERENCES parent(id)
-            )
-        """)
-
-        # Insert valid parent
-        cursor.execute(
-            "INSERT INTO parent (id, name) VALUES (?, ?)",
-            (valid_parent_id, f"Parent {valid_parent_id}"),
-        )
-        conn.commit()
-
-        # Property: Should allow insertion with valid parent_id
         try:
+            # Create tables with FK constraint
+            cursor.execute("""
+                CREATE TABLE parent (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT
+                )
+            """)
+
+            cursor.execute("""
+                CREATE TABLE child (
+                    id INTEGER PRIMARY KEY,
+                    parent_id INTEGER NOT NULL,
+                    data TEXT,
+                    FOREIGN KEY (parent_id) REFERENCES parent(id)
+                )
+            """)
+
+            # Insert valid parent
             cursor.execute(
-                "INSERT INTO child (parent_id, data) VALUES (?, ?)",
-                (valid_parent_id, "Valid child"),
+                "INSERT INTO parent (id, name) VALUES (?, ?)",
+                (valid_parent_id, f"Parent {valid_parent_id}"),
             )
             conn.commit()
-            valid_insert_succeeded = True
-        except sqlite3.IntegrityError:
-            valid_insert_succeeded = False
 
-        assert (
-            valid_insert_succeeded
-        ), "Should allow insertion with valid parent reference"
+            # Property: Should allow insertion with valid parent_id
+            try:
+                cursor.execute(
+                    "INSERT INTO child (parent_id, data) VALUES (?, ?)",
+                    (valid_parent_id, "Valid child"),
+                )
+                conn.commit()
+                valid_insert_succeeded = True
+            except sqlite3.IntegrityError:
+                valid_insert_succeeded = False
 
-        # Property: Should prevent insertion with invalid parent_id
-        try:
-            cursor.execute(
-                "INSERT INTO child (parent_id, data) VALUES (?, ?)",
-                (invalid_parent_id, "Invalid child"),
-            )
-            conn.commit()
-            invalid_insert_succeeded = True
-        except sqlite3.IntegrityError:
-            invalid_insert_succeeded = False
+            assert (
+                valid_insert_succeeded
+            ), "Should allow insertion with valid parent reference"
 
-        assert (
-            not invalid_insert_succeeded
-        ), "Should prevent insertion with invalid parent reference"
+            # Property: Should prevent insertion with invalid parent_id
+            try:
+                cursor.execute(
+                    "INSERT INTO child (parent_id, data) VALUES (?, ?)",
+                    (invalid_parent_id, "Invalid child"),
+                )
+                conn.commit()
+                invalid_insert_succeeded = True
+            except sqlite3.IntegrityError:
+                invalid_insert_succeeded = False
 
-        conn.close()
+            assert (
+                not invalid_insert_succeeded
+            ), "Should prevent insertion with invalid parent reference"
+
+        finally:
+            conn.close()
 
 
 @pytest.mark.property

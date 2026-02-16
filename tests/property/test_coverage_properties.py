@@ -78,7 +78,7 @@ def transformation_function(draw):
 
 
 @st.composite
-def test_file_structure(draw):
+def strategy_test_file_structure(draw):
     """Generate test file structure."""
     has_test_file = draw(st.booleans())
     num_test_methods = draw(st.integers(min_value=0, max_value=10))
@@ -110,7 +110,7 @@ def test_property_18_test_coverage_for_business_logic(class_code):
         src_dir = project_root / "services"
         src_dir.mkdir()
         src_file = src_dir / f"{class_name.lower()}.py"
-        src_file.write_text(code)
+        src_file.write_text(code, encoding='utf-8')
 
         # Create test file
         test_dir = project_root / "tests" / "unit"
@@ -129,13 +129,13 @@ def test_property_18_test_coverage_for_business_logic(class_code):
             test_code += f"        result = obj.{method}()\n"
             test_code += "        assert result is not None\n\n"
 
-        test_file.write_text(test_code)
+        test_file.write_text(test_code, encoding='utf-8')
 
         # Property: Test file should exist for business logic class
         assert test_file.exists(), f"Test file should exist for {class_name}"
 
         # Property: Test file should have test methods
-        test_content = test_file.read_text()
+        test_content = test_file.read_text(encoding='utf-8')
         tree = ast.parse(test_content)
 
         test_method_count = 0
@@ -173,7 +173,7 @@ def test_property_19_property_test_coverage_for_transformations(func_code):
         src_dir = project_root / "utils"
         src_dir.mkdir()
         src_file = src_dir / "transformers.py"
-        src_file.write_text(code)
+        src_file.write_text(code, encoding='utf-8')
 
         # Create property test file
         test_dir = project_root / "tests" / "property"
@@ -190,7 +190,7 @@ def test_property_19_property_test_coverage_for_transformations(func_code):
         test_code += f"    result = {func_name}(data)\n"
         test_code += "    assert result is not None\n"
 
-        test_file.write_text(test_code)
+        test_file.write_text(test_code, encoding='utf-8')
 
         # Property: Property test file should exist
         assert (
@@ -198,7 +198,7 @@ def test_property_19_property_test_coverage_for_transformations(func_code):
         ), "Property test file should exist for transformation function"
 
         # Property: Test should use Hypothesis
-        test_content = test_file.read_text()
+        test_content = test_file.read_text(encoding='utf-8')
         assert (
             "from hypothesis import" in test_content
         ), "Property test should import Hypothesis"
