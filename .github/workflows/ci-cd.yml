@@ -16,6 +16,9 @@ concurrency:
 env:
   PYTHON_VERSION: '3.11'
 
+permissions:
+  contents: write
+
 jobs:
   # ============================================
   # STAGE 1: Lint + Test (parallel, fast feedback)
@@ -120,6 +123,36 @@ jobs:
           path: dist/WarehouseManagement.exe
           retention-days: 30
           compression-level: 0  # Already compressed by PyInstaller
+
+  rolling-release:
+    runs-on: windows-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: WarehouseManagement-Windows-${{ github.sha }}
+          path: dist/
+
+      - name: Create Rolling Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: pc-latest
+          name: Latest PC Build (Windows)
+          files: dist/WarehouseManagement.exe
+          body: |
+            ## PC Management App (Rolling Build)
+            
+            Bản build tự động mới nhất cho máy tính Windows.
+            
+            ### 📥 Tải về
+            - [Tải WarehouseManagement.exe](https://github.com/${{ github.repository }}/releases/download/pc-latest/WarehouseManagement.exe)
+            
+            _Cập nhật lúc: ${{ github.event.head_commit.timestamp }}_
+          draft: false
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ============================================
   # STAGE 3: Release (only on release event)

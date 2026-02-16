@@ -13,6 +13,11 @@ on:
       - 'android_notifier/**'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -55,13 +60,38 @@ jobs:
         name: BankNotifier-APK
         path: android_notifier/app/build/outputs/apk/debug/app-debug.apk
     
-    - name: Create Release
+    - name: Create Rolling Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: android-latest
+        name: Latest Android Build
+        files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
+        body: |
+          ## Bank Notifier Android App (Rolling Build)
+          
+          This release contains the latest automated build from the `${{ github.ref_name }}` branch.
+          
+          ### 📥 Download
+          - [Download app-debug.apk](https://github.com/${{ github.repository }}/releases/download/android-latest/app-debug.apk)
+          
+          ### 🛠 Installation
+          1. Download `app-debug.apk`
+          2. Install on your Android device
+          3. Grant notification access
+          
+          _Last updated: ${{ github.event.head_commit.timestamp }}_
+        draft: false
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create Versioned Release
       if: startsWith(github.ref, 'refs/tags/android-v')
       uses: softprops/action-gh-release@v1
       with:
         files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
         body: |
-          ## Bank Notifier Android App
+          ## Bank Notifier Android App ${{ github.ref_name }}
           
           ### Installation
           1. Download `app-debug.apk`
