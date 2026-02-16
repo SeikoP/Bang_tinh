@@ -30,7 +30,7 @@ psutil==6.1.1
 
 # QR Code Generation
 qrcode==8.0
-pillow==11.1.0
+pillow>=11.1.0
 
 # Security and Cryptography (for license validation)
 cryptography==46.0.4
@@ -43,7 +43,7 @@ cffi==2.0.0
 edge-tts>=7.2.7
 num2words==0.5.13
 pyttsx3==2.98
-pywin32==308
+pywin32>=308
 
 # Environment Variables
 python-dotenv==1.0.0
