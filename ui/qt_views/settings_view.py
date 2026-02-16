@@ -3,6 +3,9 @@ Settings View - Cài đặt
 Modern Premium Design
 """
 
+import json
+from pathlib import Path
+
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFrame,
                              QHBoxLayout, QLabel, QMessageBox, QPushButton,
@@ -50,14 +53,8 @@ class SettingsView(QWidget):
                 ip = s.getsockname()[0]
                 s.close()
 
-                # Get port from config
+                # Get port and secret key from config
                 port = 5005
-                if self.container:
-                    config = self.container.get("config")
-                    if config:
-                        port = config.notification_port
-
-                # Get secret key
                 secret_key = ""
                 if self.container:
                     config = self.container.get("config")
@@ -67,8 +64,6 @@ class SettingsView(QWidget):
 
                 # Generate QR code with JSON data
                 # Using short keys to keep QR simple: h=host, p=port, k=key
-                import json
-
                 qr_data = json.dumps({"h": ip, "p": port, "k": secret_key})
 
                 qr = qrcode.QRCode(version=1, box_size=10, border=2)
@@ -539,7 +534,7 @@ class SettingsView(QWidget):
         )
         return content
 
-    def _info_row(self, label: str, value: str, color: str = None) -> QHBoxLayout:
+    def _info_row(self, label: str, value: str, color: str | None = None) -> QHBoxLayout:
         row = QHBoxLayout()
         lbl = QLabel(label + ":")
         lbl.setObjectName("subtitle")
@@ -580,8 +575,6 @@ class SettingsView(QWidget):
                 if self.container:
                     bs = self.container.get("backup_service")
                     if bs:
-                        from pathlib import Path
-
                         bs.restore_backup(Path(f_path))
                         QMessageBox.information(
                             self, "Thành công", "Đã khôi phục. Hãy khởi động lại."

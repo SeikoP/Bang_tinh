@@ -3,6 +3,8 @@ Status Indicator Widget - Shows server connection state in sidebar
 Provides visual feedback: 🟢 Running / 🔴 Stopped / 🟡 Starting
 """
 
+import time
+
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QBrush, QColor, QPainter
 from PyQt6.QtWidgets import QFrame, QHBoxLayout, QLabel, QWidget
@@ -120,8 +122,6 @@ class StatusIndicator(QFrame):
 
     def record_notification(self):
         """Record that a notification was received (for no-data detection)"""
-        import time
-
         self._last_notification_time = int(time.time() * 1000)
 
     def check_no_data(self):
@@ -130,8 +130,6 @@ class StatusIndicator(QFrame):
             return
         if self._last_notification_time is None:
             return  # No notifications yet, don't warn
-
-        import time
 
         now = int(time.time() * 1000)
         elapsed = now - self._last_notification_time

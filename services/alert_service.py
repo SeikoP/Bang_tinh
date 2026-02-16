@@ -29,7 +29,7 @@ class Alert:
     message: str
     product_id: Optional[int] = None
     product_name: Optional[str] = None
-    timestamp: datetime = None
+    timestamp: Optional[datetime] = None
 
     def __post_init__(self):
         if self.timestamp is None:

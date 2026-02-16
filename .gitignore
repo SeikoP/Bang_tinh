@@ -51,7 +51,9 @@ data/cache/*
 # Build artifacts
 build/
 dist/
+Output/
 *.spec.bak
+*.manifest
 
 # OS
 .DS_Store
@@ -79,3 +81,10 @@ android_notifier/app/build/
 
 # Ruff cache
 .ruff_cache/
+
+# TTS Cache
+tts_cache/
+
+# PyInstaller
+*.pyo
+*.pyd

@@ -3,14 +3,10 @@ Export Service - Xuất báo cáo PDF và Excel
 """
 
 import logging
-import os
-# Import config
-import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import EXPORT_DATE_FORMAT, EXPORT_DIR
 from core.exceptions import AppException, ValidationError
 from database import (HistoryRepository, SessionData, SessionHistory,
@@ -20,7 +16,7 @@ from database import (HistoryRepository, SessionData, SessionHistory,
 class ExportService:
     """Service xuất báo cáo với error handling và logging"""
 
-    def __init__(self, export_dir: Path = None, logger: logging.Logger = None):
+    def __init__(self, export_dir: Optional[Path] = None, logger: Optional[logging.Logger] = None):
         """
         Initialize export service with dependencies.
 
@@ -33,7 +29,7 @@ class ExportService:
 
         # Tạo thư mục export nếu chưa có
         try:
-            os.makedirs(self.export_dir, exist_ok=True)
+            Path(self.export_dir).mkdir(parents=True, exist_ok=True)
             self.logger.info(f"Export directory initialized: {self.export_dir}")
         except OSError as e:
             self.logger.error(f"Failed to create export directory: {e}")
@@ -43,7 +39,7 @@ class ExportService:
                 {"path": str(self.export_dir), "error": str(e)},
             ) from e
 
-    def export_current_session_to_text(self, filename: str = None) -> str:
+    def export_current_session_to_text(self, filename: Optional[str] = None) -> str:
         """
         Xuất phiên hiện tại ra file text.
 
@@ -94,7 +90,7 @@ class ExportService:
             ) from e
 
     def export_history_to_text(
-        self, history_id: int, filename: str = None
+        self, history_id: int, filename: Optional[str] = None
     ) -> Optional[str]:
         """
         Xuất lịch sử phiên ra file text.
@@ -204,7 +200,7 @@ class ExportService:
 
         return "\n".join(lines)
 
-    def export_to_csv(self, filename: str = None) -> str:
+    def export_to_csv(self, filename: Optional[str] = None) -> str:
         """
         Xuất phiên hiện tại ra file CSV.
 
