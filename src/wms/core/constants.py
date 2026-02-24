@@ -70,3 +70,26 @@ TEST_PACKAGES = {
 
 # Combined set for notification filtering
 ALL_BANK_PACKAGES = BANK_PACKAGES | TEST_PACKAGES
+
+# ── App Info ──
+APP_NAME = "WMS"
+APP_VERSION = "2.0.0"
+APP_AUTHOR = "WAREHOUSE"
+
+# ── Export Settings ──
+EXPORT_DATE_FORMAT = "%Y-%m-%d_%H%M%S"
+PDF_PAGE_SIZE = "A4"
+
+# ── Default Units ──
+DEFAULT_UNITS = [
+    {"name": "Thùng", "char": "t"},
+    {"name": "Vỉ", "char": "v"},
+    {"name": "Gói", "char": "g"},
+    {"name": "Két", "char": "k"},
+    {"name": "Hộp", "char": "h"},
+    {"name": "Chai", "char": "c"},
+]
+
+# ── Pagination ──
+ITEMS_PER_PAGE = 20
+HISTORY_DAYS_DEFAULT = 30

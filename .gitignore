@@ -1,27 +1,31 @@
-# Python
+# ========================================
+# WMS Project .gitignore
+# ========================================
+
+# Python bytecode & artifacts
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyo
+*.pyd
 .Python
 *.egg-info/
-dist/
-build/
 *.egg
-.__pycache__
-*.pyc
+
 # Virtual Environment
 .venv/
 venv/
 ENV/
 env/
 
-# IDE
+# IDE / Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.kiro/
 
 # Testing
 .pytest_cache/
@@ -30,8 +34,13 @@ env/
 htmlcov/
 coverage.xml
 *.cover
+.mypy_cache/
+.ruff_cache/
 
-# Data (runtime)
+# Security — never commit secret keys
+.secret_key
+
+# Runtime data
 data/logs/*.log
 data/logs/*.log.*
 data/exports/*
@@ -48,8 +57,7 @@ data/cache/*
 *.db-wal
 *.db-shm
 
-# Build artifacts
-build/
+# Build output (NOT the build/ config directory)
 dist/
 Output/
 *.spec.bak
@@ -69,22 +77,11 @@ desktop.ini
 logs/
 *.log
 
-# Android
-android/local.properties
-android/.gradle/
-android/build/
-android/app/build/
+# Android notifier build artifacts
 android_notifier/local.properties
 android_notifier/.gradle/
 android_notifier/build/
 android_notifier/app/build/
 
-# Ruff cache
-.ruff_cache/
-
 # TTS Cache
 tts_cache/
-
-# PyInstaller
-*.pyo
-*.pyd

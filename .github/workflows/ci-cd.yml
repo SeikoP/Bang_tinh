@@ -39,7 +39,7 @@ jobs:
       
       - name: Run flake8 (critical errors only)
         run: |
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv,build,dist,__pycache__,.hypothesis
+          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=__pycache__,.hypothesis
 
   test:
     runs-on: windows-latest
@@ -55,12 +55,12 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -e .
           pip install -r requirements-dev.txt
       
       - name: Run tests with coverage
         run: |
-          pytest --cov=. --cov-report=xml --cov-report=term --cov-config=.coveragerc -x -q
+          pytest --cov=wms --cov-report=xml --cov-report=term -x -q
       
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
@@ -93,18 +93,18 @@ jobs:
           path: |
             build
             ~\AppData\Local\pyinstaller
-          key: ${{ runner.os }}-pyinstaller-${{ hashFiles('warehouse_app.spec', 'requirements.txt', 'main.py') }}
+          key: ${{ runner.os }}-pyinstaller-${{ hashFiles('build/warehouse_app.spec', 'requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pyinstaller-
       
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -e .
           pip install pyinstaller
       
       - name: Build executable
         run: |
-          pyinstaller warehouse_app.spec
+          pyinstaller build/warehouse_app.spec
       
       - name: Verify build
         run: |
@@ -146,12 +146,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -e .
           pip install pyinstaller
       
       - name: Build executable
         run: |
-          pyinstaller warehouse_app.spec
+          pyinstaller build/warehouse_app.spec
 
       - name: Install Inno Setup
         if: steps.cache-inno.outputs.cache-hit != 'true'
@@ -160,7 +160,7 @@ jobs:
       
       - name: Create installer
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" build\installer\setup.iss
 
       - name: Create Rolling Release
         uses: softprops/action-gh-release@v2
@@ -222,12 +222,12 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -e .
           pip install pyinstaller
       
       - name: Build executable
         run: |
-          pyinstaller warehouse_app.spec
+          pyinstaller build/warehouse_app.spec
       
       - name: Install Inno Setup
         if: steps.cache-inno.outputs.cache-hit != 'true'
@@ -236,7 +236,7 @@ jobs:
       
       - name: Create installer
         run: |
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\setup.iss
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" build\installer\setup.iss
       
       - name: Get release version
         id: get_version

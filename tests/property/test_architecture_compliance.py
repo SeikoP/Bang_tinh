@@ -10,8 +10,8 @@ import pytest
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 
-from core.config import Config
-from core.container import Container
+from wms.core.config import Config
+from wms.core.container import Container
 
 # Strategies
 

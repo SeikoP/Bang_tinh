@@ -5,8 +5,8 @@ Test các logic tính toán trong tab Tính tiền
 
 import pytest
 
-from core.exceptions import ValidationError
-from services.calculator import CalculatorService
+from wms.core.exceptions import ValidationError
+from wms.services.calculator import CalculatorService
 
 
 class TestCalculatorService:

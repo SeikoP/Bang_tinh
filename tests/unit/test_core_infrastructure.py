@@ -6,13 +6,13 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from core.config import Config
-from core.container import Container
-from core.exceptions import (AppException, BusinessRuleError,
+from wms.core.config import Config
+from wms.core.container import Container
+from wms.core.exceptions import (AppException, BusinessRuleError,
                              ConfigurationError, DatabaseError, SecurityError,
                              ValidationError)
-from utils.error_handler import ErrorHandler
-from utils.logging import LoggerFactory
+from wms.utils.error_handler import ErrorHandler
+from wms.utils.logging import LoggerFactory
 
 
 class TestConfig:

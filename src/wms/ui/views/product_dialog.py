@@ -1,9 +1,13 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
+﻿from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QComboBox, QDialog, QDoubleSpinBox, QFormLayout,
                              QHBoxLayout, QLineEdit, QMessageBox, QPushButton,
                              QSpinBox, QVBoxLayout)
 
+<<<<<<<< HEAD:src/wms/ui/views/product_dialog.py
 from ...core.constants import DEFAULT_UNITS
+========
+from core.constants import DEFAULT_UNITS
+>>>>>>>> 7d399a9b3b4c170a1f26da7f8bb4a36cbe0e1cdf:src/ui/qt_views/product_dialog.py
 
 
 class ProductDialog(QDialog):

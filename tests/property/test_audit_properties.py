@@ -11,10 +11,10 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from audit.architecture_analyzer import ArchitectureAnalyzer
-from audit.quality_analyzer import QualityAnalyzer
-from audit.reporters import RiskLevel
-from audit.security_analyzer import SecurityAnalyzer
+from wms.audit.architecture_analyzer import ArchitectureAnalyzer
+from wms.audit.quality_analyzer import QualityAnalyzer
+from wms.audit.reporters import RiskLevel
+from wms.audit.security_analyzer import SecurityAnalyzer
 
 # Strategies for generating test code
 

@@ -1,7 +1,7 @@
 """Security test: SQL Injection vulnerabilities"""
 
-from database.connection import get_connection
-from database.repositories import BankRepository
+from wms.database.connection import get_connection
+from wms.database.repositories import BankRepository
 
 
 class TestSQLInjection:

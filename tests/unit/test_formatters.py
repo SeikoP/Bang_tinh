@@ -2,12 +2,9 @@
 Unit tests cho utils/formatters.py
 """
 
-import os
-import sys
 import unittest
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.formatters import (format_currency, format_to_display,
+from wms.utils.formatters import (format_currency, format_to_display,
                               parse_to_small_units)
 
 

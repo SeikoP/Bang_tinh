@@ -3,7 +3,7 @@ import pytest
 import threading
 import time
 import requests
-from core.config import Config
+from wms.core.config import Config
 
 class TestServer:
     def __init__(self, port=5005):

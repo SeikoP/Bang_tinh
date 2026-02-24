@@ -1,12 +1,13 @@
-"""
+﻿"""
 Quick Bank Peek Widget - Fast transaction preview
 """
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QFont
-from PyQt6.QtWidgets import (QFrame, QHBoxLayout, QHeaderView, QLabel,
-                             QPushButton, QTableWidget, QTableWidgetItem,
-                             QVBoxLayout)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QFont
+from PySide6.QtWidgets import (
+    QFrame, QHBoxLayout, QHeaderView, QLabel,
+    QPushButton, QTableWidget, QTableWidgetItem, QVBoxLayout
+)
 
 from ..theme import AppColors
 

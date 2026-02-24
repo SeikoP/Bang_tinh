@@ -3,19 +3,16 @@ Unit tests cho database repositories
 """
 
 import os
-import sys
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 # Use test database
-import config
+from wms.core import config
 
 config.DB_PATH = Path(__file__).parent / "test_storage.db"
 
-from database.connection import init_db
-from database.repositories import ProductRepository, SessionRepository
+from wms.database.connection import init_db
+from wms.database.repositories import ProductRepository, SessionRepository
 
 
 class TestProductRepository(unittest.TestCase):

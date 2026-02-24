@@ -7,9 +7,27 @@ from contextlib import contextmanager
 from typing import Generator
 
 # Import centralized paths
+<<<<<<<< HEAD:src/wms/database/connection.py
 from ..core.paths import DATABASE
 
 DB_PATH = DATABASE
+========
+try:
+    # Keep DB path aligned with runtime bootstrap config
+    from core.config import DATABASE
+
+    DB_PATH = DATABASE
+except ImportError:
+    try:
+        from app.core.paths import DATABASE
+
+        DB_PATH = DATABASE
+    except ImportError:
+        # Fallback: compute from current file location
+        from pathlib import Path as _Path
+
+        DB_PATH = _Path(__file__).resolve().parents[2] / "storage.db"
+>>>>>>>> 7d399a9b3b4c170a1f26da7f8bb4a36cbe0e1cdf:src/database/connection.py
 
 # Import connection pool
 from .connection_pool import get_pooled_connection, initialize_pool
@@ -187,6 +205,21 @@ def init_db():
                 change_type TEXT NOT NULL,
                 changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
+            )
+        """)
+
+        # Bảng tasks (ghi chú công việc)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_type TEXT NOT NULL,
+                description TEXT NOT NULL,
+                customer_name TEXT,
+                amount REAL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                completed INTEGER DEFAULT 0,
+                completed_at TEXT,
+                notes TEXT
             )
         """)
 

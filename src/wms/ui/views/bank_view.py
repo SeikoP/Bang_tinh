@@ -1,12 +1,15 @@
-"""
+﻿"""
 Bank View - Transaction history and raw logs
 """
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QFont
-from PyQt6.QtWidgets import (QComboBox, QHBoxLayout, QHeaderView, QLabel,
-                             QPushButton, QTableWidget, QTableWidgetItem,
-                             QTabWidget, QVBoxLayout, QWidget)
+import html
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor, QFont
+from PySide6.QtWidgets import (
+    QComboBox, QHBoxLayout, QHeaderView, QLabel,
+    QPushButton, QTableWidget, QTableWidgetItem,
+    QTabWidget, QVBoxLayout, QWidget
+)
 
 from ...database.repositories import BankRepository
 from ..theme import AppColors
@@ -87,20 +90,10 @@ class BankView(QWidget):
         filter_layout.addWidget(filter_label)
 
         self.source_filter = QComboBox()
-        self.source_filter.addItems(
-            [
-                "Tất cả",
-                "MoMo",
-                "VietinBank",
-                "Vietcombank",
-                "MB Bank",
-                "BIDV",
-                "ACB",
-                "TPBank",
-                "Techcombank",
-                "VNPay",
-            ]
-        )
+        self.source_filter.addItems([
+            "Tất cả", "MoMo", "VietinBank", "Vietcombank", "MB Bank",
+            "BIDV", "ACB", "TPBank", "Techcombank", "VNPay",
+        ])
         self.source_filter.setFixedWidth(150)
         self.source_filter.currentTextChanged.connect(self.apply_filter)
         filter_layout.addWidget(self.source_filter)
@@ -214,7 +207,6 @@ class BankView(QWidget):
         except Exception as e:
             # Log error silently
             import logging
-
             logging.error(f"Error in add_notif: {e}")
 
     def add_raw_log(self, time_str, package, raw_message):
@@ -224,9 +216,8 @@ class BankView(QWidget):
     def add_system_log(self, message):
         """Add system log (Ping/Connection status) to raw logs"""
         from datetime import datetime
-
         time_str = datetime.now().strftime("%H:%M:%S")
-
+        
         row = 0
         self.logs_table.insertRow(row)
 
@@ -243,10 +234,10 @@ class BankView(QWidget):
 
         # Message
         msg_item = QTableWidgetItem(message)
-        msg_item.setFont(QFont("Segoe UI Emoji", 9))  # Better emoji support
+        msg_item.setFont(QFont("Segoe UI Emoji", 9)) # Better emoji support
         msg_item.setForeground(QColor(AppColors.TEXT))
         self.logs_table.setItem(row, 2, msg_item)
-
+        
         # Limit logs
         while self.logs_table.rowCount() > 100:
             self.logs_table.removeRow(self.logs_table.rowCount() - 1)
@@ -375,7 +366,7 @@ class BankView(QWidget):
         # Clear tables
         self.table.setRowCount(0)
         self.logs_table.setRowCount(0)
-
+        
         # Disconnect signals
         try:
             self.source_filter.currentTextChanged.disconnect()

@@ -1,6 +1,6 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QFrame,
+﻿from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QFrame,
                              QHBoxLayout, QHeaderView, QLabel, QLineEdit,
                              QMessageBox, QPushButton, QSizePolicy,
                              QTableWidget, QTableWidgetItem, QTextEdit,

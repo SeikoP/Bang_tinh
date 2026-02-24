@@ -1,8 +1,8 @@
-"""Centralized error handling with logging and user notification"""
+﻿"""Centralized error handling with logging and user notification"""
 
 import logging
 
-from PyQt6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QMessageBox
 
 from ..core.exceptions import AppException
 
