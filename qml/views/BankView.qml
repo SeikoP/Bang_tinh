@@ -5,7 +5,7 @@ import "../components"
 import "../dialogs"
 
 /**
- * BankView — Bank transaction notifications.
+ * BankView — Bank transaction notifications with tabs.
  */
 Item {
     id: bankViewRoot
@@ -14,158 +14,234 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        spacing: 0
 
-        // Header
-        RowLayout {
+        // Tab Bar
+        TabBar {
+            id: bankTabBar
             Layout.fillWidth: true
+            Material.accent: Theme.primary
 
-            Label {
-                text: "💰 Giao dịch Ngân hàng"
-                font.pixelSize: 18
-                font.weight: Font.Medium
-                color: "#1F2937"
+            TabButton {
+                text: "Giao dịch"
+                font: Theme.typography.labelLarge
+                width: implicitWidth
             }
 
-            Item { Layout.fillWidth: true }
-
-            // Source filter
-            ComboBox {
-                id: sourceFilter
-                Layout.preferredWidth: 180
-                model: ["Tất cả"].concat(bankVM.getAvailableSources())
-                onCurrentTextChanged: {
-                    bankVM.sourceFilter = currentIndex === 0 ? "" : currentText
-                }
-            }
-
-            Button {
-                text: "Xóa tất cả"
-                flat: true
-                Material.foreground: "#DC2626"
-                onClicked: clearConfirm.show(
-                    "Xóa tất cả?",
-                    "Tất cả giao dịch ngân hàng sẽ bị xóa.",
-                    function() { bankVM.clearAll() }
-                )
+            TabButton {
+                text: "Logs"
+                font: Theme.typography.labelLarge
+                width: implicitWidth
             }
         }
 
-        // Transaction list
-        ListView {
+        StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            clip: true
-            model: bankVM.notifications
-            spacing: 6
+            currentIndex: bankTabBar.currentIndex
 
-            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-
-            delegate: Rectangle {
-                width: parent ? parent.width : 0
-                height: 72
-                radius: 12
-                color: bankItemMouse.containsMouse ? "#F3F4F6" : "white"
-                border.width: 1
-                border.color: "#F3F4F6"
-
-                RowLayout {
+            // ━━━ TAB 0: Transactions ━━━
+            Item {
+                ColumnLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    spacing: 12
+                    anchors.margins: Theme.spacingMd
+                    spacing: Theme.spacingSm
 
-                    // Source icon
-                    Rectangle {
-                        width: 44; height: 44
-                        radius: 10
-                        color: {
-                            var src = model.source || ""
-                            if (src.indexOf("MoMo") >= 0) return "#ffe0f0"
-                            if (src.indexOf("Vietin") >= 0) return "#dbeafe"
-                            return "#d1fae5"
+                    // Header
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Label {
+                            text: "Giao dịch Ngân hàng"
+                            font: Theme.typography.titleMedium
+                            color: Theme.backgroundText
                         }
 
+                        Item { Layout.fillWidth: true }
+
+                        // Source filter
+                        ComboBox {
+                            id: sourceFilter
+                            Layout.preferredWidth: 180
+                            model: ["Tất cả"].concat(bankVM.getAvailableSources())
+                            onCurrentTextChanged: {
+                                bankVM.sourceFilter = currentIndex === 0 ? "" : currentText
+                            }
+                        }
+
+                        Button {
+                            text: "Xóa tất cả"
+                            flat: true
+                            Material.foreground: Theme.error
+                            onClicked: clearConfirm.show(
+                                "Xóa tất cả?",
+                                "Tất cả giao dịch ngân hàng sẽ bị xóa.",
+                                function() { bankVM.clearAll() }
+                            )
+                        }
+                    }
+
+                    // Transaction list
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        clip: true
+                        model: bankVM.notifications
+                        spacing: 6
+
+                        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                        delegate: Rectangle {
+                            width: parent ? parent.width : 0
+                            height: 72
+                            radius: Theme.radiusLg
+                            color: bankItemMouse.containsMouse ? Theme.surfaceVariant : Theme.surface
+                            border.width: 1
+                            border.color: Theme.divider
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: Theme.spacingMd
+                                anchors.rightMargin: Theme.spacingMd
+                                spacing: Theme.spacingSm
+
+                                // Source indicator
+                                Rectangle {
+                                    width: 44; height: 44
+                                    radius: Theme.radiusMd
+                                    color: {
+                                        var src = model.source || ""
+                                        if (src.indexOf("MoMo") >= 0) return Theme.withAlpha(Theme.secondary, 0.1)
+                                        if (src.indexOf("Vietin") >= 0) return Theme.withAlpha(Theme.info, 0.1)
+                                        return Theme.withAlpha(Theme.primary, 0.1)
+                                    }
+
+                                    Label {
+                                        anchors.centerIn: parent
+                                        text: {
+                                            var src = model.source || ""
+                                            if (src.indexOf("MoMo") >= 0) return "M"
+                                            if (src.indexOf("Vietin") >= 0) return "V"
+                                            return "B"
+                                        }
+                                        font.pixelSize: 18
+                                        font.weight: Font.Bold
+                                        color: {
+                                            var src = model.source || ""
+                                            if (src.indexOf("MoMo") >= 0) return Theme.secondary
+                                            if (src.indexOf("Vietin") >= 0) return Theme.info
+                                            return Theme.primary
+                                        }
+                                    }
+                                }
+
+                                // Transaction info
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 2
+
+                                    Label {
+                                        text: model.senderName || "Không rõ"
+                                        font: Theme.typography.labelLarge
+                                        color: Theme.backgroundText
+                                    }
+
+                                    Label {
+                                        Layout.fillWidth: true
+                                        text: model.content || ""
+                                        font: Theme.typography.bodySmall
+                                        color: Theme.surfaceVariantText
+                                        elide: Text.ElideRight
+                                        maximumLineCount: 1
+                                    }
+
+                                    RowLayout {
+                                        spacing: Theme.spacingSm
+                                        Label {
+                                            text: model.source || ""
+                                            font: Theme.typography.labelSmall; color: Theme.textDisabled
+                                        }
+                                        Label {
+                                            text: model.timeStr || ""
+                                            font: Theme.typography.labelSmall; color: Theme.textDisabled
+                                        }
+                                    }
+                                }
+
+                                // Amount
+                                Label {
+                                    text: model.amount || "0"
+                                    font: Theme.typography.titleMedium
+                                    color: Theme.primary
+                                }
+
+                                // Delete
+                                RoundButton {
+                                    text: "Xóa"
+                                    width: 48; height: 32
+                                    flat: true
+                                    font: Theme.typography.labelSmall
+                                    Material.foreground: Theme.error
+                                    onClicked: bankVM.deleteNotification(model.notificationId)
+                                }
+                            }
+
+                            MouseArea {
+                                id: bankItemMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                propagateComposedEvents: true
+                                onPressed: function(mouse) { mouse.accepted = false }
+                            }
+                        }
+
+                        // Empty state
                         Label {
                             anchors.centerIn: parent
-                            text: {
-                                var src = model.source || ""
-                                if (src.indexOf("MoMo") >= 0) return "📱"
-                                if (src.indexOf("Vietin") >= 0) return "🏦"
-                                return "💳"
-                            }
-                            font.pixelSize: 20
+                            visible: bankVM.notifications.count === 0
+                            text: "Chưa có giao dịch nào"
+                            font: Theme.typography.bodyLarge
+                            color: Theme.textDisabled
                         }
                     }
-
-                    // Transaction info
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        Label {
-                            text: model.senderName || "Không rõ"
-                            font.pixelSize: 14
-                            font.weight: Font.Medium
-                            color: "#1F2937"
-                        }
-
-                        Label {
-                            Layout.fillWidth: true
-                            text: model.content || ""
-                            font.pixelSize: 12
-                            color: "#6B7280"
-                            elide: Text.ElideRight
-                            maximumLineCount: 1
-                        }
-
-                        RowLayout {
-                            spacing: 12
-                            Label {
-                                text: model.source || ""
-                                font.pixelSize: 11; color: "#9CA3AF"
-                            }
-                            Label {
-                                text: model.timeStr || ""
-                                font.pixelSize: 11; color: "#9CA3AF"
-                            }
-                        }
-                    }
-
-                    // Amount
-                    Label {
-                        text: model.amount || "0"
-                        font.pixelSize: 18
-                        font.weight: Font.Bold
-                        color: "#10B981"
-                    }
-
-                    // Delete
-                    RoundButton {
-                        text: "🗑️"
-                        width: 32; height: 32
-                        flat: true
-                        onClicked: bankVM.deleteNotification(model.notificationId)
-                    }
-                }
-
-                MouseArea {
-                    id: bankItemMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    propagateComposedEvents: true
-                    onPressed: function(mouse) { mouse.accepted = false }
                 }
             }
 
-            // Empty state
-            Label {
-                anchors.centerIn: parent
-                visible: bankVM.notifications.count === 0
-                text: "Chưa có giao dịch nào"
-                font.pixelSize: 16
-                color: "#9CA3AF"
+            // ━━━ TAB 1: Raw Logs ━━━
+            Item {
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingMd
+                    spacing: Theme.spacingSm
+
+                    Label {
+                        text: "Nhật ký hệ thống"
+                        font: Theme.typography.titleMedium
+                        color: Theme.backgroundText
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        radius: Theme.radiusMd
+                        color: Theme.backgroundSecondary
+                        border.width: 1
+                        border.color: Theme.outline
+
+                        ScrollView {
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingSm
+
+                            Label {
+                                width: parent.width
+                                text: bankVM.rawLogs || "Chưa có log nào"
+                                font: Qt.font({ family: "Consolas", pixelSize: 12 })
+                                color: Theme.surfaceVariantText
+                                wrapMode: Text.WordWrap
+                            }
+                        }
+                    }
+                }
             }
         }
     }

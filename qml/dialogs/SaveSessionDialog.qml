@@ -28,11 +28,12 @@ Dialog {
 
     ColumnLayout {
         width: parent.width
-        spacing: 16
+        spacing: Theme.spacingMd
 
         Label {
             text: "Nhập tên ca và ghi chú trước khi lưu."
-            font.pixelSize: 13; color: "#6B7280"
+            font: Theme.typography.labelLarge
+            color: Theme.surfaceVariantText
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }
@@ -54,20 +55,21 @@ Dialog {
         // Summary
         Rectangle {
             Layout.fillWidth: true
-            height: 48; radius: 8
-            color: "#ECFDF5"
+            height: 48; radius: Theme.radiusSm
+            color: Theme.successContainer
 
             RowLayout {
                 anchors.fill: parent; anchors.margins: 12
                 Label {
                     text: "Tổng tiền:"
-                    font.pixelSize: 13; color: "#374151"
+                    font: Theme.typography.labelLarge
+                    color: Theme.textSecondary
                 }
                 Item { Layout.fillWidth: true }
                 Label {
                     text: calculationVM.totalAmount
-                    font.pixelSize: 16; font.weight: Font.Bold
-                    color: "#047857"
+                    font: Theme.typography.titleSmall
+                    color: Theme.primaryDark
                 }
             }
         }

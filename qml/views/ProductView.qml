@@ -14,31 +14,26 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+        anchors.margins: Theme.spacingMd
+        spacing: Theme.spacingMd
 
         // Header
         RowLayout {
             Layout.fillWidth: true
 
             Label {
-                text: "📦 Quản lý Sản phẩm"
-                font.pixelSize: 18
-                font.weight: Font.Medium
-                color: "#1F2937"
+                text: "Quản lý Sản phẩm"
+                font: Theme.typography.titleMedium
+                color: Theme.backgroundText
             }
 
             Item { Layout.fillWidth: true }
 
             Button {
                 text: "+ Thêm sản phẩm"
-                Material.background: "#10b981"
-                Material.foreground: "white"
-                onClicked: {
-                    productDialog.editMode = false
-                    productDialog.clear()
-                    productDialog.open()
-                }
+                Material.background: Theme.primary
+                Material.foreground: Theme.primaryText
+                onClicked: productDialog.openForNew()
             }
         }
 
@@ -48,28 +43,36 @@ Item {
             Layout.fillHeight: true
             clip: true
             model: productVM.products
-            spacing: 8
+            spacing: Theme.spacingSm
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
             delegate: Rectangle {
                 width: parent ? parent.width : 0
                 height: 72
-                radius: 12
-                color: prodCardMouse.containsMouse ? "#F3F4F6" : "white"
+                radius: Theme.radiusLg
+                color: prodCardMouse.containsMouse ? Theme.surfaceVariant : Theme.surface
                 border.width: 1
-                border.color: "#F3F4F6"
+                border.color: Theme.divider
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    spacing: 12
+                    anchors.leftMargin: Theme.spacingMd
+                    anchors.rightMargin: Theme.spacingMd
+                    spacing: Theme.spacingSm
 
                     // Favorite
-                    Label {
-                        text: model.isFavorite ? "⭐" : "☆"
-                        font.pixelSize: 20
+                    Rectangle {
+                        width: 32; height: 32; radius: 16
+                        color: model.isFavorite ? Theme.withAlpha(Theme.warningColor, 0.15) : Theme.surfaceVariant
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: model.isFavorite ? "★" : "☆"
+                            font.pixelSize: 16
+                            color: model.isFavorite ? Theme.warningColor : Theme.textDisabled
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
@@ -84,20 +87,19 @@ Item {
 
                         Label {
                             text: model.name || ""
-                            font.pixelSize: 15
-                            font.weight: Font.Medium
-                            color: "#1F2937"
+                            font: Theme.typography.labelLarge
+                            color: Theme.backgroundText
                         }
 
                         RowLayout {
-                            spacing: 12
+                            spacing: Theme.spacingSm
                             Label {
                                 text: "ĐV: " + (model.largeUnit || "")
-                                font.pixelSize: 12; color: "#6B7280"
+                                font: Theme.typography.bodySmall; color: Theme.surfaceVariantText
                             }
                             Label {
                                 text: "Quy đổi: " + (model.conversion || 1)
-                                font.pixelSize: 12; color: "#6B7280"
+                                font: Theme.typography.bodySmall; color: Theme.surfaceVariantText
                             }
                         }
                     }
@@ -105,9 +107,8 @@ Item {
                     // Price
                     Label {
                         text: model.unitPrice ? Number(model.unitPrice).toLocaleString('vi-VN') + " đ" : ""
-                        font.pixelSize: 16
-                        font.weight: Font.Bold
-                        color: "#10B981"
+                        font: Theme.typography.titleSmall
+                        color: Theme.primary
                     }
 
                     // Active badge
@@ -115,35 +116,35 @@ Item {
                         width: badgeLabel.implicitWidth + 16
                         height: 24
                         radius: 12
-                        color: model.isActive ? "#d1fae5" : "#fee2e2"
+                        color: model.isActive ? Theme.successContainer : Theme.errorContainer
 
                         Label {
                             id: badgeLabel
                             anchors.centerIn: parent
                             text: model.isActive ? "Active" : "Inactive"
-                            font.pixelSize: 11
-                            font.weight: Font.Medium
-                            color: model.isActive ? "#047857" : "#DC2626"
+                            font: Theme.typography.labelSmall
+                            color: model.isActive ? Theme.primaryDark : Theme.error
                         }
                     }
 
                     // Edit button
                     RoundButton {
-                        text: "✏️"
-                        width: 36; height: 36
+                        text: "Sửa"
+                        width: 48; height: 36
                         flat: true
+                        font: Theme.typography.labelSmall
                         onClicked: {
-                            productDialog.editMode = true
-                            productDialog.loadProduct(model.productId, model.name, model.largeUnit, model.conversion, model.unitPrice)
-                            productDialog.open()
+                            productDialog.openForEdit(model.productId, model.name, model.largeUnit, model.conversion, model.unitPrice)
                         }
                     }
 
                     // Delete button
                     RoundButton {
-                        text: "🗑️"
-                        width: 36; height: 36
+                        text: "Xóa"
+                        width: 48; height: 36
                         flat: true
+                        font: Theme.typography.labelSmall
+                        Material.foreground: Theme.error
                         onClicked: {
                             deleteConfirm.show("Xóa sản phẩm?", "Sản phẩm '" + model.name + "' sẽ bị vô hiệu hóa.", function() {
                                 productVM.deleteProduct(model.productId)
@@ -162,32 +163,40 @@ Item {
             }
         }
 
-        // ── Quick Price section ──
+        // Quick Price section
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 140
-            radius: 12
+            radius: Theme.radiusLg
             border.width: 1
-            border.color: "#E5E7EB"
+            border.color: Theme.outline
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 8
+                spacing: Theme.spacingSm
 
                 RowLayout {
                     Label {
-                        text: "💰 Giá nhanh"
-                        font.pixelSize: 14
-                        font.weight: Font.Medium
-                        color: "#1F2937"
+                        text: "Giá nhanh"
+                        font: Theme.typography.titleSmall
+                        color: Theme.backgroundText
                     }
                     Item { Layout.fillWidth: true }
+                    Button {
+                        text: "+ Thêm"
+                        flat: true
+                        font: Theme.typography.labelSmall
+                        Material.foreground: Theme.primary
+                        onClicked: {
+                            // TODO: open quick price add dialog
+                        }
+                    }
                 }
 
                 Flow {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Theme.spacingSm
 
                     Repeater {
                         model: productVM.quickPrices
@@ -195,16 +204,15 @@ Item {
                         delegate: Rectangle {
                             width: qpLabel.implicitWidth + 24
                             height: 32
-                            radius: 8
-                            color: qpMouse.containsMouse ? "#d1fae5" : "#F3F4F6"
+                            radius: Theme.radiusMd
+                            color: qpMouse.containsMouse ? Theme.primaryContainer : Theme.surfaceVariant
 
                             Label {
                                 id: qpLabel
                                 anchors.centerIn: parent
                                 text: (model.name || "") + ": " + (model.price ? Number(model.price).toLocaleString('vi-VN') : "0") + "đ"
-                                font.pixelSize: 12
-                                font.weight: Font.Medium
-                                color: "#047857"
+                                font: Theme.typography.labelMedium
+                                color: Theme.primaryDark
                             }
 
                             MouseArea {
@@ -225,7 +233,7 @@ Item {
 
     Connections {
         target: productVM
-        function onProductAdded() { globalToast.show("✅ Đã thêm sản phẩm!", "success") }
-        function onProductDeleted() { globalToast.show("🗑️ Đã xóa sản phẩm", "info") }
+        function onProductAdded() { globalToast.show("Đã thêm sản phẩm!", "success") }
+        function onProductDeleted() { globalToast.show("Đã xóa sản phẩm", "info") }
     }
 }

@@ -19,6 +19,11 @@ class SettingsViewModel(BaseViewModel):
     rowHeightChanged = Signal()
     widgetHeightChanged = Signal()
     ttsEnabledChanged = Signal()
+    ttsVolumeChanged = Signal()
+    autoBackupChanged = Signal()
+    settingsReset = Signal()
+    backupCreated = Signal()
+    backupRestored = Signal()
 
     def __init__(self, container=None, parent=None):
         super().__init__(container, parent)
@@ -26,10 +31,13 @@ class SettingsViewModel(BaseViewModel):
         self._widget_height = 32
         self._tts_enabled = True
         self._tts_voice = "vi-VN-HoaiMyNeural"
+        self._tts_volume = 80
         self._qr_code_data = ""
         self._machine_count = 1
         self._server_ip = ""
         self._server_port = 5000
+        self._auto_backup_enabled = False
+        self._last_backup_time = ""
 
     # ---- Properties ----
 
@@ -79,6 +87,26 @@ class SettingsViewModel(BaseViewModel):
         return self._qr_code_data
 
     qrCodeData = Property(str, _get_qr_code_data, notify=qrCodeChanged)
+
+    def _get_tts_volume(self) -> int:
+        return self._tts_volume
+
+    def _set_tts_volume(self, val: int):
+        if self._tts_volume != val:
+            self._tts_volume = val
+            self.ttsVolumeChanged.emit()
+
+    ttsVolume = Property(int, _get_tts_volume, _set_tts_volume, notify=ttsVolumeChanged)
+
+    def _get_auto_backup_enabled(self) -> bool:
+        return self._auto_backup_enabled
+
+    autoBackupEnabled = Property(bool, _get_auto_backup_enabled, notify=autoBackupChanged)
+
+    def _get_last_backup_time(self) -> str:
+        return self._last_backup_time
+
+    lastBackupTime = Property(str, _get_last_backup_time, notify=autoBackupChanged)
 
     machineCountChanged = Signal()
 
@@ -146,6 +174,32 @@ class SettingsViewModel(BaseViewModel):
         except Exception:
             pass
         return []
+
+    @Slot()
+    def testTts(self):
+        """Play a TTS test phrase."""
+        def _test():
+            tts_svc = self._get_service("tts_service")
+            if tts_svc:
+                tts_svc.speak("Xin chào, đây là giọng thử nghiệm.")
+        self._safe_call(_test, error_msg="TTS test failed")
+
+    @Slot()
+    def resetDefaults(self):
+        """Reset all settings to defaults."""
+        self._row_height = 38
+        self._widget_height = 32
+        self._tts_enabled = True
+        self._tts_voice = "vi-VN-HoaiMyNeural"
+        self._tts_volume = 80
+        self._machine_count = 1
+        self.rowHeightChanged.emit()
+        self.widgetHeightChanged.emit()
+        self.ttsEnabledChanged.emit()
+        self.ttsVoiceChanged.emit()
+        self.ttsVolumeChanged.emit()
+        self.machineCountChanged.emit()
+        self.settingsReset.emit()
 
     def _generate_qr_code(self):
         """Generate QR code data for Android pairing."""

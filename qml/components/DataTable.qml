@@ -4,10 +4,10 @@ import QtQuick.Layouts
 
 /**
  * DataTable — Reusable Material-styled table with headers and row delegates.
- * 
+ *
  * Properties:
  *   - model: ListModel or QAbstractListModel
- *   - columns: [{title, role, width, align}]
+ *   - columns: [{title, role, width, align, fillWidth}]
  *   - showIndex: bool — show row number column
  */
 Item {
@@ -16,8 +16,6 @@ Item {
     property var columns: []
     property bool showIndex: true
     property int rowHeight: 42
-    property color alternateRowColor: "#F9FAFB"
-    property color hoverColor: "#F3F4F6"
 
     signal rowClicked(int index)
     signal rowDoubleClicked(int index)
@@ -26,18 +24,17 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // ── Header ──
+        // Header
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 44
-            color: "#F9FAFB"
-            border.width: 0
+            color: Theme.backgroundSecondary
 
             Rectangle {
                 anchors.bottom: parent.bottom
                 width: parent.width
                 height: 1
-                color: "#E5E7EB"
+                color: Theme.outline
             }
 
             RowLayout {
@@ -46,14 +43,12 @@ Item {
                 anchors.rightMargin: 12
                 spacing: 0
 
-                // Index header
                 Label {
                     visible: tableRoot.showIndex
                     Layout.preferredWidth: 40
                     text: "#"
-                    font.pixelSize: 12
-                    font.weight: Font.Medium
-                    color: "#6B7280"
+                    font: Theme.typography.labelMedium
+                    color: Theme.surfaceVariantText
                     horizontalAlignment: Text.AlignCenter
                 }
 
@@ -63,9 +58,8 @@ Item {
                         Layout.preferredWidth: modelData.width || 100
                         Layout.fillWidth: modelData.fillWidth || false
                         text: modelData.title || ""
-                        font.pixelSize: 12
-                        font.weight: Font.Medium
-                        color: "#6B7280"
+                        font: Theme.typography.labelMedium
+                        color: Theme.surfaceVariantText
                         horizontalAlignment: modelData.align === "right"
                             ? Text.AlignRight
                             : modelData.align === "center"
@@ -77,7 +71,7 @@ Item {
             }
         }
 
-        // ── Body (scrollable) ──
+        // Body (scrollable)
         ListView {
             id: tableListView
             Layout.fillWidth: true
@@ -91,17 +85,21 @@ Item {
             }
 
             delegate: Rectangle {
+                id: rowDelegate
                 width: tableListView.width
                 height: tableRoot.rowHeight
                 color: tableRowMouse.containsMouse
-                    ? tableRoot.hoverColor
-                    : index % 2 === 0 ? "white" : tableRoot.alternateRowColor
+                    ? Theme.surfaceVariant
+                    : index % 2 === 0 ? Theme.surface : Theme.backgroundSecondary
+
+                // Store model data for access by inner Repeater
+                property var rowModel: model
 
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width
                     height: 1
-                    color: "#F3F4F6"
+                    color: Theme.divider
                 }
 
                 RowLayout {
@@ -115,25 +113,26 @@ Item {
                         visible: tableRoot.showIndex
                         Layout.preferredWidth: 40
                         text: (index + 1).toString()
-                        font.pixelSize: 13
-                        color: "#9CA3AF"
+                        font: Theme.typography.bodyMedium
+                        color: Theme.textDisabled
                         horizontalAlignment: Text.AlignCenter
                     }
 
-                    // Dynamic columns — delegate must access model roles
+                    // Dynamic columns — access role from outer delegate
                     Repeater {
                         model: tableRoot.columns
                         delegate: Label {
                             Layout.preferredWidth: modelData.width || 100
                             Layout.fillWidth: modelData.fillWidth || false
                             text: {
-                                // Access role from outer delegate's model
-                                var val = tableListView.model ? index : ""
-                                // Role access happens through the outer delegate context
+                                var role = modelData.role || ""
+                                if (role && rowDelegate.rowModel)
+                                    return rowDelegate.rowModel[role] !== undefined
+                                        ? rowDelegate.rowModel[role].toString() : ""
                                 return ""
                             }
-                            font.pixelSize: 13
-                            color: "#1F2937"
+                            font: Theme.typography.bodyMedium
+                            color: Theme.backgroundText
                             elide: Text.ElideRight
                             horizontalAlignment: modelData.align === "right"
                                 ? Text.AlignRight

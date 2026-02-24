@@ -11,7 +11,7 @@ Item {
     id: toastRoot
     anchors.bottom: parent ? parent.bottom : undefined
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
-    anchors.bottomMargin: 32
+    anchors.bottomMargin: Theme.spacingXl
     width: toastContent.width
     height: toastContent.height
     opacity: 0
@@ -21,19 +21,12 @@ Item {
     function show(message, type) {
         toastLabel.text = message
         var colors = {
-            "success": "#10B981",
-            "error": "#DC2626",
-            "warning": "#F59E0B",
-            "info": "#2563EB"
-        }
-        var icons = {
-            "success": "✅",
-            "error": "❌",
-            "warning": "⚠️",
-            "info": "ℹ️"
+            "success": Theme.success,
+            "error": Theme.error,
+            "warning": Theme.warningColor,
+            "info": Theme.info
         }
         toastBg.color = colors[type] || colors["info"]
-        toastIcon.text = icons[type] || icons["info"]
         showAnim.start()
         hideTimer.restart()
     }
@@ -49,7 +42,7 @@ Item {
         target: toastRoot
         property: "opacity"
         from: 0; to: 1
-        duration: 250
+        duration: Theme.animNormal
         easing.type: Easing.OutCubic
     }
 
@@ -58,7 +51,7 @@ Item {
         target: toastRoot
         property: "opacity"
         from: 1; to: 0
-        duration: 250
+        duration: Theme.animNormal
         easing.type: Easing.InCubic
     }
 
@@ -66,51 +59,43 @@ Item {
         id: toastContent
         width: toastRow.width + 32
         height: toastRow.height + 20
-        radius: 12
+        radius: Theme.radiusLg
         color: "transparent"
 
         Rectangle {
             id: toastBg
             anchors.fill: parent
             radius: parent.radius
-            color: "#10B981"
+            color: Theme.info
             opacity: 0.95
         }
 
-        // Shadow
         layer.enabled: true
         layer.effect: null
 
         RowLayout {
             id: toastRow
             anchors.centerIn: parent
-            spacing: 10
-
-            Label {
-                id: toastIcon
-                text: "✅"
-                font.pixelSize: 18
-                color: "white"
-            }
+            spacing: Theme.spacingSm
 
             Label {
                 id: toastLabel
                 text: ""
-                font.pixelSize: 14
-                font.weight: Font.Medium
-                color: "white"
+                font: Theme.typography.labelLarge
+                color: Theme.primaryText
                 maximumLineCount: 2
                 wrapMode: Text.WordWrap
                 Layout.maximumWidth: 400
             }
 
-            // Close button
             Label {
-                text: "✕"
-                font.pixelSize: 14
+                text: "×"
+                font.pixelSize: 16
+                font.weight: Font.Medium
                 color: Qt.rgba(1, 1, 1, 0.7)
                 MouseArea {
                     anchors.fill: parent
+                    anchors.margins: -4
                     cursorShape: Qt.PointingHandCursor
                     onClicked: hideAnim.start()
                 }

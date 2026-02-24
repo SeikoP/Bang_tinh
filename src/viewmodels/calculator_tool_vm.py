@@ -141,6 +141,43 @@ class CalculatorToolViewModel(BaseViewModel):
             pass
 
     @Slot()
+    def reciprocal(self):
+        """Calculate 1/x."""
+        try:
+            val = float(self._display)
+            if val == 0:
+                self._display = "Lỗi"
+            else:
+                self._display = self._format_number(1.0 / val)
+            self.displayChanged.emit()
+        except ValueError:
+            pass
+
+    @Slot()
+    def square(self):
+        """Calculate x²."""
+        try:
+            val = float(self._display)
+            self._display = self._format_number(val * val)
+            self.displayChanged.emit()
+        except ValueError:
+            pass
+
+    @Slot()
+    def squareRoot(self):
+        """Calculate √x."""
+        try:
+            import math
+            val = float(self._display)
+            if val < 0:
+                self._display = "Lỗi"
+            else:
+                self._display = self._format_number(math.sqrt(val))
+            self.displayChanged.emit()
+        except ValueError:
+            pass
+
+    @Slot()
     def clearHistory(self):
         """Clear calculation history."""
         self._history.clear()

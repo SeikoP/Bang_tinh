@@ -101,6 +101,23 @@ class TaskViewModel(BaseViewModel):
             self.taskUpdated.emit()
         self._safe_call(_complete, error_msg="Failed to complete task")
 
+    @Slot(int, str, str, str, float, str)
+    def updateTask(self, task_id: int, task_type: str, description: str,
+                   customer_name: str, amount: float, notes: str):
+        """Update an existing task."""
+        def _update():
+            from database.task_repository import TaskRepository
+            from database.task_models import TaskType
+            try:
+                tt = TaskType(task_type)
+            except ValueError:
+                tt = TaskType.OTHER
+            TaskRepository.update(task_id, tt.value, description, customer_name,
+                                  amount if amount > 0 else None, notes or None)
+            self.refreshData()
+            self.taskUpdated.emit()
+        self._safe_call(_update, error_msg="Failed to update task")
+
     @Slot(int)
     def deleteTask(self, task_id: int):
         """Delete a task."""

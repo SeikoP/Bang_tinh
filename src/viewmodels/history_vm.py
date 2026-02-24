@@ -58,6 +58,11 @@ class HistoryViewModel(BaseViewModel):
     
     selectedNotes = Property(str, _get_selected_notes, notify=selectedIdChanged)
 
+    def _get_selected_history_id(self) -> int:
+        return self._selected_id
+
+    selectedHistoryId = Property(int, _get_selected_history_id, notify=selectedIdChanged)
+
     @Slot()
     def refreshData(self):
         """Reload history list from database."""

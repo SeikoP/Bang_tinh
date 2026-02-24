@@ -14,18 +14,17 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: Theme.spacingMd
+        spacing: Theme.spacingSm
 
         // Header
         RowLayout {
             Layout.fillWidth: true
 
             Label {
-                text: "📋 Công việc"
-                font.pixelSize: 18
-                font.weight: Font.Medium
-                color: "#1F2937"
+                text: "Công việc"
+                font: Theme.typography.titleMedium
+                color: Theme.backgroundText
             }
 
             // Pending badge
@@ -34,15 +33,14 @@ Item {
                 width: pendingLabel.implicitWidth + 16
                 height: 24
                 radius: 12
-                color: "#fee2e2"
+                color: Theme.errorContainer
 
                 Label {
                     id: pendingLabel
                     anchors.centerIn: parent
                     text: taskVM.pendingCount + " chưa xong"
-                    font.pixelSize: 11
-                    font.weight: Font.Medium
-                    color: "#DC2626"
+                    font: Theme.typography.labelSmall
+                    color: Theme.error
                 }
             }
 
@@ -50,11 +48,10 @@ Item {
 
             Button {
                 text: "+ Thêm"
-                Material.background: "#10b981"
-                Material.foreground: "white"
+                Material.background: Theme.primary
+                Material.foreground: Theme.surface
                 onClicked: {
-                    taskDialog.clear()
-                    taskDialog.open()
+                    taskDialog.openForNew()
                 }
             }
         }
@@ -62,30 +59,29 @@ Item {
         // Filter chips
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingSm
 
             Repeater {
                 model: [
                     { label: "Tất cả", value: "" },
-                    { label: "💵 Chưa thu", value: "unpaid" },
-                    { label: "📦 Chưa giao", value: "undelivered" },
-                    { label: "📥 Chưa nhận", value: "unreceived" },
-                    { label: "🗂️ Khác", value: "other" }
+                    { label: "Chưa thu", value: "unpaid" },
+                    { label: "Chưa giao", value: "undelivered" },
+                    { label: "Chưa nhận", value: "unreceived" },
+                    { label: "Khác", value: "other" }
                 ]
 
                 delegate: Rectangle {
                     width: chipLabel.implicitWidth + 24
                     height: 32
                     radius: 16
-                    color: taskVM.filterType === modelData.value ? "#10b981" : "#F3F4F6"
+                    color: taskVM.filterType === modelData.value ? Theme.primary : Theme.surfaceVariant
 
                     Label {
                         id: chipLabel
                         anchors.centerIn: parent
                         text: modelData.label
-                        font.pixelSize: 12
-                        font.weight: Font.Medium
-                        color: taskVM.filterType === modelData.value ? "white" : "#374151"
+                        font: Theme.typography.labelMedium
+                        color: taskVM.filterType === modelData.value ? Theme.surface : Theme.textSecondary
                     }
 
                     MouseArea {
@@ -109,32 +105,42 @@ Item {
 
             delegate: Rectangle {
                 width: parent ? parent.width : 0
-                height: 64
-                radius: 10
-                color: taskItemMouse.containsMouse ? "#F3F4F6" : "white"
+                height: 68
+                radius: Theme.radiusMd
+                color: taskItemMouse.containsMouse ? Theme.surfaceVariant : Theme.surface
                 border.width: 1
-                border.color: model.completed ? "#d1fae5" : "#F3F4F6"
+                border.color: model.completed ? Theme.successContainer : Theme.surfaceVariant
                 opacity: model.completed ? 0.7 : 1.0
 
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12
-                    spacing: 12
+                    spacing: Theme.spacingSm
 
                     // Completion checkbox
                     CheckBox {
                         checked: model.completed || false
-                        Material.accent: "#10b981"
+                        Material.accent: Theme.primary
                         onToggled: {
                             if (checked) taskVM.markCompleted(model.taskId)
                         }
                     }
 
                     // Type badge
-                    Label {
-                        text: model.typeDisplay || ""
-                        font.pixelSize: 13
+                    Rectangle {
+                        width: typeBadgeLabel.implicitWidth + 12
+                        height: 22
+                        radius: 4
+                        color: Theme.surfaceVariant
+
+                        Label {
+                            id: typeBadgeLabel
+                            anchors.centerIn: parent
+                            text: model.typeDisplay || ""
+                            font: Theme.typography.labelSmall
+                            color: Theme.textSecondary
+                        }
                     }
 
                     // Task info
@@ -144,9 +150,8 @@ Item {
 
                         Label {
                             text: model.description || ""
-                            font.pixelSize: 14
-                            font.weight: Font.Medium
-                            color: model.completed ? "#9CA3AF" : "#1F2937"
+                            font: Theme.typography.labelLarge
+                            color: model.completed ? Theme.textDisabled : Theme.backgroundText
                             font.strikeout: model.completed || false
                             elide: Text.ElideRight
                             Layout.fillWidth: true
@@ -156,26 +161,40 @@ Item {
                             spacing: 12
                             Label {
                                 visible: (model.customerName || "") !== ""
-                                text: "👤 " + (model.customerName || "")
-                                font.pixelSize: 11; color: "#6B7280"
+                                text: model.customerName || ""
+                                font: Theme.typography.labelSmall
+                                color: Theme.surfaceVariantText
                             }
                             Label {
                                 visible: model.amount > 0
-                                text: "💰 " + (model.amount > 0 ? Number(model.amount).toLocaleString('vi-VN') + "đ" : "")
-                                font.pixelSize: 11; color: "#6B7280"
+                                text: model.amount > 0 ? Number(model.amount).toLocaleString('vi-VN') + "đ" : ""
+                                font: Theme.typography.labelSmall
+                                color: Theme.surfaceVariantText
                             }
                             Label {
                                 text: model.createdAt || ""
-                                font.pixelSize: 10; color: "#9CA3AF"
+                                font: Theme.typography.labelSmall
+                                color: Theme.textDisabled
                             }
                         }
                     }
 
-                    // Delete
-                    RoundButton {
-                        text: "🗑️"
-                        width: 32; height: 32
+                    // Edit
+                    Button {
+                        text: "Sửa"
                         flat: true
+                        font: Theme.typography.labelSmall
+                        Material.foreground: Theme.primary
+                        visible: !(model.completed || false)
+                        onClicked: taskDialog.openForEdit(model.taskId, model.taskType || "", model.description || "", model.customerName || "", model.amount || 0, model.notes || "")
+                    }
+
+                    // Delete
+                    Button {
+                        text: "Xóa"
+                        flat: true
+                        font: Theme.typography.labelSmall
+                        Material.foreground: Theme.error
                         onClicked: taskVM.deleteTask(model.taskId)
                     }
                 }
@@ -195,7 +214,8 @@ Item {
 
     Connections {
         target: taskVM
-        function onTaskAdded() { globalToast.show("✅ Đã thêm công việc!", "success") }
-        function onTaskDeleted() { globalToast.show("🗑️ Đã xóa công việc", "info") }
+        function onTaskAdded() { globalToast.show("Đã thêm công việc", "success") }
+        function onTaskUpdated() { globalToast.show("Đã cập nhật công việc", "success") }
+        function onTaskDeleted() { globalToast.show("Đã xóa công việc", "info") }
     }
 }

@@ -3,37 +3,29 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 
 /**
- * SearchField — Material-styled search input with icon.
+ * SearchField — Material-styled search input.
  */
 TextField {
     id: searchField
     placeholderText: "Tìm kiếm..."
-    font.pixelSize: 14
-    leftPadding: 36
+    font: Theme.typography.bodyMedium
+    leftPadding: 12
     rightPadding: clearBtn.visible ? 36 : 12
 
     background: Rectangle {
-        radius: 8
-        color: searchField.activeFocus ? "white" : "#F3F4F6"
+        radius: Theme.radiusMd
+        color: searchField.activeFocus ? Theme.surface : Theme.surfaceVariant
         border.width: searchField.activeFocus ? 2 : 1
-        border.color: searchField.activeFocus ? "#10b981" : "#E5E7EB"
-
-        Label {
-            text: "🔍"
-            font.pixelSize: 14
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            opacity: 0.5
-        }
+        border.color: searchField.activeFocus ? Theme.primary : Theme.outline
     }
 
     // Clear button
     Label {
         id: clearBtn
-        text: "✕"
-        font.pixelSize: 12
-        color: "#9CA3AF"
+        text: "×"
+        font.pixelSize: 16
+        font.weight: Font.Medium
+        color: Theme.textDisabled
         visible: searchField.text.length > 0
         anchors.right: parent.right
         anchors.rightMargin: 10

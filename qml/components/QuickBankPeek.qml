@@ -14,12 +14,11 @@ Popup {
     padding: 0
 
     background: Rectangle {
-        radius: 12
-        color: "white"
+        radius: Theme.radiusLg
+        color: Theme.surface
         border.width: 1
-        border.color: "#E5E7EB"
+        border.color: Theme.outline
 
-        // Shadow simulation
         Rectangle {
             anchors.fill: parent
             anchors.margins: -2
@@ -32,20 +31,19 @@ Popup {
     ColumnLayout {
         id: peekContent
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: Theme.spacingMd
+        spacing: Theme.spacingSm
 
         Label {
-            text: "💰 Giao dịch gần đây"
-            font.pixelSize: 14
-            font.weight: Font.Medium
-            color: "#1F2937"
+            text: "Giao dịch gần đây"
+            font: Theme.typography.titleSmall
+            color: Theme.backgroundText
         }
 
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: "#E5E7EB"
+            color: Theme.outline
         }
 
         ListView {
@@ -59,19 +57,14 @@ Popup {
             delegate: Rectangle {
                 width: parent ? parent.width : 0
                 height: 48
-                radius: 8
-                color: index % 2 === 0 ? "white" : "#F9FAFB"
+                radius: Theme.radiusMd
+                color: index % 2 === 0 ? Theme.surface : Theme.backgroundSecondary
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 8
-
-                    Label {
-                        text: "💳"
-                        font.pixelSize: 16
-                    }
+                    anchors.leftMargin: Theme.spacingSm
+                    anchors.rightMargin: Theme.spacingSm
+                    spacing: Theme.spacingSm
 
                     ColumnLayout {
                         Layout.fillWidth: true
@@ -79,16 +72,15 @@ Popup {
 
                         Label {
                             text: model.senderName || ""
-                            font.pixelSize: 12
-                            font.weight: Font.Medium
-                            color: "#1F2937"
+                            font: Theme.typography.labelMedium
+                            color: Theme.backgroundText
                             elide: Text.ElideRight
                         }
 
                         Label {
-                            text: (model.source || "") + " • " + (model.timeStr || "")
-                            font.pixelSize: 10
-                            color: "#6B7280"
+                            text: (model.source || "") + " · " + (model.timeStr || "")
+                            font: Theme.typography.labelSmall
+                            color: Theme.surfaceVariantText
                         }
                     }
 
@@ -96,7 +88,7 @@ Popup {
                         text: model.amount || ""
                         font.pixelSize: 13
                         font.weight: Font.Bold
-                        color: "#10B981"
+                        color: Theme.primary
                     }
                 }
             }

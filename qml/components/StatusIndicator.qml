@@ -24,9 +24,9 @@ Item {
             radius: 5
             anchors.horizontalCenter: parent.horizontalCenter
             color: {
-                if (statusRoot.status === "connected") return "#10B981"
-                if (statusRoot.status === "connecting") return "#F59E0B"
-                return "#DC2626"
+                if (statusRoot.status === "connected") return Theme.success
+                if (statusRoot.status === "connecting") return Theme.warningColor
+                return Theme.error
             }
 
             // Pulsing animation when connecting
@@ -46,8 +46,8 @@ Item {
                 if (statusRoot.status === "connecting") return "..."
                 return "Offline"
             }
-            font.pixelSize: 9
-            color: "#64748b"
+            font: Theme.typography.labelSmall
+            color: Theme.textTertiary
         }
     }
 

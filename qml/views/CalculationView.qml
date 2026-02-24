@@ -15,50 +15,54 @@ Item {
         anchors.fill: parent
         spacing: 0
 
-        // ── Tab Bar ──
+        // Tab Bar
         TabBar {
             id: calcTabBar
             Layout.fillWidth: true
-            Material.accent: "#10b981"
+            Material.accent: Theme.primary
 
             TabButton {
-                text: "🧮 Tính tiền"
-                font.pixelSize: 14
+                text: "Tính tiền"
+                font: Theme.typography.labelLarge
                 width: implicitWidth
             }
 
             TabButton {
-                text: "📦 Danh sách Sản phẩm"
-                font.pixelSize: 14
+                text: "Danh sách Sản phẩm"
+                font: Theme.typography.labelLarge
                 width: implicitWidth
             }
         }
 
-        // ── Tab Content ──
+        // Tab Content
         StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             currentIndex: calcTabBar.currentIndex
 
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // TAB 0: Calculation Table
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // ━━━ TAB 0: Calculation Table ━━━
             Item {
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 12
+                    anchors.margins: Theme.spacingMd
+                    spacing: Theme.spacingSm
+
+                    // Alert panel (wired when VM exposes alerts)
+                    AlertPanel {
+                        id: calcAlerts
+                        Layout.fillWidth: true
+                        alerts: calculationVM.alerts || []
+                    }
 
                     // Header row with total
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 16
+                        spacing: Theme.spacingMd
 
                         Label {
-                            text: "📊 Bảng tính ca"
-                            font.pixelSize: 18
-                            font.weight: Font.Medium
-                            color: "#1F2937"
+                            text: "Bảng tính ca"
+                            font: Theme.typography.titleMedium
+                            color: Theme.backgroundText
                         }
 
                         Item { Layout.fillWidth: true }
@@ -67,45 +71,44 @@ Item {
                         Rectangle {
                             Layout.preferredWidth: totalLabel.implicitWidth + 40
                             Layout.preferredHeight: 44
-                            radius: 12
-                            color: Qt.rgba(0.063, 0.725, 0.506, 0.1)
+                            radius: Theme.radiusLg
+                            color: Theme.withAlpha(Theme.primary, 0.1)
                             border.width: 1
-                            border.color: Qt.rgba(0.063, 0.725, 0.506, 0.3)
+                            border.color: Theme.withAlpha(Theme.primary, 0.3)
 
                             RowLayout {
                                 anchors.centerIn: parent
-                                spacing: 8
+                                spacing: Theme.spacingSm
 
                                 Label {
                                     text: "Tổng:"
-                                    font.pixelSize: 14
-                                    color: "#047857"
+                                    font: Theme.typography.bodyMedium
+                                    color: Theme.primaryDark
                                 }
 
                                 Label {
                                     id: totalLabel
                                     text: calculationVM.formatTotal() + " đ"
-                                    font.pixelSize: 18
-                                    font.weight: Font.Bold
-                                    color: "#047857"
+                                    font: Theme.typography.titleMedium
+                                    color: Theme.primaryDark
                                 }
                             }
                         }
 
                         // Action buttons
                         Button {
-                            text: "💾 Lưu ca"
-                            Material.background: "#10b981"
-                            Material.foreground: "white"
-                            font.pixelSize: 13
+                            text: "Lưu ca"
+                            Material.background: Theme.primary
+                            Material.foreground: Theme.primaryText
+                            font: Theme.typography.labelLarge
                             onClicked: saveSessionDialog.open()
                         }
 
                         Button {
-                            text: "🔄 Reset"
-                            Material.background: "#F3F4F6"
-                            Material.foreground: "#374151"
-                            font.pixelSize: 13
+                            text: "Reset"
+                            Material.background: Theme.surfaceVariant
+                            Material.foreground: Theme.textSecondary
+                            font: Theme.typography.labelLarge
                             onClicked: resetConfirm.show(
                                 "Reset ca?",
                                 "Đặt lại tất cả số lượng về 0. Thao tác này không thể hoàn tác.",
@@ -114,13 +117,13 @@ Item {
                         }
                     }
 
-                    // ── Session Table ──
+                    // Session Table
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        radius: 12
+                        radius: Theme.radiusLg
                         border.width: 1
-                        border.color: "#E5E7EB"
+                        border.color: Theme.outline
                         clip: true
 
                         ColumnLayout {
@@ -131,11 +134,11 @@ Item {
                             Rectangle {
                                 Layout.fillWidth: true
                                 Layout.preferredHeight: 44
-                                color: "#F9FAFB"
+                                color: Theme.backgroundSecondary
 
                                 Rectangle {
                                     anchors.bottom: parent.bottom
-                                    width: parent.width; height: 1; color: "#E5E7EB"
+                                    width: parent.width; height: 1; color: Theme.outline
                                 }
 
                                 RowLayout {
@@ -144,15 +147,15 @@ Item {
                                     anchors.rightMargin: 12
                                     spacing: 0
 
-                                    Label { Layout.preferredWidth: 36; text: "#"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignCenter }
-                                    Label { Layout.fillWidth: true; Layout.minimumWidth: 160; text: "Sản phẩm"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280" }
-                                    Label { Layout.preferredWidth: 60; text: "ĐV lớn"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignCenter }
-                                    Label { Layout.preferredWidth: 50; text: "Quy đổi"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignCenter }
-                                    Label { Layout.preferredWidth: 80; text: "Đơn giá"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignRight }
-                                    Label { Layout.preferredWidth: 100; text: "SL Giao"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignCenter }
-                                    Label { Layout.preferredWidth: 100; text: "SL Đóng"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignCenter }
-                                    Label { Layout.preferredWidth: 60; text: "Đã dùng"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignCenter }
-                                    Label { Layout.preferredWidth: 100; text: "Thành tiền"; font.pixelSize: 12; font.weight: Font.Medium; color: "#6B7280"; horizontalAlignment: Text.AlignRight }
+                                    Label { Layout.preferredWidth: 36; text: "#"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignCenter }
+                                    Label { Layout.fillWidth: true; Layout.minimumWidth: 160; text: "Sản phẩm"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText }
+                                    Label { Layout.preferredWidth: 60; text: "ĐV lớn"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignCenter }
+                                    Label { Layout.preferredWidth: 50; text: "Quy đổi"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignCenter }
+                                    Label { Layout.preferredWidth: 80; text: "Đơn giá"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignRight }
+                                    Label { Layout.preferredWidth: 100; text: "SL Giao"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignCenter }
+                                    Label { Layout.preferredWidth: 100; text: "SL Đóng"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignCenter }
+                                    Label { Layout.preferredWidth: 60; text: "Đã dùng"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignCenter }
+                                    Label { Layout.preferredWidth: 100; text: "Thành tiền"; font: Theme.typography.labelMedium; color: Theme.surfaceVariantText; horizontalAlignment: Text.AlignRight }
                                 }
                             }
 
@@ -171,12 +174,12 @@ Item {
                                     width: sessionListView.width
                                     height: 44
                                     color: sessionRowMouse.containsMouse
-                                        ? "#F3F4F6"
-                                        : index % 2 === 0 ? "white" : "#F9FAFB"
+                                        ? Theme.surfaceVariant
+                                        : index % 2 === 0 ? Theme.surface : Theme.backgroundSecondary
 
                                     Rectangle {
                                         anchors.bottom: parent.bottom
-                                        width: parent.width; height: 1; color: "#F3F4F6"
+                                        width: parent.width; height: 1; color: Theme.divider
                                     }
 
                                     RowLayout {
@@ -185,44 +188,39 @@ Item {
                                         anchors.rightMargin: 12
                                         spacing: 0
 
-                                        // #
                                         Label {
                                             Layout.preferredWidth: 36
                                             text: (index + 1).toString()
-                                            font.pixelSize: 13; color: "#9CA3AF"
+                                            font: Theme.typography.bodyMedium; color: Theme.textDisabled
                                             horizontalAlignment: Text.AlignCenter
                                         }
 
-                                        // Product name
                                         Label {
                                             Layout.fillWidth: true
                                             Layout.minimumWidth: 160
                                             text: model.productName || ""
-                                            font.pixelSize: 13; font.weight: Font.Medium; color: "#1F2937"
+                                            font: Theme.typography.labelLarge; color: Theme.backgroundText
                                             elide: Text.ElideRight
                                         }
 
-                                        // Large unit
                                         Label {
                                             Layout.preferredWidth: 60
                                             text: model.largeUnit || ""
-                                            font.pixelSize: 12; color: "#6B7280"
+                                            font: Theme.typography.bodySmall; color: Theme.surfaceVariantText
                                             horizontalAlignment: Text.AlignCenter
                                         }
 
-                                        // Conversion
                                         Label {
                                             Layout.preferredWidth: 50
                                             text: model.conversion ? model.conversion.toString() : ""
-                                            font.pixelSize: 12; color: "#6B7280"
+                                            font: Theme.typography.bodySmall; color: Theme.surfaceVariantText
                                             horizontalAlignment: Text.AlignCenter
                                         }
 
-                                        // Unit price
                                         Label {
                                             Layout.preferredWidth: 80
                                             text: model.unitPrice ? Number(model.unitPrice).toLocaleString('vi-VN') : "0"
-                                            font.pixelSize: 12; color: "#6B7280"
+                                            font: Theme.typography.bodySmall; color: Theme.surfaceVariantText
                                             horizontalAlignment: Text.AlignRight
                                         }
 
@@ -230,16 +228,16 @@ Item {
                                         TextField {
                                             Layout.preferredWidth: 100
                                             text: model.handoverQty !== undefined ? model.handoverQty.toString() : "0"
-                                            font.pixelSize: 13
+                                            font: Theme.typography.bodyMedium
                                             horizontalAlignment: Text.AlignCenter
                                             inputMethodHints: Qt.ImhDigitsOnly
                                             selectByMouse: true
 
                                             background: Rectangle {
-                                                radius: 6
-                                                color: parent.activeFocus ? "white" : "#F3F4F6"
+                                                radius: Theme.radiusSm
+                                                color: parent.activeFocus ? Theme.surface : Theme.surfaceVariant
                                                 border.width: parent.activeFocus ? 2 : 1
-                                                border.color: parent.activeFocus ? "#10b981" : "#E5E7EB"
+                                                border.color: parent.activeFocus ? Theme.primary : Theme.outline
                                             }
 
                                             onEditingFinished: {
@@ -251,16 +249,16 @@ Item {
                                         TextField {
                                             Layout.preferredWidth: 100
                                             text: model.closingQty !== undefined ? model.closingQty.toString() : "0"
-                                            font.pixelSize: 13
+                                            font: Theme.typography.bodyMedium
                                             horizontalAlignment: Text.AlignCenter
                                             inputMethodHints: Qt.ImhDigitsOnly
                                             selectByMouse: true
 
                                             background: Rectangle {
-                                                radius: 6
-                                                color: parent.activeFocus ? "white" : "#F3F4F6"
+                                                radius: Theme.radiusSm
+                                                color: parent.activeFocus ? Theme.surface : Theme.surfaceVariant
                                                 border.width: parent.activeFocus ? 2 : 1
-                                                border.color: parent.activeFocus ? "#10b981" : "#E5E7EB"
+                                                border.color: parent.activeFocus ? Theme.primary : Theme.outline
                                             }
 
                                             onEditingFinished: {
@@ -272,8 +270,8 @@ Item {
                                         Label {
                                             Layout.preferredWidth: 60
                                             text: model.usedQty !== undefined ? model.usedQty.toString() : "0"
-                                            font.pixelSize: 13; font.weight: Font.Medium
-                                            color: model.usedQty > 0 ? "#10B981" : "#9CA3AF"
+                                            font: Theme.typography.labelLarge
+                                            color: model.usedQty > 0 ? Theme.primary : Theme.textDisabled
                                             horizontalAlignment: Text.AlignCenter
                                         }
 
@@ -282,7 +280,7 @@ Item {
                                             Layout.preferredWidth: 100
                                             text: model.amount ? Number(model.amount).toLocaleString('vi-VN') + " đ" : "0 đ"
                                             font.pixelSize: 13; font.weight: Font.Bold
-                                            color: model.amount > 0 ? "#047857" : "#9CA3AF"
+                                            color: model.amount > 0 ? Theme.primaryDark : Theme.textDisabled
                                             horizontalAlignment: Text.AlignRight
                                         }
                                     }
@@ -301,24 +299,21 @@ Item {
                 }
             }
 
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            // TAB 1: Product List
-            // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            // ━━━ TAB 1: Product List ━━━
             Item {
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 12
+                    anchors.margins: Theme.spacingMd
+                    spacing: Theme.spacingSm
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 12
+                        spacing: Theme.spacingSm
 
                         Label {
-                            text: "📦 Danh sách Sản phẩm"
-                            font.pixelSize: 18
-                            font.weight: Font.Medium
-                            color: "#1F2937"
+                            text: "Danh sách Sản phẩm"
+                            font: Theme.typography.titleMedium
+                            color: Theme.backgroundText
                         }
 
                         Item { Layout.fillWidth: true }
@@ -327,6 +322,7 @@ Item {
                             id: productSearchField
                             Layout.preferredWidth: 250
                             placeholderText: "Tìm sản phẩm..."
+                            onTextChanged: calculationVM.filterProducts(text)
                         }
                     }
 
@@ -342,21 +338,29 @@ Item {
                         delegate: Rectangle {
                             width: parent ? parent.width : 0
                             height: 56
-                            radius: 8
-                            color: prodRowMouse.containsMouse ? "#F3F4F6" : "white"
+                            radius: Theme.radiusMd
+                            color: prodRowMouse.containsMouse ? Theme.surfaceVariant : Theme.surface
                             border.width: 1
-                            border.color: "#F3F4F6"
+                            border.color: Theme.divider
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 16
-                                anchors.rightMargin: 16
-                                spacing: 12
+                                anchors.leftMargin: Theme.spacingMd
+                                anchors.rightMargin: Theme.spacingMd
+                                spacing: Theme.spacingSm
 
-                                // Favorite star
-                                Label {
-                                    text: model.isFavorite ? "⭐" : "☆"
-                                    font.pixelSize: 18
+                                // Favorite toggle
+                                Rectangle {
+                                    width: 28; height: 28; radius: 14
+                                    color: model.isFavorite ? Theme.withAlpha(Theme.warningColor, 0.15) : Theme.surfaceVariant
+
+                                    Label {
+                                        anchors.centerIn: parent
+                                        text: model.isFavorite ? "★" : "☆"
+                                        font.pixelSize: 14
+                                        color: model.isFavorite ? Theme.warningColor : Theme.textDisabled
+                                    }
+
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
@@ -371,31 +375,29 @@ Item {
 
                                     Label {
                                         text: model.name || ""
-                                        font.pixelSize: 14
-                                        font.weight: Font.Medium
-                                        color: "#1F2937"
+                                        font: Theme.typography.labelLarge
+                                        color: Theme.backgroundText
                                         elide: Text.ElideRight
                                     }
 
                                     Label {
                                         text: (model.largeUnit || "") + " × " + (model.conversion || 1)
-                                        font.pixelSize: 11
-                                        color: "#6B7280"
+                                        font: Theme.typography.labelSmall
+                                        color: Theme.surfaceVariantText
                                     }
                                 }
 
                                 // Price
                                 Label {
                                     text: model.unitPrice ? Number(model.unitPrice).toLocaleString('vi-VN') + " đ" : ""
-                                    font.pixelSize: 14
-                                    font.weight: Font.Bold
-                                    color: "#10B981"
+                                    font: Theme.typography.labelLarge
+                                    color: Theme.primary
                                 }
 
                                 // Active indicator
                                 Rectangle {
                                     width: 8; height: 8; radius: 4
-                                    color: model.isActive ? "#10B981" : "#DC2626"
+                                    color: model.isActive ? Theme.success : Theme.error
                                 }
                             }
 
@@ -413,7 +415,7 @@ Item {
         }
     }
 
-    // ── Dialogs ──
+    // Dialogs
     SaveSessionDialog {
         id: saveSessionDialog
     }
@@ -426,10 +428,10 @@ Item {
     Connections {
         target: calculationVM
         function onSessionSaved() {
-            globalToast.show("✅ Đã lưu ca thành công!", "success")
+            globalToast.show("Đã lưu ca thành công!", "success")
         }
         function onSessionReset() {
-            globalToast.show("🔄 Đã reset ca", "info")
+            globalToast.show("Đã reset ca", "info")
         }
         function onErrorOccurred(msg) {
             globalToast.show(msg, "error")

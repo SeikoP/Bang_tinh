@@ -35,8 +35,8 @@ Dialog {
         editIndex = idx
         productName = name
         unit = u
-        conversionRate = conv
-        price = p
+        conversionRate = parseFloat(conv) || 1.0
+        price = parseFloat(p) || 0
         open()
     }
 
@@ -63,7 +63,8 @@ Dialog {
 
         Label {
             text: "Điền thông tin sản phẩm bên dưới."
-            font.pixelSize: 12; color: "#6B7280"
+            font: Theme.typography.labelMedium
+            color: Theme.surfaceVariantText
             Layout.fillWidth: true
         }
 
@@ -71,7 +72,7 @@ Dialog {
             Layout.fillWidth: true
             columns: 2; columnSpacing: 12; rowSpacing: 10
 
-            Label { text: "Tên sản phẩm *"; color: "#374151" }
+            Label { text: "Tên sản phẩm *"; color: Theme.textSecondary; font: Theme.typography.labelLarge }
             TextField {
                 id: nameField
                 Layout.fillWidth: true
@@ -79,7 +80,7 @@ Dialog {
                 placeholderText: "VD: Bia 333"
             }
 
-            Label { text: "Đơn vị"; color: "#374151" }
+            Label { text: "Đơn vị"; color: Theme.textSecondary; font: Theme.typography.labelLarge }
             TextField {
                 id: unitField
                 Layout.fillWidth: true
@@ -87,7 +88,7 @@ Dialog {
                 placeholderText: "VD: thùng, lon, chai"
             }
 
-            Label { text: "Quy đổi"; color: "#374151" }
+            Label { text: "Quy đổi"; color: Theme.textSecondary; font: Theme.typography.labelLarge }
             TextField {
                 id: convField
                 Layout.fillWidth: true
@@ -96,7 +97,7 @@ Dialog {
                 inputMethodHints: Qt.ImhFormattedNumbersOnly
             }
 
-            Label { text: "Giá (đ)"; color: "#374151" }
+            Label { text: "Giá (đ)"; color: Theme.textSecondary; font: Theme.typography.labelLarge }
             TextField {
                 id: priceField
                 Layout.fillWidth: true

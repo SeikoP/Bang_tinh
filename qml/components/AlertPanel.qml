@@ -14,7 +14,7 @@ Item {
     implicitHeight: visible ? Math.min(alertColumn.implicitHeight, 200) : 0
 
     Behavior on implicitHeight {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic }
     }
 
     ScrollView {
@@ -24,7 +24,7 @@ Item {
         ColumnLayout {
             id: alertColumn
             width: parent.width
-            spacing: 4
+            spacing: Theme.spacingXs
 
             Repeater {
                 model: alertRoot.alerts
@@ -32,33 +32,35 @@ Item {
                 delegate: Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 36
-                    radius: 8
+                    radius: Theme.radiusMd
                     color: {
-                        if (modelData.type === "warning") return "#fef3c7"
-                        if (modelData.type === "error") return "#fee2e2"
-                        return "#dbeafe"
+                        if (modelData.type === "warning") return Theme.warningContainer
+                        if (modelData.type === "error") return Theme.errorContainer
+                        return Theme.infoContainer
                     }
 
                     RowLayout {
                         anchors.fill: parent
                         anchors.leftMargin: 12
                         anchors.rightMargin: 12
-                        spacing: 8
+                        spacing: Theme.spacingSm
 
-                        Label {
-                            text: {
-                                if (modelData.type === "warning") return "⚠️"
-                                if (modelData.type === "error") return "❌"
-                                return "ℹ️"
+                        Rectangle {
+                            width: 6
+                            height: 6
+                            radius: 3
+                            color: {
+                                if (modelData.type === "warning") return Theme.warningColor
+                                if (modelData.type === "error") return Theme.error
+                                return Theme.info
                             }
-                            font.pixelSize: 14
                         }
 
                         Label {
                             Layout.fillWidth: true
                             text: modelData.message || ""
-                            font.pixelSize: 12
-                            color: "#1F2937"
+                            font: Theme.typography.bodySmall
+                            color: Theme.backgroundText
                             elide: Text.ElideRight
                         }
                     }

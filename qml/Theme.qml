@@ -45,6 +45,8 @@ QtObject {
     readonly property color surfaceText: "#1F2937"            // Gray-800
     readonly property color surfaceVariantText: "#6B7280"     // Gray-500
     readonly property color textDisabled: "#9CA3AF"         // Gray-400
+    readonly property color textSecondary: "#374151"        // Gray-700
+    readonly property color textTertiary: "#64748b"         // Slate-500
 
     // ========================
     // Color Palette — Status
@@ -72,6 +74,7 @@ QtObject {
     readonly property color outline: "#E5E7EB"       // Gray-200
     readonly property color outlineHover: "#CBD5E1"  // Gray-300
     readonly property color outlineFocus: "#2563EB"  // Blue-600
+    readonly property color divider: "#F3F4F6"       // Gray-100 (light separator)
 
     // ========================
     // Typography Scale (Material 3)

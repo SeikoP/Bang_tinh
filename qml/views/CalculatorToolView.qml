@@ -5,32 +5,63 @@ import "../components"
 import "../dialogs"
 
 /**
- * CalculatorToolView — Simple calculator with history panel.
+ * CalculatorToolView — Simple calculator with history panel, keyboard input,
+ * special functions (%, 1/x, x², √), and click-to-reuse history.
  */
 Item {
     id: calcToolRoot
+    focus: true
+
+    // Keyboard input
+    Keys.onPressed: function(event) {
+        switch (event.key) {
+        case Qt.Key_0: case Qt.Key_1: case Qt.Key_2: case Qt.Key_3:
+        case Qt.Key_4: case Qt.Key_5: case Qt.Key_6: case Qt.Key_7:
+        case Qt.Key_8: case Qt.Key_9:
+            calculatorToolVM.inputDigit(event.text); event.accepted = true; break
+        case Qt.Key_Plus:
+            calculatorToolVM.inputOperator("+"); event.accepted = true; break
+        case Qt.Key_Minus:
+            calculatorToolVM.inputOperator("-"); event.accepted = true; break
+        case Qt.Key_Asterisk:
+            calculatorToolVM.inputOperator("*"); event.accepted = true; break
+        case Qt.Key_Slash:
+            calculatorToolVM.inputOperator("/"); event.accepted = true; break
+        case Qt.Key_Period: case Qt.Key_Comma:
+            calculatorToolVM.inputDecimal(); event.accepted = true; break
+        case Qt.Key_Return: case Qt.Key_Enter: case Qt.Key_Equal:
+            calculatorToolVM.calculate(); event.accepted = true; break
+        case Qt.Key_Backspace:
+            calculatorToolVM.backspace(); event.accepted = true; break
+        case Qt.Key_Escape:
+            calculatorToolVM.clear(); event.accepted = true; break
+        case Qt.Key_Percent:
+            calculatorToolVM.percent(); event.accepted = true; break
+        }
+    }
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+        anchors.margins: Theme.spacingMd
+        spacing: Theme.spacingMd
 
         // Calculator panel
         Pane {
-            Layout.preferredWidth: 340
+            Layout.preferredWidth: 360
             Layout.fillHeight: true
             Material.elevation: 2
-            Material.background: "white"
+            Material.background: Theme.surface
             padding: 20
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 12
+                spacing: Theme.spacingSm
 
                 // Expression
                 Label {
                     text: calculatorToolVM.expression || " "
-                    font.pixelSize: 13; color: "#9CA3AF"
+                    font: Theme.typography.labelMedium
+                    color: Theme.textDisabled
                     horizontalAlignment: Text.AlignRight
                     Layout.fillWidth: true
                 }
@@ -38,17 +69,17 @@ Item {
                 // Display
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 56; radius: 12
-                    color: "#F9FAFB"
-                    border.width: 1; border.color: "#E5E7EB"
+                    height: 56; radius: Theme.radiusLg
+                    color: Theme.backgroundSecondary
+                    border.width: 1; border.color: Theme.outline
 
                     Label {
                         anchors.fill: parent
-                        anchors.rightMargin: 16
+                        anchors.rightMargin: Theme.spacingMd
                         text: calculatorToolVM.display || "0"
                         font.pixelSize: 28
                         font.weight: Font.Medium
-                        color: "#1F2937"
+                        color: Theme.backgroundText
                         horizontalAlignment: Text.AlignRight
                         verticalAlignment: Text.AlignVCenter
                         elide: Text.ElideLeft
@@ -60,7 +91,13 @@ Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     columns: 4
-                    rowSpacing: 8; columnSpacing: 8
+                    rowSpacing: 6; columnSpacing: 6
+
+                    // Row 0: Special functions — %, 1/x, x², √
+                    CalcButton { btnText: "%";   accent: true;  onBtnClicked: calculatorToolVM.percent() }
+                    CalcButton { btnText: "1/x"; accent: true;  onBtnClicked: calculatorToolVM.reciprocal() }
+                    CalcButton { btnText: "x²";  accent: true;  onBtnClicked: calculatorToolVM.square() }
+                    CalcButton { btnText: "√";   accent: true;  onBtnClicked: calculatorToolVM.squareRoot() }
 
                     // Row 1: C, CE, ⌫, ÷
                     CalcButton { btnText: "C";  accent: false; onBtnClicked: calculatorToolVM.clear() }
@@ -100,26 +137,28 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Material.elevation: 1
-            Material.background: "white"
-            padding: 16
+            Material.background: Theme.surface
+            padding: Theme.spacingMd
 
             ColumnLayout {
                 anchors.fill: parent
-                spacing: 8
+                spacing: Theme.spacingSm
 
                 RowLayout {
                     Layout.fillWidth: true
 
                     Label {
-                        text: "📋 Lịch sử tính"
-                        font.pixelSize: 15; font.weight: Font.Medium
-                        color: "#1F2937"
+                        text: "Lịch sử tính"
+                        font: Theme.typography.titleSmall
+                        color: Theme.backgroundText
                         Layout.fillWidth: true
                     }
 
-                    RoundButton {
-                        text: "🗑️"; flat: true
-                        width: 32; height: 32
+                    Button {
+                        text: "Xóa"
+                        flat: true
+                        font: Theme.typography.labelSmall
+                        Material.foreground: Theme.error
                         onClicked: calculatorToolVM.clearHistory()
                     }
                 }
@@ -136,17 +175,30 @@ Item {
                     delegate: Rectangle {
                         width: parent ? parent.width : 0
                         height: 40
-                        radius: 8
-                        color: index % 2 === 0 ? "#F9FAFB" : "white"
+                        radius: Theme.radiusSm
+                        color: histMouse.containsMouse ? Theme.surfaceVariant : (index % 2 === 0 ? Theme.backgroundSecondary : Theme.surface)
 
                         Label {
                             anchors.fill: parent
                             anchors.leftMargin: 12; anchors.rightMargin: 12
                             text: modelData || ""
-                            font.pixelSize: 13
-                            color: "#374151"
+                            font: Theme.typography.labelLarge
+                            color: Theme.textSecondary
                             verticalAlignment: Text.AlignVCenter
                             elide: Text.ElideRight
+                        }
+
+                        MouseArea {
+                            id: histMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                // Extract result from "expr = result" and reuse it
+                                var parts = (modelData || "").split("=")
+                                if (parts.length > 1)
+                                    calculatorToolVM.inputDigit(parts[parts.length - 1].trim())
+                            }
                         }
                     }
                 }
@@ -154,7 +206,8 @@ Item {
                 Label {
                     visible: calculatorToolVM.history.length === 0
                     text: "Chưa có phép tính nào"
-                    font.pixelSize: 13; color: "#9CA3AF"
+                    font: Theme.typography.labelMedium
+                    color: Theme.textDisabled
                     Layout.alignment: Qt.AlignHCenter
                 }
             }
@@ -173,21 +226,21 @@ Item {
         Layout.fillHeight: true
 
         background: Rectangle {
-            radius: 10
+            radius: Theme.radiusMd
             color: {
-                if (calcBtn.primary) return calcBtn.pressed ? "#059669" : "#10b981"
-                if (calcBtn.accent) return calcBtn.pressed ? "#E5E7EB" : "#F3F4F6"
-                return calcBtn.pressed ? "#E5E7EB" : "#F9FAFB"
+                if (calcBtn.primary) return calcBtn.pressed ? Theme.primaryDark : Theme.primary
+                if (calcBtn.accent) return calcBtn.pressed ? Theme.outline : Theme.surfaceVariant
+                return calcBtn.pressed ? Theme.outline : Theme.backgroundSecondary
             }
             border.width: 1
-            border.color: calcBtn.primary ? "#059669" : "#E5E7EB"
+            border.color: calcBtn.primary ? Theme.primaryDark : Theme.outline
         }
 
         contentItem: Label {
             text: calcBtn.btnText
-            font.pixelSize: 20
+            font.pixelSize: 18
             font.weight: calcBtn.primary ? Font.Bold : Font.Medium
-            color: calcBtn.primary ? "white" : (calcBtn.accent ? "#047857" : "#1F2937")
+            color: calcBtn.primary ? Theme.surface : (calcBtn.accent ? Theme.primaryDark : Theme.backgroundText)
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }

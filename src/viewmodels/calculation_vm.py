@@ -139,6 +139,20 @@ class CalculationViewModel(BaseViewModel):
         """Drag-drop reorder."""
         self._session_model.moveItem(fromRow, toRow)
 
+    @Slot(str)
+    def filterProducts(self, text: str):
+        """Filter product list by name for search field."""
+        def _filter():
+            product_repo = self._get_service("product_repo")
+            if not product_repo:
+                return
+            products = product_repo.get_all()
+            search = text.lower().strip()
+            if search:
+                products = [p for p in products if search in p.name.lower()]
+            self._product_model.resetItems(products)
+        self._safe_call(_filter, error_msg="Failed to filter products")
+
     @Slot(result=str)
     def formatTotal(self) -> str:
         """Return formatted total amount string."""

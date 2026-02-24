@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 /**
  * ConfirmDialog — Reusable Material confirm dialog.
- * 
+ *
  * Usage:
  *   confirmDialog.show("Delete?", "This cannot be undone.", function() { doDelete() })
  */
@@ -14,7 +14,7 @@ Dialog {
     anchors.centerIn: parent
     width: 380
     standardButtons: Dialog.Ok | Dialog.Cancel
-    Material.accent: "#10b981"
+    Material.accent: Theme.primary
 
     property string message: ""
     property var onConfirm: null
@@ -28,12 +28,12 @@ Dialog {
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 16
+        spacing: Theme.spacingMd
 
         Label {
             text: confirmDlg.message
-            font.pixelSize: 14
-            color: "#374151"
+            font: Theme.typography.bodyMedium
+            color: Theme.textSecondary
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
         }

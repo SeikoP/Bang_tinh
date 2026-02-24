@@ -67,6 +67,22 @@ class BankViewModel(BaseViewModel):
             self.refreshData()
         self._safe_call(_clear, error_msg="Failed to clear notifications")
 
+    rawLogsChanged = Signal()
+
+    def _get_raw_logs(self) -> str:
+        """Return raw notification log text."""
+        try:
+            from database.repositories import BankRepository
+            all_notifs = BankRepository.get_all()
+            lines = []
+            for n in all_notifs:
+                lines.append(f"[{n.received_at}] {n.source}: {n.raw_content or n.description}")
+            return "\n".join(lines)
+        except Exception:
+            return ""
+
+    rawLogs = Property(str, _get_raw_logs, notify=rawLogsChanged)
+
     @Slot(result=list)
     def getAvailableSources(self) -> list:
         """Return unique source names for filter ComboBox."""

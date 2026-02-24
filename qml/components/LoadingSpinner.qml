@@ -19,19 +19,19 @@ Item {
         anchors.fill: parent
         color: Qt.rgba(0, 0, 0, 0.3)
         opacity: spinnerRoot.active ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
 
         MouseArea { anchors.fill: parent }  // Block clicks through
     }
 
     Column {
         anchors.centerIn: parent
-        spacing: 16
+        spacing: Theme.spacingMd
 
         BusyIndicator {
             anchors.horizontalCenter: parent.horizontalCenter
             running: spinnerRoot.active
-            Material.accent: "#10b981"
+            Material.accent: Theme.primary
             width: 48
             height: 48
         }
@@ -39,8 +39,8 @@ Item {
         Label {
             anchors.horizontalCenter: parent.horizontalCenter
             text: spinnerRoot.message
-            font.pixelSize: 14
-            color: "white"
+            font: Theme.typography.bodyMedium
+            color: Theme.primaryText
             visible: spinnerRoot.message !== ""
         }
     }

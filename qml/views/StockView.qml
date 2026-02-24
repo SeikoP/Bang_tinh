@@ -14,19 +14,18 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: Theme.spacingMd
+        spacing: Theme.spacingSm
 
         // Header
         RowLayout {
             Layout.fillWidth: true
-            spacing: 12
+            spacing: Theme.spacingSm
 
             Label {
-                text: "📊 Kho hàng"
-                font.pixelSize: 18
-                font.weight: Font.Medium
-                color: "#1F2937"
+                text: "Kho hàng"
+                font: Theme.typography.titleMedium
+                color: Theme.backgroundText
             }
 
             Item { Layout.fillWidth: true }
@@ -35,46 +34,47 @@ Item {
                 id: stockSearch
                 Layout.preferredWidth: 250
                 placeholderText: "Tìm sản phẩm..."
+                onTextChanged: stockVM.filterProducts(text)
             }
         }
 
-        // ── Two-panel layout: Stock list (left) + Change log (right) ──
+        // Two-panel layout: Stock list (left) + Change log (right)
         RowLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 16
+            spacing: Theme.spacingMd
 
             // Stock list
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                Layout.preferredWidth: 2  // 2:1 ratio
-                radius: 12
+                Layout.preferredWidth: 2
+                radius: Theme.radiusLg
                 border.width: 1
-                border.color: "#E5E7EB"
+                border.color: Theme.outline
                 clip: true
 
                 ListView {
                     id: stockListView
                     anchors.fill: parent
-                    anchors.margins: 8
+                    anchors.margins: Theme.spacingSm
                     clip: true
                     model: stockVM.stockItems
-                    spacing: 4
+                    spacing: Theme.spacingXs
 
                     ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
                     delegate: Rectangle {
                         width: stockListView.width
                         height: 60
-                        radius: 10
-                        color: stockItemMouse.containsMouse ? "#F3F4F6" : "white"
+                        radius: Theme.radiusMd
+                        color: stockItemMouse.containsMouse ? Theme.surfaceVariant : Theme.surface
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 16
-                            anchors.rightMargin: 16
-                            spacing: 12
+                            anchors.leftMargin: Theme.spacingMd
+                            anchors.rightMargin: Theme.spacingMd
+                            spacing: Theme.spacingSm
 
                             // Product info
                             ColumnLayout {
@@ -83,15 +83,14 @@ Item {
 
                                 Label {
                                     text: model.name || ""
-                                    font.pixelSize: 14
-                                    font.weight: Font.Medium
-                                    color: "#1F2937"
+                                    font: Theme.typography.labelLarge
+                                    color: Theme.backgroundText
                                 }
 
                                 Label {
                                     text: (model.largeUnit || "") + " × " + (model.conversion || 1)
-                                    font.pixelSize: 11
-                                    color: "#6B7280"
+                                    font: Theme.typography.labelSmall
+                                    color: Theme.surfaceVariantText
                                 }
                             }
 
@@ -104,23 +103,22 @@ Item {
                                     text: "−"
                                     font.pixelSize: 18
                                     width: 36; height: 36
-                                    Material.background: "#fee2e2"
-                                    Material.foreground: "#DC2626"
+                                    Material.background: Theme.errorContainer
+                                    Material.foreground: Theme.error
                                     onClicked: stockVM.adjustQuantity(index, -1)
                                 }
 
                                 // Quantity display
                                 Rectangle {
                                     width: 56; height: 36
-                                    color: "#F3F4F6"
-                                    radius: 4
+                                    color: Theme.surfaceVariant
+                                    radius: Theme.radiusSm
 
                                     Label {
                                         anchors.centerIn: parent
                                         text: model.quantity !== undefined ? model.quantity.toString() : "0"
-                                        font.pixelSize: 16
-                                        font.weight: Font.Bold
-                                        color: "#1F2937"
+                                        font: Theme.typography.titleSmall
+                                        color: Theme.backgroundText
                                     }
                                 }
 
@@ -129,8 +127,8 @@ Item {
                                     text: "+"
                                     font.pixelSize: 18
                                     width: 36; height: 36
-                                    Material.background: "#d1fae5"
-                                    Material.foreground: "#047857"
+                                    Material.background: Theme.successContainer
+                                    Material.foreground: Theme.primaryDark
                                     onClicked: stockVM.adjustQuantity(index, 1)
                                 }
                             }
@@ -150,28 +148,40 @@ Item {
             // Change log panel
             Rectangle {
                 Layout.fillHeight: true
-                Layout.preferredWidth: 1  // 2:1 ratio
-                radius: 12
+                Layout.preferredWidth: 1
+                radius: Theme.radiusLg
                 border.width: 1
-                border.color: "#E5E7EB"
+                border.color: Theme.outline
                 clip: true
 
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 12
-                    spacing: 8
+                    spacing: Theme.spacingSm
 
-                    Label {
-                        text: "📋 Lịch sử thay đổi"
-                        font.pixelSize: 14
-                        font.weight: Font.Medium
-                        color: "#1F2937"
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Label {
+                            text: "Lịch sử thay đổi"
+                            font: Theme.typography.titleSmall
+                            color: Theme.backgroundText
+                            Layout.fillWidth: true
+                        }
+
+                        Button {
+                            text: "Xóa"
+                            flat: true
+                            font: Theme.typography.labelSmall
+                            Material.foreground: Theme.error
+                            onClicked: stockVM.clearChangeLog()
+                        }
                     }
 
                     Rectangle {
                         Layout.fillWidth: true
                         height: 1
-                        color: "#E5E7EB"
+                        color: Theme.outline
                     }
 
                     ListView {
@@ -186,18 +196,18 @@ Item {
                         delegate: Rectangle {
                             width: parent ? parent.width : 0
                             height: 40
-                            radius: 6
-                            color: index % 2 === 0 ? "white" : "#F9FAFB"
+                            radius: Theme.radiusSm
+                            color: index % 2 === 0 ? Theme.surface : Theme.backgroundSecondary
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 8
-                                anchors.rightMargin: 8
+                                anchors.leftMargin: Theme.spacingSm
+                                anchors.rightMargin: Theme.spacingSm
                                 spacing: 6
 
-                                Label {
-                                    text: model.changeType === "increase" ? "📈" : "📉"
-                                    font.pixelSize: 14
+                                Rectangle {
+                                    width: 6; height: 6; radius: 3
+                                    color: model.changeType === "increase" ? Theme.success : Theme.error
                                 }
 
                                 ColumnLayout {
@@ -206,23 +216,22 @@ Item {
 
                                     Label {
                                         text: model.productName || ""
-                                        font.pixelSize: 12
-                                        font.weight: Font.Medium
-                                        color: "#1F2937"
+                                        font: Theme.typography.labelMedium
+                                        color: Theme.backgroundText
                                         elide: Text.ElideRight
                                     }
 
                                     Label {
                                         text: (model.oldQty || 0) + " → " + (model.newQty || 0)
-                                        font.pixelSize: 10
-                                        color: "#6B7280"
+                                        font: Theme.typography.labelSmall
+                                        color: Theme.surfaceVariantText
                                     }
                                 }
 
                                 Label {
                                     text: model.changedAt || ""
-                                    font.pixelSize: 9
-                                    color: "#9CA3AF"
+                                    font: Theme.typography.labelSmall
+                                    color: Theme.textDisabled
                                 }
                             }
                         }

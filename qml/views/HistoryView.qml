@@ -14,18 +14,17 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 12
+        anchors.margins: Theme.spacingMd
+        spacing: Theme.spacingSm
 
         // Header
         RowLayout {
             Layout.fillWidth: true
 
             Label {
-                text: "📜 Lịch sử Ca"
-                font.pixelSize: 18
-                font.weight: Font.Medium
-                color: "#1F2937"
+                text: "Lịch sử Ca"
+                font: Theme.typography.titleMedium
+                color: Theme.backgroundText
             }
 
             Item { Layout.fillWidth: true }
@@ -44,27 +43,32 @@ Item {
             delegate: Rectangle {
                 width: parent ? parent.width : 0
                 height: 72
-                radius: 12
-                color: histItemMouse.containsMouse ? "#F3F4F6" : "white"
+                radius: Theme.radiusLg
+                color: histItemMouse.containsMouse ? Theme.surfaceVariant : Theme.surface
                 border.width: 1
-                border.color: "#F3F4F6"
+                border.color: Theme.divider
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    spacing: 12
+                    anchors.leftMargin: Theme.spacingMd
+                    anchors.rightMargin: Theme.spacingMd
+                    spacing: Theme.spacingSm
 
-                    // Date icon
+                    // Date indicator
                     Rectangle {
                         width: 44; height: 44
-                        radius: 10
-                        color: "#dbeafe"
+                        radius: Theme.radiusMd
+                        color: Theme.withAlpha(Theme.info, 0.1)
 
                         Label {
                             anchors.centerIn: parent
-                            text: "📅"
-                            font.pixelSize: 20
+                            text: {
+                                var d = model.sessionDate || ""
+                                return d.length >= 2 ? d.substring(0, 2) : "–"
+                            }
+                            font.pixelSize: 16
+                            font.weight: Font.Bold
+                            color: Theme.info
                         }
                     }
 
@@ -75,21 +79,20 @@ Item {
 
                         Label {
                             text: model.shiftName || "Ca không tên"
-                            font.pixelSize: 14
-                            font.weight: Font.Medium
-                            color: "#1F2937"
+                            font: Theme.typography.labelLarge
+                            color: Theme.backgroundText
                         }
 
                         RowLayout {
-                            spacing: 12
+                            spacing: Theme.spacingSm
                             Label {
                                 text: model.sessionDate || ""
-                                font.pixelSize: 12; color: "#6B7280"
+                                font: Theme.typography.bodySmall; color: Theme.surfaceVariantText
                             }
                             Label {
                                 visible: (model.notes || "") !== ""
-                                text: "📝 " + (model.notes || "")
-                                font.pixelSize: 11; color: "#9CA3AF"
+                                text: model.notes || ""
+                                font: Theme.typography.labelSmall; color: Theme.textDisabled
                                 elide: Text.ElideRight
                                 Layout.maximumWidth: 200
                             }
@@ -99,16 +102,16 @@ Item {
                     // Total
                     Label {
                         text: model.totalAmount ? Number(model.totalAmount).toLocaleString('vi-VN') + " đ" : "0 đ"
-                        font.pixelSize: 16
-                        font.weight: Font.Bold
-                        color: "#047857"
+                        font: Theme.typography.titleSmall
+                        color: Theme.primaryDark
                     }
 
                     // View detail
                     RoundButton {
-                        text: "👁️"
-                        width: 36; height: 36
+                        text: "Chi tiết"
+                        width: 64; height: 36
                         flat: true
+                        font: Theme.typography.labelSmall
                         onClicked: {
                             historyVM.loadDetail(model.historyId)
                             historyDetailDialog.open()
@@ -117,9 +120,11 @@ Item {
 
                     // Delete
                     RoundButton {
-                        text: "🗑️"
-                        width: 32; height: 32
+                        text: "Xóa"
+                        width: 48; height: 32
                         flat: true
+                        font: Theme.typography.labelSmall
+                        Material.foreground: Theme.error
                         onClicked: deleteHistConfirm.show(
                             "Xóa lịch sử?",
                             "Ca '" + (model.shiftName || "") + "' sẽ bị xóa.",
@@ -142,8 +147,8 @@ Item {
                 anchors.centerIn: parent
                 visible: historyVM.histories.count === 0
                 text: "Chưa có lịch sử nào"
-                font.pixelSize: 16
-                color: "#9CA3AF"
+                font: Theme.typography.bodyLarge
+                color: Theme.textDisabled
             }
         }
     }

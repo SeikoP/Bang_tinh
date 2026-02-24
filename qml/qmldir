@@ -29,4 +29,3 @@ SaveSessionDialog 1.0 dialogs/SaveSessionDialog.qml
 ProductDialog 1.0 dialogs/ProductDialog.qml
 TaskDialog 1.0 dialogs/TaskDialog.qml
 HistoryDetailDialog 1.0 dialogs/HistoryDetailDialog.qml
-HistoryDetailDialog 1.0 dialogs/HistoryDetailDialog.qml

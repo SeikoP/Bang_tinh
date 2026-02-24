@@ -3,7 +3,7 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 
 /**
- * NotificationBanner — Slide-in banner for header area
+ * NotificationBanner — Slide-in banner for header area.
  * Shows bank notifications or system alerts.
  */
 Item {
@@ -28,7 +28,7 @@ Item {
     }
 
     Behavior on height {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.animFast; easing.type: Easing.OutCubic }
     }
 
     NumberAnimation {
@@ -45,7 +45,7 @@ Item {
         target: bannerContent
         property: "x"
         from: 0; to: bannerRoot.width
-        duration: 250
+        duration: Theme.animNormal
         easing.type: Easing.InCubic
         onFinished: bannerText.text = ""
     }
@@ -53,50 +53,53 @@ Item {
     Rectangle {
         id: bannerContent
         anchors.fill: parent
-        radius: 8
+        radius: Theme.radiusMd
         color: {
-            if (bannerType === "bank") return Qt.rgba(0.063, 0.725, 0.506, 0.1)
-            if (bannerType === "task") return Qt.rgba(0.957, 0.620, 0.043, 0.1)
-            return Qt.rgba(0.145, 0.388, 0.922, 0.1)
+            if (bannerType === "bank") return Theme.withAlpha(Theme.primary, 0.1)
+            if (bannerType === "task") return Theme.withAlpha(Theme.warningColor, 0.1)
+            return Theme.withAlpha(Theme.info, 0.1)
         }
         border.width: 1
         border.color: {
-            if (bannerType === "bank") return Qt.rgba(0.063, 0.725, 0.506, 0.3)
-            if (bannerType === "task") return Qt.rgba(0.957, 0.620, 0.043, 0.3)
-            return Qt.rgba(0.145, 0.388, 0.922, 0.3)
+            if (bannerType === "bank") return Theme.withAlpha(Theme.primary, 0.3)
+            if (bannerType === "task") return Theme.withAlpha(Theme.warningColor, 0.3)
+            return Theme.withAlpha(Theme.info, 0.3)
         }
 
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 12
             anchors.rightMargin: 12
-            spacing: 8
+            spacing: Theme.spacingSm
 
-            Label {
-                text: {
-                    if (bannerType === "bank") return "💰"
-                    if (bannerType === "task") return "📋"
-                    return "ℹ️"
+            Rectangle {
+                width: 6
+                height: 6
+                radius: 3
+                color: {
+                    if (bannerType === "bank") return Theme.primary
+                    if (bannerType === "task") return Theme.warningColor
+                    return Theme.info
                 }
-                font.pixelSize: 16
             }
 
             Label {
                 id: bannerText
                 Layout.fillWidth: true
-                font.pixelSize: 13
-                font.weight: Font.Medium
-                color: "#1F2937"
+                font: Theme.typography.labelMedium
+                color: Theme.backgroundText
                 elide: Text.ElideRight
                 maximumLineCount: 1
             }
 
             Label {
-                text: "✕"
-                font.pixelSize: 12
-                color: "#6B7280"
+                text: "×"
+                font.pixelSize: 14
+                font.weight: Font.Medium
+                color: Theme.surfaceVariantText
                 MouseArea {
                     anchors.fill: parent
+                    anchors.margins: -4
                     cursorShape: Qt.PointingHandCursor
                     onClicked: bannerRoot.hide()
                 }

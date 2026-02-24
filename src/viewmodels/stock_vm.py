@@ -92,6 +92,45 @@ class StockViewModel(BaseViewModel):
             self._changelog_model.resetItems(logs)
         self._safe_call(_adjust, error_msg="Failed to adjust stock quantity")
 
+    @Slot(str)
+    def filterProducts(self, text: str):
+        """Filter stock items by product name."""
+        def _filter():
+            session_repo = self._get_service("session_repo")
+            product_repo = self._get_service("product_repo")
+            if not session_repo or not product_repo:
+                return
+            products = product_repo.get_all()
+            sessions = session_repo.get_all()
+            session_map = {s.product.id: s for s in sessions}
+            stock_items = []
+            search = text.lower().strip()
+            for p in products:
+                if not p.is_active:
+                    continue
+                if search and search not in p.name.lower():
+                    continue
+                s = session_map.get(p.id)
+                qty = s.closing_qty if s else 0
+                stock_items.append({
+                    "product_id": p.id,
+                    "name": p.name,
+                    "large_unit": p.large_unit,
+                    "quantity": qty,
+                    "conversion": p.conversion,
+                })
+            self._stock_model.resetItems(stock_items)
+        self._safe_call(_filter, error_msg="Failed to filter stock")
+
+    @Slot()
+    def clearChangeLog(self):
+        """Clear the stock change history."""
+        def _clear():
+            from database.repositories import StockChangeLogRepository
+            StockChangeLogRepository.clear_all()
+            self._changelog_model.resetItems([])
+        self._safe_call(_clear, error_msg="Failed to clear change log")
+
     @Slot(int, int)
     def setQuantity(self, row: int, qty: int):
         """Set absolute quantity for a product."""
