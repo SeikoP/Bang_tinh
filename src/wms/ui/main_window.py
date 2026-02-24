@@ -145,17 +145,17 @@ class MainWindow(QMainWindow):
         self.fade_effect = QGraphicsOpacityEffect(self.content_stack)
         self.content_stack.setGraphicsEffect(self.fade_effect)
 
-        # Fade-in animation (reused)
+        # Fade-in animation — smooth ease-out for natural feel
         self.fade_animation = QPropertyAnimation(self.fade_effect, b"opacity")
-        self.fade_animation.setDuration(120)
-        self.fade_animation.setStartValue(0.0)
+        self.fade_animation.setDuration(150)
+        self.fade_animation.setStartValue(0.3)
         self.fade_animation.setEndValue(1.0)
-        self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self.fade_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
 
-        # Fade-out animation (reused instead of creating new each switch)
+        # Fade-out animation — quick snap
         self.fade_out_animation = QPropertyAnimation(self.fade_effect, b"opacity")
-        self.fade_out_animation.setDuration(60)
-        self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InCubic)
+        self.fade_out_animation.setDuration(50)
+        self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InQuad)
 
     def _setup_window(self):
         title = f"{APP_NAME} v{APP_VERSION}"
@@ -190,31 +190,56 @@ class MainWindow(QMainWindow):
 
         # Sidebar - Modern gradient design
         self.sidebar = QFrame()
-        self.sidebar.setFixedWidth(160)
+        self.sidebar.setFixedWidth(180)
         self.sidebar.setObjectName("sidebar")
         self.sidebar.setStyleSheet("""
             QFrame#sidebar {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #1E293B, stop:0.5 #0F172A, stop:1 #020617);
+                    stop:0 #1e293b, stop:0.3 #0f172a, stop:1 #020617);
                 border: none;
-                border-right: 1px solid rgba(255, 255, 255, 0.08);
+                border-right: 1px solid rgba(255, 255, 255, 0.06);
             }
         """)
 
         sidebar_layout = QVBoxLayout(self.sidebar)
-        sidebar_layout.setContentsMargins(12, 20, 12, 16)
+        sidebar_layout.setContentsMargins(14, 20, 14, 16)
         sidebar_layout.setSpacing(4)
 
+        # Logo with subtle glass-morphism badge
+        logo_frame = QFrame()
+        logo_frame.setStyleSheet("""
+            QFrame {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 rgba(16, 185, 129, 0.15), stop:1 rgba(59, 130, 246, 0.1));
+                border-radius: 10px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+        """)
+        logo_layout = QVBoxLayout(logo_frame)
+        logo_layout.setContentsMargins(12, 10, 12, 10)
+        logo_layout.setSpacing(2)
         logo = QLabel("WMS")
         logo.setStyleSheet("""
             color: white; 
             font-weight: 950; 
-            font-size: 20px; 
-            padding: 10px 12px 20px 12px;
-            letter-spacing: 3px;
-            border-radius: 8px;
+            font-size: 18px; 
+            letter-spacing: 4px;
+            background: transparent;
+            border: none;
         """)
-        sidebar_layout.addWidget(logo)
+        logo_sub = QLabel("Warehouse System")
+        logo_sub.setStyleSheet("""
+            color: rgba(148, 163, 184, 0.8);
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: transparent;
+            border: none;
+        """)
+        logo_layout.addWidget(logo)
+        logo_layout.addWidget(logo_sub)
+        sidebar_layout.addWidget(logo_frame)
+        sidebar_layout.addSpacing(16)
 
         self.nav_btns = []
         self._add_nav_btn(sidebar_layout, "Quản lý", 0)
@@ -235,11 +260,9 @@ class MainWindow(QMainWindow):
 
         version = QLabel(f"v{APP_VERSION}")
         version.setStyleSheet(f"""
-            color: {AppColors.SIDEBAR_TEXT}; 
+            color: rgba(148, 163, 184, 0.6); 
             font-size: 10px; 
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
+            padding: 10px 14px;
             font-weight: 600;
             letter-spacing: 0.5px;
         """)
@@ -264,6 +287,9 @@ class MainWindow(QMainWindow):
                 border: none;
                 background: transparent;
             }}
+            QTabBar {{
+                background: transparent;
+            }}
             QTabBar::tab {{
                 padding: 12px 28px;
                 font-weight: 600;
@@ -271,15 +297,17 @@ class MainWindow(QMainWindow):
                 background: transparent;
                 color: {AppColors.TEXT_SECONDARY};
                 border-bottom: 2px solid transparent;
+                margin-right: 2px;
             }}
             QTabBar::tab:selected {{
                 color: {AppColors.PRIMARY};
                 border-bottom: 2px solid {AppColors.PRIMARY};
-                background: rgba(37, 99, 235, 0.05);
+                background: rgba(16, 185, 129, 0.04);
             }}
             QTabBar::tab:hover:!selected {{
                 color: {AppColors.TEXT};
-                background: rgba(15, 23, 42, 0.05);
+                background: rgba(15, 23, 42, 0.03);
+                border-bottom: 2px solid {AppColors.BORDER};
             }}
         """)
 
@@ -306,20 +334,23 @@ class MainWindow(QMainWindow):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Global Header - Clean minimal
+        # Global Header - Clean with subtle bottom shadow
         header = QFrame()
-        header.setFixedHeight(50)
+        header.setFixedHeight(52)
         header.setStyleSheet(f"""
-            background: #FFFFFF;
-            border-bottom: 1px solid {AppColors.BORDER};
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #FFFFFF, stop:1 #FAFBFC);
+                border-bottom: 1px solid {AppColors.BORDER};
+            }}
         """)
         header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(24, 0, 24, 0)
+        header_layout.setContentsMargins(28, 0, 28, 0)
 
         self.breadcrumb = QLabel("Trang chủ / Bảng tính")
         self.breadcrumb.setStyleSheet(f"""
             color: {AppColors.TEXT_SECONDARY}; 
-            font-weight: 500; 
+            font-weight: 600; 
             font-size: 12px;
             letter-spacing: 0.3px;
         """)

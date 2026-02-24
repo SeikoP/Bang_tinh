@@ -159,34 +159,31 @@ class AppTheme:
             background: {c.PRIMARY_HOVER};
         }}
 
-        /* Sidebar Item Style - Modern gradient */
+        /* Sidebar Item Style - Refined modern */
         QPushButton#navItem {{
             background: transparent;
             color: {c.SIDEBAR_TEXT};
             text-align: left;
-            padding: 13px 16px;
+            padding: 12px 16px;
             border-radius: 10px;
             font-weight: 600;
             font-size: 13px;
             border: none;
-            min-height: 42px;
-            letter-spacing: 0.4px;
+            min-height: 40px;
+            letter-spacing: 0.3px;
         }}
         
         QPushButton#navItem:hover {{
-            background: rgba(59, 130, 246, 0.12);
+            background: rgba(255, 255, 255, 0.07);
             color: #e2e8f0;
-            border-left: 3px solid #3B82F6;
         }}
         
         QPushButton#navItem[active="true"] {{
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 #3B82F6, stop:1 #8B5CF6);
-            color: white;
+                stop:0 rgba(16, 185, 129, 0.25), stop:1 rgba(59, 130, 246, 0.15));
+            color: {c.PRIMARY_LIGHT};
             font-weight: 700;
-            border-left: 4px solid white;
-            border-radius: 10px;
-            margin-left: 4px;
+            border-left: 3px solid {c.PRIMARY};
         }}
         
         QPushButton#success {{
@@ -398,7 +395,7 @@ class AppTheme:
         }}
         
         QTableWidget::item:hover {{
-            background-color: rgba(37, 99, 235, 0.05);
+            background-color: rgba(16, 185, 129, 0.06);
             color: {c.TEXT};
         }}
         
@@ -411,13 +408,12 @@ class AppTheme:
             padding: 12px 8px;
             border: none;
             border-right: 1px solid {c.BORDER};
-            border-bottom: 1px solid {c.BORDER};
+            border-bottom: 2px solid {c.BORDER};
             min-height: 44px;
         }}
         
         QHeaderView::section:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {c.BG}, stop:1 {c.BG_SECONDARY});
+            background-color: #eef2f7;
             color: {c.TEXT};
         }}
         
@@ -434,14 +430,13 @@ class AppTheme:
         }}
         
         QScrollBar::handle:vertical {{
-            background-color: {c.BORDER_HOVER};
+            background-color: rgba(148, 163, 184, 0.35);
             border-radius: 5px;
             min-height: 40px;
         }}
         
         QScrollBar::handle:vertical:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 {c.PRIMARY}, stop:1 {c.PRIMARY_LIGHT});
+            background-color: rgba(16, 185, 129, 0.5);
         }}
         
         QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
@@ -457,14 +452,13 @@ class AppTheme:
         }}
         
         QScrollBar::handle:horizontal {{
-            background-color: {c.BORDER_HOVER};
+            background-color: rgba(148, 163, 184, 0.35);
             border-radius: 5px;
             min-width: 40px;
         }}
         
         QScrollBar::handle:horizontal:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {c.PRIMARY}, stop:1 {c.PRIMARY_LIGHT});
+            background-color: rgba(16, 185, 129, 0.5);
         }}
         
         /* ===== Frames ===== */
@@ -476,6 +470,7 @@ class AppTheme:
         
         QFrame#card:hover {{
             border-color: {c.BORDER_HOVER};
+            background-color: {c.SURFACE_HOVER};
         }}
         
         /* ===== Message Box ===== */

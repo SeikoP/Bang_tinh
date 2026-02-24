@@ -42,23 +42,29 @@ class CalculatorToolView(QWidget):
                 border: none;
                 background: transparent;
             }}
-            QTabBar::tab {{
+            QTabBar {{
                 background: transparent;
+            }}
+            QTabBar::tab {{
+                background: rgba(255, 255, 255, 0.6);
                 color: {AppColors.TEXT_SECONDARY};
                 font-size: 12px;
                 font-weight: 700;
-                padding: 8px 20px;
-                margin-right: 4px;
-                border: none;
-                border-bottom: 2px solid transparent;
+                padding: 10px 24px;
+                margin-right: 6px;
+                border: 1px solid {AppColors.BORDER};
+                border-bottom: none;
+                border-radius: 10px 10px 0 0;
             }}
             QTabBar::tab:selected {{
+                background: white;
                 color: {AppColors.PRIMARY};
-                border-bottom: 2px solid {AppColors.PRIMARY};
+                border-color: {AppColors.BORDER};
+                border-bottom: 2px solid white;
             }}
             QTabBar::tab:hover:!selected {{
+                background: rgba(255, 255, 255, 0.85);
                 color: {AppColors.TEXT};
-                border-bottom: 2px solid {AppColors.BORDER};
             }}
         """)
         outer.addWidget(self.sub_tabs)
@@ -76,48 +82,64 @@ class CalculatorToolView(QWidget):
         calc_container.setStyleSheet(f"""
             QFrame {{
                 background-color: white;
-                border-radius: 18px;
+                border-radius: 16px;
                 border: 1px solid {AppColors.BORDER};
             }}
         """)
 
         calc_layout = QVBoxLayout(calc_container)
-        calc_layout.setContentsMargins(18, 22, 18, 18)
+        calc_layout.setContentsMargins(18, 18, 18, 18)
         calc_layout.setSpacing(10)
 
         # Header info
         header_info = QLabel("STANDARD CALCULATOR")
         header_info.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 10px; letter-spacing: 2px; padding-bottom: 2px;"
+            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 9px; letter-spacing: 2.5px; padding-bottom: 2px;"
         )
         calc_layout.addWidget(header_info)
+
+        # Display area with subtle gradient background
+        display_frame = QFrame()
+        display_frame.setStyleSheet(f"""
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f8fafc, stop:1 #f1f5f9);
+                border-radius: 12px;
+                border: 1px solid {AppColors.BORDER};
+                padding: 8px 12px;
+            }}
+        """)
+        display_layout = QVBoxLayout(display_frame)
+        display_layout.setContentsMargins(8, 4, 8, 4)
+        display_layout.setSpacing(0)
 
         # Result Display (Top Line: Previous expression)
         self.prev_display = QLabel("")
         self.prev_display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.prev_display.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 14px; min-height: 24px;"
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 13px; min-height: 20px; background: transparent;"
         )
-        calc_layout.addWidget(self.prev_display)
+        display_layout.addWidget(self.prev_display)
 
         # Main Entry Display (Bottom Line)
         self.display = QLineEdit()
         self.display.setReadOnly(True)
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.display.setFixedHeight(54)
+        self.display.setFixedHeight(50)
         self.display.setText("0")
         self.display.setStyleSheet(f"""
             QLineEdit {{
                 border: none;
                 background: transparent;
                 color: {AppColors.TEXT};
-                font-size: 36px;
+                font-size: 34px;
                 font-weight: 800;
-                padding-right: 5px;
+                padding-right: 4px;
                 letter-spacing: -0.5px;
             }}
         """)
-        calc_layout.addWidget(self.display)
+        display_layout.addWidget(self.display)
+        calc_layout.addWidget(display_frame)
 
         # --- SPECIAL ACTION PANEL ---
         action_layout = QHBoxLayout()
@@ -193,16 +215,19 @@ class CalculatorToolView(QWidget):
             is_digit = text.isdigit() or text == "."
             is_op = text in ["÷", "×", "−", "+"]
 
-            # Ultra-clean modern style
+            # Ultra-clean modern style with press feedback
             if text == "=":
-                st = f"background: {AppColors.PRIMARY}; color: white; border-radius: 12px; font-weight: 700; font-size: 24px; border: none;"
-                hover = f"background: {AppColors.PRIMARY_HOVER}; margin-top: -2px;"
+                st = f"background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {AppColors.PRIMARY_LIGHT}, stop:1 {AppColors.PRIMARY}); color: white; border-radius: 12px; font-weight: 700; font-size: 24px; border: none;"
+                hover = f"background: {AppColors.PRIMARY_HOVER};"
+                pressed = f"background: {AppColors.PRIMARY_DARK}; padding-top: 2px;"
             elif is_op:
                 st = f"background: #F1F5F9; color: {AppColors.PRIMARY}; border-radius: 12px; font-weight: 600; font-size: 24px; border: none;"
                 hover = f"background: #E2E8F0; color: {AppColors.PRIMARY_DARK};"
+                pressed = f"background: #CBD5E1; padding-top: 2px;"
             elif is_digit:
                 st = f"background: white; color: {AppColors.TEXT}; border-radius: 12px; font-weight: 600; font-size: 22px; border: 1px solid #F1F5F9;"
                 hover = f"background: #F8FAFC; border-color: {AppColors.BORDER_HOVER};"
+                pressed = f"background: #F1F5F9; border-color: {AppColors.PRIMARY}; padding-top: 2px;"
             else:  # Function keys (CE, C, etc)
                 st = f"background: white; color: {AppColors.ERROR if text in ['C', 'CE'] else AppColors.TEXT_SECONDARY}; border-radius: 12px; font-weight: 600; font-size: 16px; border: 1px solid #F1F5F9;"
                 hover = (
@@ -210,11 +235,12 @@ class CalculatorToolView(QWidget):
                     if text in ["C", "CE"]
                     else f"background: #F8FAFC; color: {AppColors.TEXT};"
                 )
+                pressed = f"background: #F1F5F9; padding-top: 2px;"
 
             btn.setStyleSheet(f"""
                 QPushButton {{ {st} }}
                 QPushButton:hover {{ {hover} }}
-                QPushButton:pressed {{ background: #E2E8F0; margin-top: 1px; }}
+                QPushButton:pressed {{ {pressed} }}
             """)
             btn.clicked.connect(lambda ch, t=real_op: self._on_btn(t))
             grid.addWidget(btn, r, c)
@@ -228,16 +254,20 @@ class CalculatorToolView(QWidget):
         # --- RIGHT: HISTORY ---
         history_side = QFrame()
         history_side.setFixedWidth(260)
-        history_side.setStyleSheet(
-            f"background-color: white; border-radius: 18px; border: 1px solid {AppColors.BORDER};"
-        )
+        history_side.setStyleSheet(f"""
+            QFrame {{
+                background-color: white;
+                border-radius: 16px;
+                border: 1px solid {AppColors.BORDER};
+            }}
+        """)
 
         hist_layout = QVBoxLayout(history_side)
-        hist_layout.setContentsMargins(14, 20, 14, 14)
+        hist_layout.setContentsMargins(14, 18, 14, 14)
 
         hist_label = QLabel("LỊCH SỬ")
         hist_label.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 10px; letter-spacing: 2px; margin-bottom: 8px;"
+            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 9px; letter-spacing: 2.5px; margin-bottom: 10px;"
         )
         hist_layout.addWidget(hist_label)
 
@@ -301,22 +331,22 @@ class CalculatorToolView(QWidget):
         card.setStyleSheet(f"""
             QFrame#money_card {{
                 background-color: white;
-                border-radius: 18px;
+                border-radius: 16px;
                 border: 1px solid {AppColors.BORDER};
             }}
         """)
         card.setObjectName("money_card")
 
         card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(24, 20, 24, 16)
-        card_layout.setSpacing(12)
+        card_layout.setContentsMargins(28, 20, 28, 18)
+        card_layout.setSpacing(14)
 
-        # Header row
+        # Header row with decorative underline
         header_row = QHBoxLayout()
         header_label = QLabel("ĐẾM TIỀN VIỆT NAM")
         header_label.setStyleSheet(
             f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; "
-            f"font-size: 10px; letter-spacing: 2px;"
+            f"font-size: 9px; letter-spacing: 2.5px;"
         )
         header_row.addWidget(header_label)
         header_row.addStretch()
@@ -340,14 +370,15 @@ class CalculatorToolView(QWidget):
                 align = Qt.AlignmentFlag.AlignRight if i == 2 else Qt.AlignmentFlag.AlignLeft
                 hdr.setAlignment(align)
                 hdr.setStyleSheet(
-                    f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; "
-                    f"font-weight: 700; letter-spacing: 1px; padding-bottom: 4px;"
+                    f"color: {AppColors.TEXT_SECONDARY}; font-size: 9px; "
+                    f"font-weight: 700; letter-spacing: 1.5px; padding-bottom: 6px;"
+                    f"border-bottom: 2px solid {AppColors.BORDER};"
                 )
                 table_grid.addWidget(hdr, 0, base_col + i)
 
         # Spacer column between groups
         spacer = QLabel()
-        spacer.setFixedWidth(24)
+        spacer.setFixedWidth(32)
         table_grid.addWidget(spacer, 0, 3)
 
         # --- Denomination rows: 6 rows × 2 groups ---
@@ -360,14 +391,16 @@ class CalculatorToolView(QWidget):
 
             # Column 0: Denomination label with color dot
             denom_widget = QWidget()
-            denom_widget.setStyleSheet("background: transparent;")
+            # Alternate row background for zebra-stripe effect
+            row_bg = "#f8fafc" if (row_num % 2 == 0) else "transparent"
+            denom_widget.setStyleSheet(f"background: {row_bg}; border-radius: 6px;")
             denom_h = QHBoxLayout(denom_widget)
-            denom_h.setContentsMargins(0, 0, 0, 0)
-            denom_h.setSpacing(8)
+            denom_h.setContentsMargins(6, 4, 0, 4)
+            denom_h.setSpacing(10)
 
             dot = QLabel()
-            dot.setFixedSize(8, 8)
-            dot.setStyleSheet(f"background: {color}; border-radius: 4px;")
+            dot.setFixedSize(10, 10)
+            dot.setStyleSheet(f"background: {color}; border-radius: 5px;")
             denom_h.addWidget(dot)
 
             if denom >= 1000:
@@ -375,9 +408,9 @@ class CalculatorToolView(QWidget):
             else:
                 text = str(denom)
             lbl = QLabel(text)
-            lbl.setFixedWidth(70)
+            lbl.setFixedWidth(75)
             lbl.setStyleSheet(
-                f"color: {AppColors.TEXT}; font-weight: 700; font-size: 13px;"
+                f"color: {AppColors.TEXT}; font-weight: 700; font-size: 13px; background: transparent;"
             )
             denom_h.addWidget(lbl)
             denom_h.addStretch()
@@ -389,20 +422,23 @@ class CalculatorToolView(QWidget):
             qty_input.setValidator(QIntValidator(0, 99999))
             qty_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
             qty_input.setFixedWidth(80)
-            qty_input.setFixedHeight(32)
+            qty_input.setFixedHeight(34)
             qty_input.setStyleSheet(f"""
                 QLineEdit {{
                     border: 1px solid {AppColors.BORDER};
-                    border-radius: 6px;
-                    background: #f8fafc;
+                    border-radius: 8px;
+                    background: white;
                     color: {AppColors.TEXT};
                     font-size: 13px;
                     font-weight: 600;
                     padding: 0 8px;
                 }}
                 QLineEdit:focus {{
-                    border-color: {AppColors.PRIMARY};
+                    border: 2px solid {AppColors.PRIMARY};
                     background: #f0fdf4;
+                }}
+                QLineEdit:hover {{
+                    border-color: {AppColors.BORDER_HOVER};
                 }}
             """)
             qty_input.textChanged.connect(lambda _: self._update_money_totals())
@@ -412,7 +448,7 @@ class CalculatorToolView(QWidget):
             # Column 2: Subtotal
             sub = QLabel("0 ₫")
             sub.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-            sub.setFixedWidth(120)
+            sub.setFixedWidth(130)
             sub.setStyleSheet(
                 f"color: {AppColors.TEXT_SECONDARY}; font-size: 13px; font-weight: 600;"
             )
@@ -421,23 +457,27 @@ class CalculatorToolView(QWidget):
 
         card_layout.addLayout(table_grid)
 
-        # Separator
+        # Separator with gradient
         sep = QFrame()
-        sep.setFixedHeight(1)
-        sep.setStyleSheet(f"background: {AppColors.BORDER};")
+        sep.setFixedHeight(2)
+        sep.setStyleSheet(f"""
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {AppColors.PRIMARY}, stop:0.5 {AppColors.BORDER}, stop:1 transparent);
+            border-radius: 1px;
+        """)
         card_layout.addWidget(sep)
 
-        # Grand total row
+        # Grand total row - prominent
         total_row = QHBoxLayout()
-        total_row.setContentsMargins(0, 4, 0, 0)
+        total_row.setContentsMargins(0, 6, 0, 2)
         total_label = QLabel("TỔNG CỘNG:")
         total_label.setStyleSheet(
-            f"color: {AppColors.TEXT}; font-weight: 800; font-size: 14px;"
+            f"color: {AppColors.TEXT}; font-weight: 800; font-size: 14px; letter-spacing: 0.5px;"
         )
         self._money_total_label = QLabel("0 ₫")
         self._money_total_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self._money_total_label.setStyleSheet(
-            f"color: {AppColors.PRIMARY}; font-weight: 900; font-size: 22px;"
+            f"color: {AppColors.PRIMARY}; font-weight: 900; font-size: 24px; letter-spacing: -0.5px;"
         )
         total_row.addWidget(total_label)
         total_row.addWidget(self._money_total_label)
@@ -456,42 +496,47 @@ class CalculatorToolView(QWidget):
 
         copy_btn = QPushButton("Copy kết quả")
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        copy_btn.setFixedHeight(36)
+        copy_btn.setFixedHeight(38)
         copy_btn.setStyleSheet(f"""
             QPushButton {{
                 background: white; color: {AppColors.PRIMARY};
-                border-radius: 8px; border: 1px solid {AppColors.BORDER};
-                font-size: 12px; font-weight: 700; padding: 0 16px;
+                border-radius: 10px; border: 1.5px solid {AppColors.BORDER};
+                font-size: 12px; font-weight: 700; padding: 0 20px;
             }}
             QPushButton:hover {{ background: #f0fdf4; border-color: {AppColors.PRIMARY}; }}
+            QPushButton:pressed {{ background: #ecfdf5; }}
         """)
         copy_btn.clicked.connect(self._copy_money_total)
         btn_row.addWidget(copy_btn)
 
         send_btn = QPushButton("Gửi sang Máy tính")
         send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        send_btn.setFixedHeight(36)
+        send_btn.setFixedHeight(38)
         send_btn.setStyleSheet(f"""
             QPushButton {{
-                background: {AppColors.PRIMARY}; color: white;
-                border-radius: 8px; border: none;
-                font-size: 12px; font-weight: 700; padding: 0 16px;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 {AppColors.PRIMARY_LIGHT}, stop:1 {AppColors.PRIMARY});
+                color: white;
+                border-radius: 10px; border: none;
+                font-size: 12px; font-weight: 700; padding: 0 20px;
             }}
             QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
+            QPushButton:pressed {{ background: {AppColors.PRIMARY_DARK}; }}
         """)
         send_btn.clicked.connect(self._send_money_to_calc)
         btn_row.addWidget(send_btn)
 
         reset_btn = QPushButton("Xóa tất cả")
         reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        reset_btn.setFixedHeight(36)
+        reset_btn.setFixedHeight(38)
         reset_btn.setStyleSheet(f"""
             QPushButton {{
                 background: white; color: {AppColors.ERROR};
-                border-radius: 8px; border: 1px solid {AppColors.BORDER};
-                font-size: 12px; font-weight: 700; padding: 0 16px;
+                border-radius: 10px; border: 1.5px solid {AppColors.BORDER};
+                font-size: 12px; font-weight: 700; padding: 0 20px;
             }}
             QPushButton:hover {{ background: #fef2f2; border-color: {AppColors.ERROR}; }}
+            QPushButton:pressed {{ background: #fee2e2; }}
         """)
         reset_btn.clicked.connect(self._reset_money_counter)
         btn_row.addWidget(reset_btn)
@@ -518,12 +563,12 @@ class CalculatorToolView(QWidget):
             if qty > 0:
                 lbl.setText(f"{sub:,.0f} ₫")
                 lbl.setStyleSheet(
-                    f"color: {AppColors.TEXT}; font-size: 10px; font-weight: 700;"
+                    f"color: {AppColors.TEXT}; font-size: 13px; font-weight: 700;"
                 )
             else:
                 lbl.setText("0 ₫")
                 lbl.setStyleSheet(
-                    f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; font-weight: 600;"
+                    f"color: {AppColors.TEXT_SECONDARY}; font-size: 13px; font-weight: 600;"
                 )
 
         self._money_total_label.setText(f"{grand_total:,.0f} ₫")
@@ -710,19 +755,29 @@ class CalculatorToolView(QWidget):
 
     def _add_to_history(self, expr, res):
         frame = QFrame()
-        frame.setStyleSheet(
-            f"QFrame {{ background: #f8fafc; border-radius: 8px; padding: 8px; border: 1px solid #e2e8f0; }} QFrame:hover {{ border-color: {AppColors.PRIMARY}; }}"
-        )
+        frame.setStyleSheet(f"""
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #fafbfc, stop:1 #f1f5f9);
+                border-radius: 10px;
+                padding: 8px;
+                border: 1px solid #e2e8f0;
+            }}
+            QFrame:hover {{
+                border-color: {AppColors.PRIMARY};
+                background: #f0fdf4;
+            }}
+        """)
 
         layout = QVBoxLayout(frame)
-        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setContentsMargins(10, 8, 10, 8)
 
         eq = QLabel(expr)
-        eq.setStyleSheet("color: #64748b; font-size: 11px;")
+        eq.setStyleSheet("color: #64748b; font-size: 11px; background: transparent;")
         eq.setWordWrap(True)
 
         rs = QLabel(res)
-        rs.setStyleSheet(f"color: {AppColors.TEXT}; font-weight: 800; font-size: 15px;")
+        rs.setStyleSheet(f"color: {AppColors.TEXT}; font-weight: 800; font-size: 16px; background: transparent;")
         rs.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         layout.addWidget(eq)
