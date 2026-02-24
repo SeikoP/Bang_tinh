@@ -1,7 +1,7 @@
 """
-Main Application Entry Point - Production Ready
+Main Application Entry Point - QML Edition
 
-This is the main entry point using the runtime system.
+This is the main entry point using the runtime system with QML UI.
 It provides proper bootstrap, lifecycle management, and crash handling.
 
 Usage:
@@ -23,8 +23,17 @@ if sys.platform == 'win32':
     if hasattr(sys.stderr, 'reconfigure'):
         sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
+from PySide6.QtCore import QUrl
+
 from runtime.bootstrap import ApplicationBootstrap
 from runtime.lifecycle import ApplicationLifecycle
+
+
+def _resolve_qml_path() -> Path:
+    """Resolve the path to the qml/ directory, handling frozen builds."""
+    if getattr(sys, "frozen", False):
+        return Path(sys._MEIPASS) / "qml"
+    return Path(__file__).parent / "qml"
 
 
 def main() -> int:
@@ -44,31 +53,62 @@ def main() -> int:
     config = bootstrap.get_config()
     container = bootstrap.get_container()
     qt_app = bootstrap.get_qt_app()
+    qml_engine = bootstrap.get_qml_engine()
     logger = container.get("logger")
     profiler = bootstrap.get_profiler()
     watchdog = bootstrap.get_watchdog()
 
-    # Step 3: Create lifecycle manager
-    lifecycle = ApplicationLifecycle(
-        config=config, 
-        container=container, 
-        qt_app=qt_app, 
-        logger=logger,
-        profiler=profiler,
-        watchdog=watchdog
+    # Step 3: Register QML import path
+    qml_dir = _resolve_qml_path()
+    qml_engine.addImportPath(str(qml_dir.parent))  # parent so "qml" is the module
+    qml_engine.addImportPath(str(qml_dir))
+
+    # Step 4: Create and register ViewModels as QML context properties
+    from viewmodels import (
+        AppViewModel,
+        CalculationViewModel,
+        StockViewModel,
+        ProductViewModel,
+        TaskViewModel,
+        BankViewModel,
+        HistoryViewModel,
+        SettingsViewModel,
+        CalculatorToolViewModel,
     )
 
-    # Step 4: Create main window
-    # Import here to avoid circular imports and ensure all dependencies are ready
-    from app_window import MainWindow
+    view_models = {
+        "appVM": AppViewModel(container),
+        "calculationVM": CalculationViewModel(container),
+        "stockVM": StockViewModel(container),
+        "productVM": ProductViewModel(container),
+        "taskVM": TaskViewModel(container),
+        "bankVM": BankViewModel(container),
+        "historyVM": HistoryViewModel(container),
+        "settingsVM": SettingsViewModel(container),
+        "calculatorToolVM": CalculatorToolViewModel(container),
+    }
 
-    main_window = MainWindow(container=container)
+    for name, vm in view_models.items():
+        qml_engine.rootContext().setContextProperty(name, vm)
+        logger.debug(f"Registered QML context property: {name}")
 
-    # Step 5: Register shutdown handlers (if needed)
+    # Step 5: Create lifecycle manager
+    lifecycle = ApplicationLifecycle(
+        config=config,
+        container=container,
+        qt_app=qt_app,
+        qml_engine=qml_engine,
+        logger=logger,
+        profiler=profiler,
+        watchdog=watchdog,
+    )
+
+    # Step 6: Register shutdown handlers (if needed)
     # lifecycle.register_shutdown_handler(some_cleanup_function)
 
-    # Step 6: Start the application
-    exit_code = lifecycle.start(main_window)
+    # Step 7: Load QML and start the application
+    main_qml = QUrl.fromLocalFile(str(qml_dir / "main.qml"))
+    exit_code = lifecycle.start(main_qml)
 
     return exit_code
 

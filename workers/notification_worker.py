@@ -1,4 +1,4 @@
-"""
+﻿"""
 Notification Worker - Process notifications in background
 """
 
@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from PyQt6.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 
 from workers.base_worker import BaseWorker, TaskPriority
 
@@ -154,7 +154,7 @@ class NotificationWorker(BaseWorker):
     """
     
     # Signal for UI update
-    notification_parsed = pyqtSignal(object)  # ParsedNotification
+    notification_parsed = Signal(object)  # ParsedNotification
     
     def __init__(self, logger: logging.Logger, repository):
         super().__init__("NotificationWorker", logger)

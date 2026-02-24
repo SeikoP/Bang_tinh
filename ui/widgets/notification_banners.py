@@ -1,17 +1,17 @@
-"""
+﻿"""
 Notification Banners - Premium UI Components
 Encapsulates notification display logic and animations.
 """
 
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSignal, QTimer, QSize
-from PyQt6.QtWidgets import QFrame, QLabel, QHBoxLayout, QPushButton, QGraphicsOpacityEffect, QWidget
+from PySide6.QtCore import Qt, QPropertyAnimation, QEasingCurve, Signal, QTimer, QSize
+from PySide6.QtWidgets import QFrame, QLabel, QHBoxLayout, QPushButton, QGraphicsOpacityEffect, QWidget
 
 
 class BaseBanner(QFrame):
     """Base class for notification banners with animations"""
     
-    clicked = pyqtSignal()
-    closed = pyqtSignal()
+    clicked = Signal()
+    closed = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)

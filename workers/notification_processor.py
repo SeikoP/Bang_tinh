@@ -1,11 +1,11 @@
-"""
+﻿"""
 Notification Processor Worker - Process notifications in background
 """
 
 from datetime import datetime
 from typing import Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from services.bank_parser import BankStatementParser
 
@@ -14,8 +14,8 @@ class NotificationProcessor(QObject):
     """Worker để xử lý thông báo trong background thread"""
     
     # Signals
-    notification_processed = pyqtSignal(dict)  # Emit processed notification data
-    error_occurred = pyqtSignal(str)  # Emit error message
+    notification_processed = Signal(dict)  # Emit processed notification data
+    error_occurred = Signal(str)  # Emit error message
     
     def __init__(self, logger=None):
         super().__init__()

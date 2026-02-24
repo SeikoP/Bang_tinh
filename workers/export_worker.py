@@ -1,4 +1,4 @@
-"""
+﻿"""
 Export Worker - Handle file exports in background
 """
 
@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any
 
-from PyQt6.QtCore import pyqtSignal
+from PySide6.QtCore import Signal
 
 from workers.base_worker import BaseWorker, TaskPriority
 
@@ -21,8 +21,8 @@ class ExportWorker(BaseWorker):
     """
     
     # Signals
-    export_completed = pyqtSignal(str)  # file_path
-    export_progress = pyqtSignal(int)  # progress (0-100)
+    export_completed = Signal(str)  # file_path
+    export_progress = Signal(int)  # progress (0-100)
     
     def __init__(self, logger: logging.Logger, export_dir: Path):
         super().__init__("ExportWorker", logger)

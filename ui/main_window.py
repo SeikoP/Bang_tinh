@@ -1,11 +1,11 @@
-"""
+﻿"""
 Main Window - Refactored
 Split from monolithic app_window.py
 """
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QIcon
+from PySide6.QtWidgets import (
     QApplication, QFrame, QHBoxLayout, QLabel,
     QMainWindow, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 )
@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
     """
     
     # Signals
-    notification_received = pyqtSignal(str)
+    notification_received = Signal(str)
     
     def __init__(self, container: Container):
         super().__init__()

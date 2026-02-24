@@ -1,8 +1,8 @@
-"""
+﻿"""
 Example: How to use the new theme system
 """
 
-from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLabel
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLabel
 from ui.theme import AppTheme
 from ui.widgets.data_table import DataTable
 from ui.widgets.loading_spinner import LoadingOverlay
@@ -154,7 +154,7 @@ class ExampleWindow(QMainWindow):
         self.loading_overlay.show_loading("Đang xử lý...")
         
         # Simulate work
-        from PyQt6.QtCore import QTimer
+        from PySide6.QtCore import QTimer
         QTimer.singleShot(2000, self.loading_overlay.hide_loading)
     
     def _on_edit(self, row_idx: int):

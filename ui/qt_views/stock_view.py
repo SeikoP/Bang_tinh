@@ -1,4 +1,4 @@
-"""
+﻿"""
 Stock View - Quản lý kho hàng
 Modern Premium Design with Real-time History
 """
@@ -6,9 +6,9 @@ Modern Premium Design with Real-time History
 from datetime import datetime
 from typing import Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont
-from PyQt6.QtWidgets import (QFrame, QHBoxLayout, QHeaderView, QLabel,
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QFont
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QHeaderView, QLabel,
                              QLineEdit, QMessageBox, QPushButton, QTableWidget,
                              QTableWidgetItem, QVBoxLayout, QWidget, QScrollArea)
 
@@ -20,7 +20,7 @@ from ui.qt_theme import AppColors
 class StockStepper(QFrame):
     """Modern Stepper Component for adjusting quantities"""
     
-    value_changed = pyqtSignal(int)
+    value_changed = Signal(int)
 
     def __init__(self, value: int, label: str = "", parent=None):
         super().__init__(parent)

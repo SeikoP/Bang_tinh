@@ -1,14 +1,14 @@
-"""
+﻿"""
 Task View - Quản lý ghi chú công việc
 """
 
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QComboBox, QCheckBox, QDialog, QFormLayout,
     QLineEdit, QTextEdit, QMessageBox, QHeaderView, QCompleter
 )
-from PyQt6.QtGui import QColor
+from PySide6.QtGui import QColor
 
 from database.task_repository import TaskRepository
 from database.task_models import TaskType

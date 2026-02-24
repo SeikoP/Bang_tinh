@@ -1,9 +1,9 @@
-"""
+﻿"""
 Notification Server - Background thread for receiving notifications
 """
 
 from http.server import ThreadingHTTPServer
-from PyQt6.QtCore import QThread, pyqtSignal
+from PySide6.QtCore import QThread, Signal
 
 from network.notification_handler import NotificationHandler
 
@@ -11,7 +11,7 @@ from network.notification_handler import NotificationHandler
 class NotificationServer(QThread):
     """Luồng chạy server lắng nghe thông báo"""
 
-    msg_received = pyqtSignal(str)
+    msg_received = Signal(str)
     
     def __init__(self, host="0.0.0.0", port=5005, logger=None, container=None):
         super().__init__()

@@ -1,10 +1,10 @@
-"""
+﻿"""
 Main Window with Background Workers
 Example of how to integrate workers
 """
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QMainWindow
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QMainWindow
 
 from core.container import Container
 from workers.notification_worker import NotificationWorker

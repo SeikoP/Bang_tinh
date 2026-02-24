@@ -1,4 +1,4 @@
-"""
+﻿"""
 Main Application - Phần mềm Quản lý Xuất kho & Dịch vụ
 PyQt6 Version - Modern Premium Design - Refactored
 """
@@ -8,9 +8,9 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from PyQt6.QtCore import QEvent, Qt, QThread, QTimer, pyqtSignal, QPropertyAnimation, QEasingCurve, QPoint, QParallelAnimationGroup, QSequentialAnimationGroup
-from PyQt6.QtGui import QFont, QIcon
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QEvent, Qt, QThread, QTimer, Signal, QPropertyAnimation, QEasingCurve, QPoint, QParallelAnimationGroup, QSequentialAnimationGroup
+from PySide6.QtGui import QFont, QIcon
+from PySide6.QtWidgets import (
     QApplication, QFrame, QHBoxLayout, QLabel,
     QMainWindow, QPushButton, QStackedWidget, QTabWidget, QVBoxLayout, QWidget, QGraphicsOpacityEffect
 )
@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
     """Main window - modern premium design"""
 
     # Signal for cross-thread notification
-    notification_received = pyqtSignal(str)
+    notification_received = Signal(str)
 
     def __init__(self, container=None):
         super().__init__()
@@ -681,8 +681,8 @@ class MainWindow(QMainWindow):
     
     def _setup_keyboard_shortcuts(self):
         """Setup global keyboard shortcuts"""
-        from PyQt6.QtGui import QShortcut, QKeySequence
-        from PyQt6.QtCore import Qt
+        from PySide6.QtGui import QShortcut, QKeySequence
+        from PySide6.QtCore import Qt
         
         # Undo: Ctrl+Z
         undo_shortcut = QShortcut(QKeySequence.StandardKey.Undo, self)
@@ -957,7 +957,7 @@ def main():
     app.setApplicationName(APP_NAME)
 
     # Load custom fonts from assets
-    from PyQt6.QtGui import QFontDatabase
+    from PySide6.QtGui import QFontDatabase
 
     fonts_dir = ASSETS / "fonts"
 
@@ -987,7 +987,7 @@ def main():
     app.setFont(font)
 
     # Initialize container with configuration
-    from PyQt6.QtWidgets import QMessageBox
+    from PySide6.QtWidgets import QMessageBox
 
     from core.config import Config
     from core.container import Container

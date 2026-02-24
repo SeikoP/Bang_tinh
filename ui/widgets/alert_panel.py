@@ -1,9 +1,9 @@
-"""
+﻿"""
 Alert Panel Widget - Hiển thị cảnh báo tồn kho
 """
 
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QHBoxLayout, QLabel, 
     QPushButton, QScrollArea, QWidget
 )

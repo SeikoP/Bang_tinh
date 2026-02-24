@@ -1,11 +1,11 @@
-"""
+﻿"""
 Status Indicator Widget - Shows server connection state in sidebar
 Provides visual feedback: 🟢 Running / 🔴 Stopped / 🟡 Starting
 """
 
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QFrame
-from PyQt6.QtGui import QPainter, QColor, QBrush
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QLabel, QFrame
+from PySide6.QtGui import QPainter, QColor, QBrush
 
 
 class StatusDot(QWidget):

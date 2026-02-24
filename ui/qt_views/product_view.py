@@ -1,6 +1,6 @@
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QDialog, QDoubleSpinBox, QFormLayout, QHBoxLayout,
+﻿from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import (QDialog, QDoubleSpinBox, QFormLayout, QHBoxLayout,
                              QHeaderView, QLabel, QLineEdit, QPushButton,
                              QSizePolicy, QTableWidget, QTableWidgetItem,
                              QVBoxLayout, QWidget)
@@ -352,7 +352,7 @@ class ProductView(QWidget):
     def _import_prices(self):
         """Import quick prices from CSV"""
         try:
-            from PyQt6.QtWidgets import QFileDialog, QMessageBox
+            from PySide6.QtWidgets import QFileDialog, QMessageBox
             import csv
             
             path, _ = QFileDialog.getOpenFileName(
@@ -409,7 +409,7 @@ class ProductView(QWidget):
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error importing prices: {str(e)}", exc_info=True)
-            from PyQt6.QtWidgets import QMessageBox
+            from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(
                 self,
                 "Lỗi",
@@ -419,7 +419,7 @@ class ProductView(QWidget):
     def _export_prices(self):
         """Export quick prices to CSV"""
         try:
-            from PyQt6.QtWidgets import QFileDialog, QMessageBox
+            from PySide6.QtWidgets import QFileDialog, QMessageBox
             import csv
             
             path, _ = QFileDialog.getSaveFileName(
@@ -459,7 +459,7 @@ class ProductView(QWidget):
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error exporting prices: {str(e)}", exc_info=True)
-            from PyQt6.QtWidgets import QMessageBox
+            from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(
                 self,
                 "Lỗi",

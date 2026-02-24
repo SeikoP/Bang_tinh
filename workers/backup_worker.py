@@ -1,4 +1,4 @@
-"""
+﻿"""
 Backup Worker - Automatic database backups
 """
 
@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtCore import QTimer, pyqtSignal
+from PySide6.QtCore import QTimer, Signal
 
 from workers.base_worker import BaseWorker, TaskPriority
 
@@ -25,8 +25,8 @@ class BackupWorker(BaseWorker):
     """
     
     # Signals
-    backup_completed = pyqtSignal(str)  # backup_path
-    backup_failed = pyqtSignal(str)  # error_message
+    backup_completed = Signal(str)  # backup_path
+    backup_failed = Signal(str)  # error_message
     
     def __init__(
         self,

@@ -1,0 +1,32 @@
+module WarehouseApp
+
+# Theme
+singleton Theme 1.0 Theme.qml
+
+# Components
+NotificationToast 1.0 components/NotificationToast.qml
+NotificationBanner 1.0 components/NotificationBanner.qml
+StatusIndicator 1.0 components/StatusIndicator.qml
+LoadingSpinner 1.0 components/LoadingSpinner.qml
+AlertPanel 1.0 components/AlertPanel.qml
+DataTable 1.0 components/DataTable.qml
+QuickBankPeek 1.0 components/QuickBankPeek.qml
+SearchField 1.0 components/SearchField.qml
+ConfirmDialog 1.0 components/ConfirmDialog.qml
+
+# Views
+CalculationView 1.0 views/CalculationView.qml
+StockView 1.0 views/StockView.qml
+ProductView 1.0 views/ProductView.qml
+TaskView 1.0 views/TaskView.qml
+BankView 1.0 views/BankView.qml
+HistoryView 1.0 views/HistoryView.qml
+SettingsView 1.0 views/SettingsView.qml
+CalculatorToolView 1.0 views/CalculatorToolView.qml
+
+# Dialogs
+SaveSessionDialog 1.0 dialogs/SaveSessionDialog.qml
+ProductDialog 1.0 dialogs/ProductDialog.qml
+TaskDialog 1.0 dialogs/TaskDialog.qml
+HistoryDetailDialog 1.0 dialogs/HistoryDetailDialog.qml
+HistoryDetailDialog 1.0 dialogs/HistoryDetailDialog.qml

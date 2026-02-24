@@ -1,4 +1,4 @@
-"""
+﻿"""
 Global Crash Handler - Production Ready
 
 Handles uncaught exceptions and provides comprehensive crash reporting:
@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from core.config import Config
 

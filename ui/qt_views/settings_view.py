@@ -1,4 +1,4 @@
-"""
+﻿"""
 Settings View - Cài đặt
 Modern Premium Design
 """
@@ -7,8 +7,8 @@ import os
 import shutil
 from datetime import datetime
 
-from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer
-from PyQt6.QtWidgets import (QFileDialog, QFrame, QHBoxLayout, QLabel,
+from PySide6.QtCore import Qt, Signal, QThread, QTimer
+from PySide6.QtWidgets import (QFileDialog, QFrame, QHBoxLayout, QLabel,
                              QMessageBox, QPushButton, QScrollArea, QSlider,
                              QVBoxLayout, QWidget, QCheckBox, QComboBox)
 
@@ -26,12 +26,12 @@ class SettingsView(QWidget):
     """View cài đặt"""
 
     # Signals để thông báo thay đổi
-    row_height_changed = pyqtSignal(int)
-    widget_height_changed = pyqtSignal(int)
+    row_height_changed = Signal(int)
+    widget_height_changed = Signal(int)
 
     class IPWorker(QThread):
-        finished = pyqtSignal(str, int, str, object) # IP, Port, SecretKey, QPixmap
-        error = pyqtSignal()
+        finished = Signal(str, int, str, object) # IP, Port, SecretKey, QPixmap
+        error = Signal()
         
         def __init__(self, container=None):
             super().__init__()
@@ -41,7 +41,7 @@ class SettingsView(QWidget):
             import socket
             from io import BytesIO
             import qrcode
-            from PyQt6.QtGui import QPixmap
+            from PySide6.QtGui import QPixmap
             try:
                 # Get local IP
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

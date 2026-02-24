@@ -1,4 +1,4 @@
-"""
+﻿"""
 Application Bootstrap System
 
 Handles the initialization sequence for the application:
@@ -13,9 +13,13 @@ Handles the initialization sequence for the application:
 
 import logging
 import sys
+from pathlib import Path
 from typing import Optional
 
-from PyQt6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQuickControls2 import QQuickStyle
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from core.config import Config
 from core.container import Container
@@ -38,7 +42,8 @@ class ApplicationBootstrap:
         self.config: Optional[Config] = None
         self.container: Optional[Container] = None
         self.logger: Optional[logging.Logger] = None
-        self.qt_app: Optional[QApplication] = None
+        self.qt_app: Optional[QGuiApplication] = None
+        self.qml_engine: Optional[QQmlApplicationEngine] = None
         self.crash_handler: Optional[CrashHandler] = None
         self.profiler: Optional['ApplicationProfiler'] = None
         self.watchdog: Optional['ApplicationWatchdog'] = None
@@ -316,14 +321,17 @@ class ApplicationBootstrap:
             self.container.register_singleton("is_license_valid", False)
 
     def _initialize_qt_application(self):
-        """Initialize Qt Application"""
-        self.logger.info("Initializing Qt application...")
+        """Initialize Qt Application with QML engine"""
+        self.logger.info("Initializing Qt QML application...")
 
-        # Create QApplication if not already created
-        if not QApplication.instance():
-            self.qt_app = QApplication(sys.argv)
+        # Set Material style BEFORE creating QGuiApplication
+        QQuickStyle.setStyle("Material")
+
+        # Create QGuiApplication if not already created
+        if not QGuiApplication.instance():
+            self.qt_app = QGuiApplication(sys.argv)
         else:
-            self.qt_app = QApplication.instance()
+            self.qt_app = QGuiApplication.instance()
 
         # Set application metadata
         self.qt_app.setApplicationName(self.config.app_name)
@@ -338,16 +346,20 @@ class ApplicationBootstrap:
             icon_path = self.config.base_dir / "assets" / "icon.png"
             
         if icon_path.exists():
-            from PyQt6.QtGui import QIcon
-
+            from PySide6.QtGui import QIcon
             self.qt_app.setWindowIcon(QIcon(str(icon_path)))
 
-        self.logger.info("Qt application initialized")
+        # Create QML engine
+        self.qml_engine = QQmlApplicationEngine()
+
+        self.logger.info("Qt QML application initialized")
 
     def _show_error_dialog(self, title: str, message: str):
         """Show error dialog to user"""
-        # Try to create a minimal QApplication for the error dialog
-        if not QApplication.instance():
+        # QMessageBox requires QApplication (not QGuiApplication)
+        # Fall back to creating a temporary QApplication for the error dialog
+        app = QApplication.instance()
+        if not app:
             app = QApplication(sys.argv)
 
         msg_box = QMessageBox()
@@ -369,13 +381,21 @@ class ApplicationBootstrap:
             raise RuntimeError("Configuration not loaded. Call initialize() first.")
         return self.config
 
-    def get_qt_app(self) -> QApplication:
+    def get_qt_app(self) -> QGuiApplication:
         """Get the Qt application instance"""
         if not self.qt_app:
             raise RuntimeError(
                 "Qt application not initialized. Call initialize() first."
             )
         return self.qt_app
+
+    def get_qml_engine(self) -> QQmlApplicationEngine:
+        """Get the QML engine instance"""
+        if not self.qml_engine:
+            raise RuntimeError(
+                "QML engine not initialized. Call initialize() first."
+            )
+        return self.qml_engine
     
     def get_profiler(self) -> 'ApplicationProfiler':
         """Get the profiler instance"""

@@ -1,10 +1,10 @@
-"""
+﻿"""
 Loading Spinner Widget
 """
 
-from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QRect
-from PyQt6.QtGui import QPainter, QColor, QPen
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QRect
+from PySide6.QtGui import QPainter, QColor, QPen
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel
 
 
 class LoadingSpinner(QWidget):

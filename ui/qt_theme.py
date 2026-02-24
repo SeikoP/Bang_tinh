@@ -1,4 +1,4 @@
-"""
+﻿"""
 Qt Theme - Modern Premium Design
 Inspired by modern desktop applications with enhanced visual appeal
 """

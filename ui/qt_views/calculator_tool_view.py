@@ -1,11 +1,11 @@
-"""
+﻿"""
 Standard Calculator Tool View - Professional Windows-style Full Feature Set
 """
 
 import math
-from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QFont, QColor
-from PyQt6.QtWidgets import (QGridLayout, QLayout, QLineEdit, QPushButton, 
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont, QColor
+from PySide6.QtWidgets import (QGridLayout, QLayout, QLineEdit, QPushButton, 
                              QVBoxLayout, QHBoxLayout, QWidget, QFrame, QLabel, 
                              QScrollArea, QApplication)
 from ui.qt_theme import AppColors
