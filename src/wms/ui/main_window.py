@@ -147,14 +147,14 @@ class MainWindow(QMainWindow):
 
         # Fade-in animation (reused)
         self.fade_animation = QPropertyAnimation(self.fade_effect, b"opacity")
-        self.fade_animation.setDuration(300)
+        self.fade_animation.setDuration(120)
         self.fade_animation.setStartValue(0.0)
         self.fade_animation.setEndValue(1.0)
         self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
         # Fade-out animation (reused instead of creating new each switch)
         self.fade_out_animation = QPropertyAnimation(self.fade_effect, b"opacity")
-        self.fade_out_animation.setDuration(150)
+        self.fade_out_animation.setDuration(60)
         self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InCubic)
 
     def _setup_window(self):
@@ -190,39 +190,39 @@ class MainWindow(QMainWindow):
 
         # Sidebar - Modern gradient design
         self.sidebar = QFrame()
-        self.sidebar.setFixedWidth(140)
+        self.sidebar.setFixedWidth(160)
         self.sidebar.setObjectName("sidebar")
         self.sidebar.setStyleSheet("""
             QFrame#sidebar {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
                     stop:0 #1E293B, stop:0.5 #0F172A, stop:1 #020617);
                 border: none;
-                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                border-right: 1px solid rgba(255, 255, 255, 0.08);
             }
         """)
 
         sidebar_layout = QVBoxLayout(self.sidebar)
-        sidebar_layout.setContentsMargins(10, 16, 10, 16)
-        sidebar_layout.setSpacing(6)
+        sidebar_layout.setContentsMargins(12, 20, 12, 16)
+        sidebar_layout.setSpacing(4)
 
-        logo = QLabel("📦 BANGLA")
+        logo = QLabel("WMS")
         logo.setStyleSheet("""
             color: white; 
             font-weight: 950; 
-            font-size: 17px; 
-            padding: 8px 8px 16px 8px;
-            letter-spacing: 1px;
+            font-size: 20px; 
+            padding: 10px 12px 20px 12px;
+            letter-spacing: 3px;
             border-radius: 8px;
         """)
         sidebar_layout.addWidget(logo)
 
         self.nav_btns = []
-        self._add_nav_btn(sidebar_layout, "📊 Quản lý", 0)
-        self._add_nav_btn(sidebar_layout, "📋 Ghi chú", 1)
-        self._add_nav_btn(sidebar_layout, "💰 Bank", 2)
-        self._add_nav_btn(sidebar_layout, "📜 Lịch sử", 3)
-        self._add_nav_btn(sidebar_layout, "⚙️ Cài đặt", 4)
-        self._add_nav_btn(sidebar_layout, "🔢 Máy tính", 5)
+        self._add_nav_btn(sidebar_layout, "Quản lý", 0)
+        self._add_nav_btn(sidebar_layout, "Ghi chú", 1)
+        self._add_nav_btn(sidebar_layout, "Bank", 2)
+        self._add_nav_btn(sidebar_layout, "Lịch sử", 3)
+        self._add_nav_btn(sidebar_layout, "Cài đặt", 4)
+        self._add_nav_btn(sidebar_layout, "Máy tính", 5)
 
         sidebar_layout.addStretch()
 
@@ -283,14 +283,14 @@ class MainWindow(QMainWindow):
             }}
         """)
 
-        self.management_tabs.addTab(self.calc_view, "🧮 Tính tiền")
+        self.management_tabs.addTab(self.calc_view, "Tính tiền")
 
         # Create product list tab from calc_view's prod_tab
         self.product_list_tab = self.calc_view.prod_tab
-        self.management_tabs.addTab(self.product_list_tab, "📦 Danh sách sản phẩm")
+        self.management_tabs.addTab(self.product_list_tab, "Danh sách SP")
 
-        self.management_tabs.addTab(self.stock_view, "📊 Kho hàng")
-        self.management_tabs.addTab(self.product_view, "📦 Sản phẩm")
+        self.management_tabs.addTab(self.stock_view, "Kho hàng")
+        self.management_tabs.addTab(self.product_view, "Sản phẩm")
 
         management_layout.addWidget(self.management_tabs)
 
@@ -306,22 +306,21 @@ class MainWindow(QMainWindow):
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
 
-        # Global Header - Modern gradient
+        # Global Header - Clean minimal
         header = QFrame()
-        header.setFixedHeight(56)
+        header.setFixedHeight(50)
         header.setStyleSheet(f"""
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 #FFFFFF, stop:1 #F9FAFB);
-            border-bottom: 2px solid {AppColors.BORDER};
+            background: #FFFFFF;
+            border-bottom: 1px solid {AppColors.BORDER};
         """)
         header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(20, 0, 20, 0)
+        header_layout.setContentsMargins(24, 0, 24, 0)
 
-        self.breadcrumb = QLabel("🏠 Trang chủ › Bảng tính")
+        self.breadcrumb = QLabel("Trang chủ / Bảng tính")
         self.breadcrumb.setStyleSheet(f"""
             color: {AppColors.TEXT_SECONDARY}; 
-            font-weight: 600; 
-            font-size: 13px;
+            font-weight: 500; 
+            font-size: 12px;
             letter-spacing: 0.3px;
         """)
         header_layout.addWidget(self.breadcrumb)
@@ -453,9 +452,8 @@ class MainWindow(QMainWindow):
 
             def switch_and_fade_in():
                 self.content_stack.setCurrentIndex(index)
-                icons = ["📊", "📋", "💰", "📜", "⚙️", "🔢"]
                 names = ["Quản lý", "Ghi chú", "Bank", "Lịch sử", "Cài đặt", "Máy tính"]
-                self.breadcrumb.setText(f"🏠 Trang chủ › {icons[index]} {names[index]}")
+                self.breadcrumb.setText(f"Trang chủ / {names[index]}")
 
                 # Update nav buttons
                 for i, btn in enumerate(self.nav_btns):
@@ -481,9 +479,9 @@ class MainWindow(QMainWindow):
     def _switch_view_direct(self, index):
         """Switch view directly without animation (fallback)"""
         self.content_stack.setCurrentIndex(index)
-        icons = ["📊", "📋", "💰", "📜", "⚙️", "🔢"]
+        icons = []
         names = ["Quản lý", "Ghi chú", "Bank", "Lịch sử", "Cài đặt", "Máy tính"]
-        self.breadcrumb.setText(f"🏠 Trang chủ › {icons[index]} {names[index]}")
+        self.breadcrumb.setText(f"Trang chủ / {names[index]}")
         for i, btn in enumerate(self.nav_btns):
             btn.setProperty("active", i == index)
             btn.style().unpolish(btn)
@@ -565,11 +563,11 @@ class MainWindow(QMainWindow):
                 # Message from "Test Connection" button or KeepAlive
                 # Log to Bank View but DO NOT show popup notification
                 if hasattr(self, "bank_view"):
-                    self.bank_view.add_system_log(f"⚡ {data['content']}")
+                    self.bank_view.add_system_log(f"{data['content']}")
                 return
 
             # Use task notification area for system messages
-            content = f"✨ {data['content']}"
+            content = f"{data['content']}"
             self.task_banner.show_message(content, duration=5000)
 
             if cmd == "REFRESH_SESSION":
@@ -633,7 +631,7 @@ class MainWindow(QMainWindow):
         # Show error in task banner
         try:
             self.task_banner.show_message(
-                f"⚠️ TTS Error: {error_msg[:50]}", duration=5000
+                f"TTS Error: {error_msg[:50]}", duration=5000
             )
         except:
             pass
@@ -783,7 +781,7 @@ class MainWindow(QMainWindow):
                 desc = self.command_history.get_redo_description()
                 if desc:
                     self.task_banner.show_message(
-                        f"↶ Đã hoàn tác: {desc}", duration=2000
+                        f"Đã hoàn tác: {desc}", duration=2000
                     )
             except Exception as e:
                 self.logger.error(f"Undo failed: {e}")
@@ -798,7 +796,7 @@ class MainWindow(QMainWindow):
                 desc = self.command_history.get_undo_description()
                 if desc:
                     self.task_banner.show_message(
-                        f"↷ Đã làm lại: {desc}", duration=2000
+                        f"Đã làm lại: {desc}", duration=2000
                     )
             except Exception as e:
                 self.logger.error(f"Redo failed: {e}")
@@ -809,7 +807,7 @@ class MainWindow(QMainWindow):
             try:
                 backup_file = self.backup_service.create_backup(prefix="manual")
                 self.task_banner.show_message(
-                    f"💾 Đã lưu: {backup_file.name}", duration=3000
+                    f"Đã lưu: {backup_file.name}", duration=3000
                 )
             except Exception as e:
                 self.logger.error(f"Manual backup failed: {e}")
@@ -817,7 +815,7 @@ class MainWindow(QMainWindow):
     def _on_refresh(self):
         """Handle F5 - Refresh all views"""
         self._refresh_all_views()
-        self.task_banner.show_message("🔄 Đã làm mới", duration=1000)
+        self.task_banner.show_message("Đã làm mới", duration=1000)
 
     def _refresh_all_views(self):
         """Refresh all views"""
@@ -857,7 +855,7 @@ class MainWindow(QMainWindow):
 
     def _on_alert_triggered(self, alert):
         """Handle alert notification"""
-        self.task_banner.show_message(f"⚠️ {alert.title}: {alert.message}")
+        self.task_banner.show_message(f"{alert.title}: {alert.message}")
 
     def _check_daily_backup(self):
         """Check and create daily backup if needed"""

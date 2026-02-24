@@ -77,7 +77,7 @@ class BankNotificationBanner(BaseBanner):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(34) # Slimmer
+        self.setFixedHeight(36) # Enough room for 13px bold text
         
         # Style: Modern Glassmorphism/Solid blend
         self.setStyleSheet("""

@@ -33,10 +33,10 @@ class HistoryDetailDialog(QDialog):
         info = QHBoxLayout()
         info.setSpacing(20)
 
-        info.addWidget(QLabel(f"📅 Ngày: <b>{self.history.session_date}</b>"))
-        info.addWidget(QLabel(f"⏰ Ca: <b>{self.history.shift_name or 'N/A'}</b>"))
+        info.addWidget(QLabel(f"Ngày: <b>{self.history.session_date}</b>"))
+        info.addWidget(QLabel(f"Ca: <b>{self.history.shift_name or 'N/A'}</b>"))
 
-        total = QLabel(f"💰 Tổng: <b>{self.history.total_amount:,.0f} VNĐ</b>")
+        total = QLabel(f"Tổng: <b>{self.history.total_amount:,.0f} VNĐ</b>")
         total.setStyleSheet(f"""
             color: white;
             font-size: 15px;
@@ -117,7 +117,7 @@ class HistoryView(QWidget):
         toolbar = QHBoxLayout()
         toolbar.setContentsMargins(0, 0, 0, 0)
 
-        refresh_btn = QPushButton("🔄 Làm mới danh sách")
+        refresh_btn = QPushButton("Làm mới danh sách")
         refresh_btn.setObjectName("secondary")
         refresh_btn.setFixedWidth(180)
         refresh_btn.clicked.connect(self.refresh_list)

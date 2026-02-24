@@ -26,7 +26,7 @@ class QuickBankPeek(QFrame):
 
         # Tiêu đề và nút đóng
         header_layout = QHBoxLayout()
-        title = QLabel("⚡ Xem nhanh giao dịch")
+        title = QLabel("Xem nhanh giao dịch")
         title.setStyleSheet(f"font-weight: 800; color: {AppColors.PRIMARY};")
         header_layout.addWidget(title)
 
@@ -49,8 +49,8 @@ class QuickBankPeek(QFrame):
         self.table.horizontalHeader().setSectionResizeMode(
             2, QHeaderView.ResizeMode.Stretch
         )
-        self.table.setColumnWidth(0, 60)
-        self.table.setColumnWidth(1, 90)
+        self.table.setColumnWidth(0, 55)
+        self.table.setColumnWidth(1, 100)
         self.table.verticalHeader().setVisible(False)
         self.table.setAlternatingRowColors(True)
         self.table.setStyleSheet("font-size: 11px;")

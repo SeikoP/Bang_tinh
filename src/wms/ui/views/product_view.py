@@ -103,7 +103,7 @@ class ProductView(QWidget):
         toolbar.setSpacing(16)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Tìm giá nhanh...")
+        self.search_input.setPlaceholderText("Tìm giá nhanh...")
         self.search_input.setFixedWidth(300)
         self.search_input.textChanged.connect(self.refresh_list)
         toolbar.addWidget(self.search_input)
@@ -111,13 +111,13 @@ class ProductView(QWidget):
         toolbar.addStretch()
 
         # Import/Export buttons
-        import_btn = QPushButton("📥 Nhập CSV")
+        import_btn = QPushButton("Nhập CSV")
         import_btn.setObjectName("secondary")
         import_btn.setFixedWidth(140)
         import_btn.clicked.connect(self._import_prices)
         toolbar.addWidget(import_btn)
 
-        export_btn = QPushButton("📤 Xuất CSV")
+        export_btn = QPushButton("Xuất CSV")
         export_btn.setObjectName("secondary")
         export_btn.setFixedWidth(140)
         export_btn.clicked.connect(self._export_prices)
@@ -239,7 +239,7 @@ class ProductView(QWidget):
                 edit_btn.setSizePolicy(
                     QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
                 )
-                edit_btn.setFixedSize(58, 30)  # Thu nhỏ xuống
+                edit_btn.setFixedSize(64, 30)  # Room for Vietnamese text
                 edit_btn.clicked.connect(lambda _, it=item: self._edit_quick_price(it))
                 actions_layout.addWidget(edit_btn)
 
@@ -250,7 +250,7 @@ class ProductView(QWidget):
                 del_btn.setSizePolicy(
                     QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
                 )
-                del_btn.setFixedSize(58, 30)  # Thu nhỏ xuống
+                del_btn.setFixedSize(64, 30)  # Room for Vietnamese text
                 del_btn.clicked.connect(
                     lambda _, i_id=item.id: self._delete_quick_price(i_id)
                 )

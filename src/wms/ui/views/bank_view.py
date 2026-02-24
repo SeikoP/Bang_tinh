@@ -71,8 +71,8 @@ class BankView(QWidget):
         self._setup_logs_tab()
 
         # Add tabs
-        self.tabs.addTab(self.transactions_widget, "💰 Giao dịch")
-        self.tabs.addTab(self.logs_widget, "📋 Raw Logs")
+        self.tabs.addTab(self.transactions_widget, "Giao dịch")
+        self.tabs.addTab(self.logs_widget, "Raw Logs")
 
         layout.addWidget(self.tabs)
 
@@ -100,7 +100,7 @@ class BankView(QWidget):
 
         filter_layout.addStretch()
 
-        self.clear_trans_btn = QPushButton("🗑️ Xóa lịch sử")
+        self.clear_trans_btn = QPushButton("Xóa lịch sử")
         self.clear_trans_btn.setObjectName("secondary")
         self.clear_trans_btn.setFixedWidth(150)
         self.clear_trans_btn.setStyleSheet(
@@ -128,7 +128,7 @@ class BankView(QWidget):
         self.table.setColumnWidth(0, 70)
         self.table.setColumnWidth(1, 90)
         self.table.setColumnWidth(2, 110)
-        self.table.setColumnWidth(3, 150)
+        self.table.setColumnWidth(3, 180)
         self.table.setColumnWidth(5, 50)
 
         self.table.setAlternatingRowColors(True)
@@ -144,7 +144,7 @@ class BankView(QWidget):
         # Clear button for logs
         log_btn_layout = QHBoxLayout()
         log_btn_layout.addStretch()
-        self.clear_logs_btn = QPushButton("🗑️ Xóa logs")
+        self.clear_logs_btn = QPushButton("Xóa logs")
         self.clear_logs_btn.setObjectName("secondary")
         self.clear_logs_btn.setFixedWidth(150)
         self.clear_logs_btn.setStyleSheet(
@@ -234,7 +234,7 @@ class BankView(QWidget):
 
         # Message
         msg_item = QTableWidgetItem(message)
-        msg_item.setFont(QFont("Segoe UI Emoji", 9)) # Better emoji support
+        msg_item.setFont(QFont("Segoe UI", 9))
         msg_item.setForeground(QColor(AppColors.TEXT))
         self.logs_table.setItem(row, 2, msg_item)
         
@@ -316,7 +316,7 @@ class BankView(QWidget):
         del_layout.setContentsMargins(0, 0, 0, 0)
         del_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        del_btn = QPushButton("🗑️")
+        del_btn = QPushButton("X")
         del_btn.setFixedSize(30, 30)
         del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         del_btn.setStyleSheet("""

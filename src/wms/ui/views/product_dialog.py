@@ -76,7 +76,7 @@ class ProductDialog(QDialog):
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
-        save_btn = QPushButton("💾 Lưu")
+        save_btn = QPushButton("Lưu")
         save_btn.clicked.connect(self._save)
         btn_layout.addWidget(save_btn)
 

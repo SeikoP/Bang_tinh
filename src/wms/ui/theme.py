@@ -164,19 +164,18 @@ class AppTheme:
             background: transparent;
             color: {c.SIDEBAR_TEXT};
             text-align: left;
-            padding: 12px 14px;
-            border-radius: 8px;
+            padding: 13px 16px;
+            border-radius: 10px;
             font-weight: 600;
             font-size: 13px;
             border: none;
-            min-height: 44px;
-            letter-spacing: 0.3px;
+            min-height: 42px;
+            letter-spacing: 0.4px;
         }}
         
         QPushButton#navItem:hover {{
-            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                stop:0 rgba(59, 130, 246, 0.15), stop:1 rgba(139, 92, 246, 0.15));
-            color: white;
+            background: rgba(59, 130, 246, 0.12);
+            color: #e2e8f0;
             border-left: 3px solid #3B82F6;
         }}
         
@@ -184,9 +183,9 @@ class AppTheme:
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                 stop:0 #3B82F6, stop:1 #8B5CF6);
             color: white;
-            font-weight: 800;
+            font-weight: 700;
             border-left: 4px solid white;
-            border-radius: 8px;
+            border-radius: 10px;
             margin-left: 4px;
         }}
         
@@ -357,16 +356,17 @@ class AppTheme:
         QTabBar::tab {{
             background-color: transparent;
             color: {c.TEXT_SECONDARY};
-            padding: 14px 28px;
+            padding: 12px 24px;
             border-bottom: 3px solid transparent;
             font-weight: 600;
-            font-size: 14px;
-            margin-right: 4px;
+            font-size: 13px;
+            margin-right: 2px;
         }}
         
         QTabBar::tab:selected {{
             color: {c.PRIMARY};
             border-bottom-color: {c.PRIMARY};
+            background: rgba(16, 185, 129, 0.04);
         }}
         
         QTabBar::tab:hover:!selected {{
@@ -470,8 +470,8 @@ class AppTheme:
         /* ===== Frames ===== */
         QFrame#card {{
             background-color: {c.SURFACE};
-            border: 2px solid {c.BORDER};
-            border-radius: 12px;
+            border: 1px solid {c.BORDER};
+            border-radius: 14px;
         }}
         
         QFrame#card:hover {{

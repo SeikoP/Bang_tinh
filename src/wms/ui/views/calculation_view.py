@@ -56,7 +56,7 @@ class SaveSessionDialog(QDialog):
         layout.setContentsMargins(28, 24, 28, 24)
 
         # Total
-        total_label = QLabel(f"💰 Tổng cộng: {self.total_amount:,.0f} VNĐ")
+        total_label = QLabel(f"Tổng cộng: {self.total_amount:,.0f} VNĐ")
         total_label.setStyleSheet(f"""
             font-size: 18px;
             font-weight: 700;
@@ -93,7 +93,7 @@ class SaveSessionDialog(QDialog):
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
-        save_btn = QPushButton("💾 Lưu")
+        save_btn = QPushButton("Lưu")
         save_btn.clicked.connect(self._save)
         btn_layout.addWidget(save_btn)
 
@@ -184,7 +184,7 @@ class CalculationView(QWidget):
         toolbar.addStretch()
 
         # Primary Action
-        save_btn = QPushButton("💾 Lưu toàn bộ phiên")
+        save_btn = QPushButton("Lưu toàn bộ phiên")
         save_btn.setObjectName("primary")
         save_btn.setFixedWidth(220)
         save_btn.clicked.connect(self._save_session)
@@ -219,7 +219,7 @@ class CalculationView(QWidget):
         footer = QHBoxLayout()
         footer.setSpacing(16)
 
-        info = QLabel("💡 Định dạng: 3t4 = 3 thùng 4 lon")
+        info = QLabel("Định dạng: 3t4 = 3 thùng 4 lon")
         info.setObjectName("subtitle")
         footer.addWidget(info)
 
@@ -249,7 +249,7 @@ class CalculationView(QWidget):
         toolbar.setSpacing(16)
 
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Tìm sản phẩm theo tên...")
+        self.search_input.setPlaceholderText("Tìm sản phẩm theo tên...")
         self.search_input.setFixedWidth(300)
         self.search_input.textChanged.connect(self.refresh_product_list)
         toolbar.addWidget(self.search_input)
@@ -257,13 +257,13 @@ class CalculationView(QWidget):
         toolbar.addStretch()
 
         # Import/Export buttons
-        import_btn = QPushButton("📥 Nhập CSV")
+        import_btn = QPushButton("Nhập CSV")
         import_btn.setObjectName("secondary")
         import_btn.setFixedWidth(140)
         import_btn.clicked.connect(self._import_products)
         toolbar.addWidget(import_btn)
 
-        export_btn = QPushButton("📤 Xuất CSV")
+        export_btn = QPushButton("Xuất CSV")
         export_btn.setObjectName("secondary")
         export_btn.setFixedWidth(140)
         export_btn.clicked.connect(self._export_products)
@@ -707,12 +707,12 @@ class CalculationView(QWidget):
 
             msg = QMessageBox(self)
             msg.setIcon(QMessageBox.Icon.Warning)
-            msg.setWindowTitle("⚠️ Cảnh báo: Chốt ca > Giao ca")
+            msg.setWindowTitle("Cảnh báo: Chốt ca > Giao ca")
             msg.setText(f"<b style='font-size:14px;'>{product_name}</b>")
             msg.setInformativeText(
                 f"<b>Chốt ca:</b> {closing_display}<br>"
                 f"<b>Giao ca:</b> {handover_display}<br><br>"
-                f"<span style='color:#dc2626;'>❌ Chốt ca không thể lớn hơn Giao ca!</span>"
+                f"<span style='color:#dc2626;'>Chốt ca không thể lớn hơn Giao ca!</span>"
             )
             msg.setDetailedText(
                 "Nguyên nhân có thể:\n\n"
@@ -1183,7 +1183,7 @@ class CalculationView(QWidget):
             save_btn = self.sender()
             if save_btn:
                 save_btn.setEnabled(True)
-                save_btn.setText("💾 Lưu toàn bộ phiên")
+                save_btn.setText("Lưu toàn bộ phiên")
 
     def _import_products(self):
         """Import products from CSV"""

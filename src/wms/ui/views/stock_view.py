@@ -141,13 +141,13 @@ class StockView(QWidget):
         stats_layout = QHBoxLayout(stats_frame)
         stats_layout.setContentsMargins(20, 12, 20, 12)
         
-        self.total_products_label = QLabel("📦 Sản phẩm: 0")
+        self.total_products_label = QLabel("Sản phẩm: 0")
         self.total_products_label.setStyleSheet("color: white; font-weight: 700; font-size: 14px;")
         stats_layout.addWidget(self.total_products_label)
         
         stats_layout.addSpacing(20)
         
-        self.total_stock_label = QLabel("📥 Tổng tồn: 0")
+        self.total_stock_label = QLabel("Tổng tồn: 0")
         self.total_stock_label.setStyleSheet("color: #94A3B8; font-weight: 600; font-size: 14px;")
         stats_layout.addWidget(self.total_stock_label)
         
@@ -160,7 +160,7 @@ class StockView(QWidget):
         search_layout.setSpacing(10)
         
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 Tìm sản phẩm...")
+        self.search_input.setPlaceholderText("Tìm sản phẩm...")
         self.search_input.setFixedWidth(250)
         self.search_input.setFixedHeight(42)
         self.search_input.setStyleSheet(f"""
@@ -176,7 +176,7 @@ class StockView(QWidget):
         self.search_input.textChanged.connect(self.filter_table)
         search_layout.addWidget(self.search_input)
         
-        refresh_btn = QPushButton("🔄 Làm mới")
+        refresh_btn = QPushButton("Làm mới")
         refresh_btn.setObjectName("secondary")
         refresh_btn.setFixedHeight(42)
         refresh_btn.setFixedWidth(120)
@@ -206,7 +206,8 @@ class StockView(QWidget):
         # Right: History panel
         history_panel = QFrame()
         history_panel.setObjectName("history_card")
-        history_panel.setFixedWidth(320)
+        history_panel.setMinimumWidth(280)
+        history_panel.setMaximumWidth(360)
         history_panel.setStyleSheet(f"""
             QFrame#history_card {{
                 background: #F8FAFC;
@@ -223,7 +224,7 @@ class StockView(QWidget):
         h_header.addWidget(h_title)
         h_header.addStretch()
         
-        clear_btn = QPushButton("🗑️")
+        clear_btn = QPushButton("X")
         clear_btn.setFixedSize(30, 30)
         clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         clear_btn.setToolTip("Xóa trắng lịch sử")
@@ -362,8 +363,8 @@ class StockView(QWidget):
                 total.setForeground(QColor(AppColors.TEXT_SECONDARY))
             self.table.setItem(row, 6, total)
             
-        self.total_products_label.setText(f"📦 Sản phẩm: {len(sessions)}")
-        self.total_stock_label.setText(f"📥 Tổng tồn: {total_qty:,}")
+        self.total_products_label.setText(f"Sản phẩm: {len(sessions)}")
+        self.total_stock_label.setText(f"Tổng tồn: {total_qty:,}")
 
     def _wrap_widget(self, widget):
         container = QWidget()

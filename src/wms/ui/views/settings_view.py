@@ -505,7 +505,7 @@ class SettingsView(QWidget):
         layout.setSpacing(10)
 
         # Auto-backup status
-        status_label = QLabel("✅ Tự động sao lưu: Đang bật")
+        status_label = QLabel("Tự động sao lưu: Đang bật")
         status_label.setStyleSheet(f"color: {AppColors.SUCCESS}; font-weight: 600;")
         layout.addWidget(status_label)
 
@@ -517,7 +517,7 @@ class SettingsView(QWidget):
 
         # Buttons
         btns = QHBoxLayout()
-        backup_btn = QPushButton("💾 Sao lưu ngay")
+        backup_btn = QPushButton("Sao lưu ngay")
         backup_btn.setObjectName("success")
         backup_btn.clicked.connect(self._backup_database)
         btns.addWidget(backup_btn)

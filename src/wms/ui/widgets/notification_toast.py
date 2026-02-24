@@ -99,7 +99,7 @@ class NotificationToast(QWidget):
             },
             "warning": {
                 "bg": "#ff9800",
-                "icon": "⚠"
+                "icon": "!"
             },
             "info": {
                 "bg": "#2196f3",

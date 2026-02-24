@@ -35,10 +35,10 @@ class Task:
     def type_display(self) -> str:
         """Get display text for task type"""
         type_map = {
-            "unpaid": "💰 Chưa thanh toán",
-            "uncollected": "💵 Chưa thu tiền",
-            "undelivered": "📦 Chưa giao đồ",
-            "unreceived": "📥 Chưa lấy đồ",
-            "other": "📝 Khác",
+            "unpaid": "Chưa thanh toán",
+            "uncollected": "Chưa thu tiền",
+            "undelivered": "Chưa giao đồ",
+            "unreceived": "Chưa lấy đồ",
+            "other": "Khác",
         }
-        return type_map.get(self.task_type, "📝 Khác")
+        return type_map.get(self.task_type, "Khác")

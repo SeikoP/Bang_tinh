@@ -47,11 +47,11 @@ class TaskDialog(QDialog):
 
         # Task type
         self.type_combo = QComboBox()
-        self.type_combo.addItem("💰 Chưa thanh toán", "unpaid")
-        self.type_combo.addItem("💵 Chưa thu tiền", "uncollected")
-        self.type_combo.addItem("📦 Chưa giao đồ", "undelivered")
-        self.type_combo.addItem("📥 Chưa lấy đồ", "unreceived")
-        self.type_combo.addItem("📝 Khác", "other")
+        self.type_combo.addItem("Chưa thanh toán", "unpaid")
+        self.type_combo.addItem("Chưa thu tiền", "uncollected")
+        self.type_combo.addItem("Chưa giao đồ", "undelivered")
+        self.type_combo.addItem("Chưa lấy đồ", "unreceived")
+        self.type_combo.addItem("Khác", "other")
 
         if self.task:
             index = self.type_combo.findData(self.task.task_type)
@@ -120,7 +120,7 @@ class TaskDialog(QDialog):
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
 
-        save_btn = QPushButton("💾 Lưu")
+        save_btn = QPushButton("Lưu")
         save_btn.setObjectName("primary")
         save_btn.clicked.connect(self._save)
         btn_layout.addWidget(save_btn)
@@ -187,7 +187,7 @@ class TaskView(QWidget):
         layout.setSpacing(16)
 
         # Header
-        header = QLabel("📋 Ghi chú / Công việc")
+        header = QLabel("Ghi chú / Công việc")
         header.setStyleSheet(
             f"font-size: 18px; font-weight: 800; color: {AppColors.TEXT};"
         )
@@ -200,11 +200,11 @@ class TaskView(QWidget):
         # Filter by type
         self.type_filter = QComboBox()
         self.type_filter.addItem("Tất cả", "all")
-        self.type_filter.addItem("💰 Chưa thanh toán", "unpaid")
-        self.type_filter.addItem("💵 Chưa thu tiền", "uncollected")
-        self.type_filter.addItem("📦 Chưa giao đồ", "undelivered")
-        self.type_filter.addItem("📥 Chưa lấy đồ", "unreceived")
-        self.type_filter.addItem("📝 Khác", "other")
+        self.type_filter.addItem("Chưa thanh toán", "unpaid")
+        self.type_filter.addItem("Chưa thu tiền", "uncollected")
+        self.type_filter.addItem("Chưa giao đồ", "undelivered")
+        self.type_filter.addItem("Chưa lấy đồ", "unreceived")
+        self.type_filter.addItem("Khác", "other")
         self.type_filter.currentIndexChanged.connect(self.refresh_list)
         toolbar.addWidget(QLabel("Lọc:"))
         toolbar.addWidget(self.type_filter)
@@ -260,12 +260,12 @@ class TaskView(QWidget):
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 150)
-        self.table.setColumnWidth(2, 100)
-        self.table.setColumnWidth(3, 100)
+        self.table.setColumnWidth(0, 140)
+        self.table.setColumnWidth(2, 140)
+        self.table.setColumnWidth(3, 110)
         self.table.setColumnWidth(4, 120)
-        self.table.setColumnWidth(5, 100)
-        self.table.setColumnWidth(6, 180)
+        self.table.setColumnWidth(5, 120)
+        self.table.setColumnWidth(6, 160)
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -378,7 +378,7 @@ class TaskView(QWidget):
 
                 if not task.completed:
                     # Complete button
-                    complete_btn = QPushButton("✅")
+                    complete_btn = QPushButton("✓")
                     complete_btn.setFixedSize(40, 44)
                     complete_btn.setStyleSheet(f"""
                         QPushButton {{
@@ -414,7 +414,7 @@ class TaskView(QWidget):
                 actions_layout.addWidget(edit_btn)
 
                 # Delete button
-                del_btn = QPushButton("🗑️")
+                del_btn = QPushButton("X")
                 del_btn.setFixedSize(40, 44)
                 del_btn.setStyleSheet(f"""
                     QPushButton {{
@@ -507,7 +507,7 @@ class TaskView(QWidget):
                         main_window, "task_notif_box"
                     ):
                         main_window.task_notif_label.setText(
-                            f"⚠️ Còn {pending_count} việc chưa xong!"
+                            f"Còn {pending_count} việc chưa xong!"
                         )
                         main_window.task_notif_box.show()
                         if self.logger:

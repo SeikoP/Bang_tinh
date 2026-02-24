@@ -25,7 +25,7 @@ class AlertPanel(QFrame):
 
         # Header
         header = QHBoxLayout()
-        title = QLabel("⚠️ Cảnh báo")
+        title = QLabel("Cảnh báo")
         title.setStyleSheet(f"""
             font-size: 16px;
             font-weight: 700;
@@ -36,7 +36,7 @@ class AlertPanel(QFrame):
         header.addStretch()
 
         # Refresh button
-        refresh_btn = QPushButton("🔄")
+        refresh_btn = QPushButton("R")
         refresh_btn.setFixedSize(32, 32)
         refresh_btn.setStyleSheet("""
             QPushButton {
@@ -70,7 +70,7 @@ class AlertPanel(QFrame):
         layout.addWidget(scroll, 1)
 
         # Empty state
-        self.empty_label = QLabel("✅ Không có cảnh báo")
+        self.empty_label = QLabel("Không có cảnh báo")
         self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.empty_label.setStyleSheet(f"""
             color: {AppColors.TEXT_SECONDARY};
