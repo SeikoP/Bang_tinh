@@ -9,7 +9,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import (QApplication, QFrame, QGridLayout, QHBoxLayout,
                              QLabel, QLineEdit, QPushButton, QScrollArea,
-                             QSizePolicy, QSpinBox, QVBoxLayout, QWidget)
+                             QTabWidget, QVBoxLayout, QWidget)
 
 from ..theme import AppColors
 
@@ -31,9 +31,44 @@ class CalculatorToolView(QWidget):
         # Background main
         self.setStyleSheet(f"background-color: {AppColors.BG_SECONDARY};")
 
-        main_h_layout = QHBoxLayout(self)
-        main_h_layout.setContentsMargins(16, 16, 16, 16)
-        main_h_layout.setSpacing(16)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(16, 12, 16, 16)
+        outer.setSpacing(0)
+
+        # --- Sub-tab widget ---
+        self.sub_tabs = QTabWidget()
+        self.sub_tabs.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: none;
+                background: transparent;
+            }}
+            QTabBar::tab {{
+                background: transparent;
+                color: {AppColors.TEXT_SECONDARY};
+                font-size: 12px;
+                font-weight: 700;
+                padding: 8px 20px;
+                margin-right: 4px;
+                border: none;
+                border-bottom: 2px solid transparent;
+            }}
+            QTabBar::tab:selected {{
+                color: {AppColors.PRIMARY};
+                border-bottom: 2px solid {AppColors.PRIMARY};
+            }}
+            QTabBar::tab:hover:!selected {{
+                color: {AppColors.TEXT};
+                border-bottom: 2px solid {AppColors.BORDER};
+            }}
+        """)
+        outer.addWidget(self.sub_tabs)
+
+        # ===== TAB 1: Calculator + History =====
+        calc_page = QWidget()
+        calc_page.setStyleSheet("background: transparent;")
+        calc_h_layout = QHBoxLayout(calc_page)
+        calc_h_layout.setContentsMargins(0, 12, 0, 0)
+        calc_h_layout.setSpacing(16)
 
         # --- LEFT: CALCULATOR ---
         calc_container = QFrame()
@@ -185,14 +220,14 @@ class CalculatorToolView(QWidget):
             grid.addWidget(btn, r, c)
 
         calc_layout.addLayout(grid)
-        main_h_layout.addWidget(calc_container)
+        calc_h_layout.addWidget(calc_container)
 
-        # --- MIDDLE: MONEY COUNTER ---
-        self._build_money_counter(main_h_layout)
+        # --- Spacer between calc and history ---
+        calc_h_layout.addStretch(1)
 
         # --- RIGHT: HISTORY ---
         history_side = QFrame()
-        history_side.setFixedWidth(230)
+        history_side.setFixedWidth(260)
         history_side.setStyleSheet(
             f"background-color: white; border-radius: 18px; border: 1px solid {AppColors.BORDER};"
         )
@@ -200,7 +235,7 @@ class CalculatorToolView(QWidget):
         hist_layout = QVBoxLayout(history_side)
         hist_layout.setContentsMargins(14, 20, 14, 14)
 
-        hist_label = QLabel("LỊch sử")
+        hist_label = QLabel("LỊCH SỬ")
         hist_label.setStyleSheet(
             f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 10px; letter-spacing: 2px; margin-bottom: 8px;"
         )
@@ -227,7 +262,15 @@ class CalculatorToolView(QWidget):
         clear_btn.clicked.connect(self._clear_history)
         hist_layout.addWidget(clear_btn)
 
-        main_h_layout.addWidget(history_side)
+        calc_h_layout.addWidget(history_side)
+
+        self.sub_tabs.addTab(calc_page, "Máy tính")
+
+        # ===== TAB 2: Money Counter =====
+        money_page = QWidget()
+        money_page.setStyleSheet("background: transparent;")
+        self._build_money_counter(money_page)
+        self.sub_tabs.addTab(money_page, "Đếm tiền")
 
     # ================================================================
     # MONEY COUNTER
@@ -247,194 +290,218 @@ class CalculatorToolView(QWidget):
         500:     "#78716c", 200:    "#78716c", 100:    "#78716c",
     }
 
-    def _build_money_counter(self, parent_layout):
-        """Build the Vietnamese money counting panel — compact, fits in one screen."""
-        container = QFrame()
-        container.setMinimumWidth(280)
-        container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        container.setStyleSheet(f"""
-            QFrame {{
+    def _build_money_counter(self, parent_widget):
+        """Build full-width money counter as its own tab with proper table alignment."""
+        page_layout = QVBoxLayout(parent_widget)
+        page_layout.setContentsMargins(0, 12, 0, 0)
+        page_layout.setSpacing(12)
+
+        # Main card
+        card = QFrame()
+        card.setStyleSheet(f"""
+            QFrame#money_card {{
                 background-color: white;
                 border-radius: 18px;
                 border: 1px solid {AppColors.BORDER};
             }}
         """)
+        card.setObjectName("money_card")
 
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(14, 16, 14, 12)
-        layout.setSpacing(6)
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(24, 20, 24, 16)
+        card_layout.setSpacing(12)
 
-        # Header
-        header = QLabel("ĐẾM TIỀN VIỆT NAM")
-        header.setStyleSheet(
+        # Header row
+        header_row = QHBoxLayout()
+        header_label = QLabel("ĐẾM TIỀN VIỆT NAM")
+        header_label.setStyleSheet(
             f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; "
             f"font-size: 10px; letter-spacing: 2px;"
         )
-        layout.addWidget(header)
+        header_row.addWidget(header_label)
+        header_row.addStretch()
+        card_layout.addLayout(header_row)
 
-        # --- 2-column grid for denomination rows (no scroll needed) ---
+        # --- Table header ---
         self._money_inputs: dict[int, QLineEdit] = {}
         self._money_subtotals: dict[int, QLabel] = {}
 
-        grid = QGridLayout()
-        grid.setSpacing(4)
-        grid.setContentsMargins(0, 0, 0, 0)
+        table_grid = QGridLayout()
+        table_grid.setHorizontalSpacing(16)
+        table_grid.setVerticalSpacing(6)
+        table_grid.setContentsMargins(0, 0, 0, 0)
 
+        # Column headers for both sides
+        col_headers = ["Mệnh giá", "Số lượng", "Thành tiền"]
+        for group in range(2):  # 2 groups side-by-side
+            base_col = group * 4  # 0 or 4 (col 3 and 7 are spacers)
+            for i, hdr_text in enumerate(col_headers):
+                hdr = QLabel(hdr_text)
+                align = Qt.AlignmentFlag.AlignRight if i == 2 else Qt.AlignmentFlag.AlignLeft
+                hdr.setAlignment(align)
+                hdr.setStyleSheet(
+                    f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; "
+                    f"font-weight: 700; letter-spacing: 1px; padding-bottom: 4px;"
+                )
+                table_grid.addWidget(hdr, 0, base_col + i)
+
+        # Spacer column between groups
+        spacer = QLabel()
+        spacer.setFixedWidth(24)
+        table_grid.addWidget(spacer, 0, 3)
+
+        # --- Denomination rows: 6 rows × 2 groups ---
         for idx, denom in enumerate(self.VND_DENOMINATIONS):
-            col = idx % 2      # 0 or 1
-            row_num = idx // 2  # 0..5
-            row_widget = self._create_denom_row(denom)
-            grid.addWidget(row_widget, row_num, col)
+            group = idx // 6       # 0 = left group, 1 = right group
+            row_num = (idx % 6) + 1  # rows 1..6 (row 0 is header)
+            base_col = group * 4
 
-        layout.addLayout(grid)
+            color = self._DENOM_COLORS.get(denom, "#64748b")
+
+            # Column 0: Denomination label with color dot
+            denom_widget = QWidget()
+            denom_widget.setStyleSheet("background: transparent;")
+            denom_h = QHBoxLayout(denom_widget)
+            denom_h.setContentsMargins(0, 0, 0, 0)
+            denom_h.setSpacing(8)
+
+            dot = QLabel()
+            dot.setFixedSize(8, 8)
+            dot.setStyleSheet(f"background: {color}; border-radius: 4px;")
+            denom_h.addWidget(dot)
+
+            if denom >= 1000:
+                text = f"{denom:,}"
+            else:
+                text = str(denom)
+            lbl = QLabel(text)
+            lbl.setFixedWidth(70)
+            lbl.setStyleSheet(
+                f"color: {AppColors.TEXT}; font-weight: 700; font-size: 13px;"
+            )
+            denom_h.addWidget(lbl)
+            denom_h.addStretch()
+            table_grid.addWidget(denom_widget, row_num, base_col + 0)
+
+            # Column 1: Quantity input
+            qty_input = QLineEdit()
+            qty_input.setPlaceholderText("0")
+            qty_input.setValidator(QIntValidator(0, 99999))
+            qty_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            qty_input.setFixedWidth(80)
+            qty_input.setFixedHeight(32)
+            qty_input.setStyleSheet(f"""
+                QLineEdit {{
+                    border: 1px solid {AppColors.BORDER};
+                    border-radius: 6px;
+                    background: #f8fafc;
+                    color: {AppColors.TEXT};
+                    font-size: 13px;
+                    font-weight: 600;
+                    padding: 0 8px;
+                }}
+                QLineEdit:focus {{
+                    border-color: {AppColors.PRIMARY};
+                    background: #f0fdf4;
+                }}
+            """)
+            qty_input.textChanged.connect(lambda _: self._update_money_totals())
+            table_grid.addWidget(qty_input, row_num, base_col + 1)
+            self._money_inputs[denom] = qty_input
+
+            # Column 2: Subtotal
+            sub = QLabel("0 ₫")
+            sub.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            sub.setFixedWidth(120)
+            sub.setStyleSheet(
+                f"color: {AppColors.TEXT_SECONDARY}; font-size: 13px; font-weight: 600;"
+            )
+            table_grid.addWidget(sub, row_num, base_col + 2)
+            self._money_subtotals[denom] = sub
+
+        card_layout.addLayout(table_grid)
 
         # Separator
         sep = QFrame()
         sep.setFixedHeight(1)
         sep.setStyleSheet(f"background: {AppColors.BORDER};")
-        layout.addWidget(sep)
+        card_layout.addWidget(sep)
 
-        # Grand total
+        # Grand total row
         total_row = QHBoxLayout()
-        total_row.setContentsMargins(0, 2, 0, 0)
+        total_row.setContentsMargins(0, 4, 0, 0)
         total_label = QLabel("TỔNG CỘNG:")
         total_label.setStyleSheet(
-            f"color: {AppColors.TEXT}; font-weight: 800; font-size: 12px;"
+            f"color: {AppColors.TEXT}; font-weight: 800; font-size: 14px;"
         )
         self._money_total_label = QLabel("0 ₫")
         self._money_total_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self._money_total_label.setStyleSheet(
-            f"color: {AppColors.PRIMARY}; font-weight: 900; font-size: 16px;"
+            f"color: {AppColors.PRIMARY}; font-weight: 900; font-size: 22px;"
         )
         total_row.addWidget(total_label)
         total_row.addWidget(self._money_total_label)
-        layout.addLayout(total_row)
+        card_layout.addLayout(total_row)
 
         # Count summary
         self._money_count_label = QLabel("Tổng: 0 tờ")
         self._money_count_label.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px;"
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;"
         )
-        layout.addWidget(self._money_count_label)
+        card_layout.addWidget(self._money_count_label)
 
-        # Action buttons — compact row
+        # Action buttons
         btn_row = QHBoxLayout()
-        btn_row.setSpacing(6)
+        btn_row.setSpacing(10)
 
-        copy_btn = QPushButton("Copy")
+        copy_btn = QPushButton("Copy kết quả")
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        copy_btn.setFixedHeight(30)
+        copy_btn.setFixedHeight(36)
         copy_btn.setStyleSheet(f"""
             QPushButton {{
                 background: white; color: {AppColors.PRIMARY};
-                border-radius: 6px; border: 1px solid {AppColors.BORDER};
-                font-size: 11px; font-weight: 700; padding: 0 10px;
+                border-radius: 8px; border: 1px solid {AppColors.BORDER};
+                font-size: 12px; font-weight: 700; padding: 0 16px;
             }}
             QPushButton:hover {{ background: #f0fdf4; border-color: {AppColors.PRIMARY}; }}
         """)
         copy_btn.clicked.connect(self._copy_money_total)
         btn_row.addWidget(copy_btn)
 
-        send_btn = QPushButton("Gửi → Máy tính")
+        send_btn = QPushButton("Gửi sang Máy tính")
         send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        send_btn.setFixedHeight(30)
+        send_btn.setFixedHeight(36)
         send_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {AppColors.PRIMARY}; color: white;
-                border-radius: 6px; border: none;
-                font-size: 11px; font-weight: 700; padding: 0 10px;
+                border-radius: 8px; border: none;
+                font-size: 12px; font-weight: 700; padding: 0 16px;
             }}
             QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
         """)
         send_btn.clicked.connect(self._send_money_to_calc)
         btn_row.addWidget(send_btn)
 
-        reset_btn = QPushButton("Xóa")
+        reset_btn = QPushButton("Xóa tất cả")
         reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        reset_btn.setFixedHeight(30)
+        reset_btn.setFixedHeight(36)
         reset_btn.setStyleSheet(f"""
             QPushButton {{
                 background: white; color: {AppColors.ERROR};
-                border-radius: 6px; border: 1px solid {AppColors.BORDER};
-                font-size: 11px; font-weight: 700; padding: 0 10px;
+                border-radius: 8px; border: 1px solid {AppColors.BORDER};
+                font-size: 12px; font-weight: 700; padding: 0 16px;
             }}
             QPushButton:hover {{ background: #fef2f2; border-color: {AppColors.ERROR}; }}
         """)
         reset_btn.clicked.connect(self._reset_money_counter)
         btn_row.addWidget(reset_btn)
 
-        layout.addLayout(btn_row)
-        parent_layout.addWidget(container)
+        btn_row.addStretch()
+        card_layout.addLayout(btn_row)
 
-    def _create_denom_row(self, denom: int) -> QFrame:
-        """Create a compact denomination row: [color dot] [label] [qty input] [subtotal]."""
-        row = QFrame()
-        row.setStyleSheet(
-            f"QFrame {{ background: #f8fafc; border-radius: 6px; "
-            f"border: 1px solid transparent; }}"
-            f"QFrame:hover {{ border-color: {AppColors.BORDER_HOVER}; }}"
-        )
-
-        h = QHBoxLayout(row)
-        h.setContentsMargins(6, 3, 6, 3)
-        h.setSpacing(4)
-
-        # Color indicator
-        dot = QLabel()
-        dot.setFixedSize(6, 6)
-        color = self._DENOM_COLORS.get(denom, "#64748b")
-        dot.setStyleSheet(f"background: {color}; border-radius: 3px;")
-        h.addWidget(dot)
-
-        # Denomination label
-        if denom >= 1000:
-            text = f"{denom // 1000:,}k"
-        else:
-            text = f"{denom:,}"
-        lbl = QLabel(text)
-        lbl.setFixedWidth(36)
-        lbl.setStyleSheet(
-            f"color: {AppColors.TEXT}; font-weight: 700; font-size: 11px;"
-        )
-        h.addWidget(lbl)
-
-        # Quantity input
-        qty_input = QLineEdit()
-        qty_input.setPlaceholderText("0")
-        qty_input.setValidator(QIntValidator(0, 99999))
-        qty_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        qty_input.setFixedWidth(48)
-        qty_input.setFixedHeight(26)
-        qty_input.setStyleSheet(f"""
-            QLineEdit {{
-                border: 1px solid {AppColors.BORDER};
-                border-radius: 4px;
-                background: white;
-                color: {AppColors.TEXT};
-                font-size: 11px;
-                font-weight: 600;
-                padding: 0 2px;
-            }}
-            QLineEdit:focus {{
-                border-color: {AppColors.PRIMARY};
-                background: #f0fdf4;
-            }}
-        """)
-        qty_input.textChanged.connect(lambda _: self._update_money_totals())
-        h.addWidget(qty_input)
-        self._money_inputs[denom] = qty_input
-
-        # Subtotal — stretch to fill remaining space
-        sub = QLabel("0 ₫")
-        sub.setAlignment(Qt.AlignmentFlag.AlignRight)
-        sub.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; font-weight: 600;"
-        )
-        h.addWidget(sub, 1)  # stretch factor 1
-        self._money_subtotals[denom] = sub
-
-        return row
-
+        # Push card to top
+        page_layout.addWidget(card)
+        page_layout.addStretch()
     def _update_money_totals(self):
         """Recalculate all subtotals and grand total."""
         grand_total = 0
