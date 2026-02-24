@@ -12,6 +12,12 @@ import sys
 import os
 from pathlib import Path
 
+# Prefer src/ as canonical source root to avoid duplicate module ambiguity
+PROJECT_ROOT = Path(__file__).parent
+SRC_ROOT = PROJECT_ROOT / "src"
+if SRC_ROOT.exists():
+    sys.path.insert(0, str(SRC_ROOT))
+
 # Fix Unicode encoding for Windows console BEFORE any imports
 if sys.platform == 'win32':
     # Set environment variable for Python I/O encoding
