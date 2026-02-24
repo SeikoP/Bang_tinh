@@ -60,7 +60,7 @@ jobs:
       
       - name: Run tests with coverage
         run: |
-          pytest --cov=wms --cov-report=xml --cov-report=term -x -q
+          pytest --cov=wms --cov-report=xml --cov-report=html --cov-report=term -x -q
       
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
@@ -130,12 +130,13 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
+
+      # Reuse the exe built by the build job instead of rebuilding
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: 'pip'
+          name: WarehouseManagement-Windows-${{ github.sha }}
+          path: dist/
 
       - name: Cache Inno Setup
         id: cache-inno
@@ -143,15 +144,6 @@ jobs:
         with:
           path: C:\Program Files (x86)\Inno Setup 6
           key: ${{ runner.os }}-innosetup-6.2
-
-      - name: Install dependencies
-        run: |
-          pip install -e .
-          pip install pyinstaller
-      
-      - name: Build executable
-        run: |
-          pyinstaller build/warehouse_app.spec
 
       - name: Install Inno Setup
         if: steps.cache-inno.outputs.cache-hit != 'true'
@@ -208,7 +200,7 @@ jobs:
           path: |
             build
             ~\AppData\Local\pyinstaller
-          key: ${{ runner.os }}-pyinstaller-release-${{ hashFiles('warehouse_app.spec', 'requirements.txt') }}
+          key: ${{ runner.os }}-pyinstaller-release-${{ hashFiles('build/warehouse_app.spec', 'requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pyinstaller-
       

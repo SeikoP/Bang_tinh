@@ -15,13 +15,13 @@ a = Analysis(
     datas=[
         (str(PROJECT_ROOT / 'src' / 'wms' / 'assets'), 'wms/assets'),
         (str(PROJECT_ROOT / 'config'), 'config'),
-        (str(PROJECT_ROOT / '.env.example'), '.'),
     ],
     hiddenimports=[
         'PyQt6.QtCore',
         'PyQt6.QtGui',
         'PyQt6.QtWidgets',
         'PyQt6.QtNetwork',
+        'PyQt6.QtMultimedia',
         'sqlite3',
         'logging.handlers',
         'decimal',
@@ -88,6 +88,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(PROJECT_ROOT / 'src' / 'wms' / 'assets' / 'icon.png'),
+    icon=str(PROJECT_ROOT / 'src' / 'wms' / 'assets' / 'icons' / 'icon.png'),
     version=str(PROJECT_ROOT / 'build' / 'version_info.txt'),
 )

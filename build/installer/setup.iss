@@ -47,7 +47,7 @@ Source: "..\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\src\wms\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Configuration template
-Source: "..\.env.example"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist
+Source: "..\.env.example"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist skipifsourcedoesntexist
 
 ; Create necessary directories
 Source: "..\data\exports\.gitkeep"; DestDir: "{app}\exports"; Flags: ignoreversion skipifsourcedoesntexist
