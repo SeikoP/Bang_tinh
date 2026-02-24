@@ -2,7 +2,13 @@
 Script to run comprehensive code audit on the project.
 """
 
+import sys
 from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 from audit.architecture_analyzer import ArchitectureAnalyzer
 from audit.quality_analyzer import QualityAnalyzer
@@ -12,7 +18,7 @@ from audit.security_analyzer import SecurityAnalyzer
 
 def main():
     """Run all analyzers and generate report."""
-    project_root = Path(__file__).parent
+    project_root = PROJECT_ROOT
 
     print("Starting code audit...")
     print(f"Project root: {project_root}\n")

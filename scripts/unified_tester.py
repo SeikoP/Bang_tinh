@@ -9,14 +9,17 @@ Usage:
     python scripts/unified_tester.py
 """
 
-import os
 import sys
 import time
+from pathlib import Path
 
 import requests
 
 # Fix path for imports if needed
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SRC_ROOT = PROJECT_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
 
 # ===== Constants =====
 HOST = "localhost"

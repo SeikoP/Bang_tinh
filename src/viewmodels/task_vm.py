@@ -54,7 +54,7 @@ class TaskViewModel(BaseViewModel):
                 from database.task_models import TaskType
                 try:
                     task_type = TaskType(self._filter_type)
-                    tasks = TaskRepository.get_by_type(task_type)
+                    tasks = TaskRepository.get_by_type(task_type.value)
                 except ValueError:
                     tasks = TaskRepository.get_all()
             else:
