@@ -101,16 +101,24 @@ Dialog {
                     }
                     Label {
                         text: model.usedQty !== undefined ? model.usedQty : ""
-                        font: Theme.typography.labelLarge
-                        font.weight: Font.Medium
+                        font {
+                            family: Theme.typography.labelLarge.family
+                            pixelSize: Theme.typography.labelLarge.pixelSize
+                            weight: Font.Medium
+                            capitalization: Theme.typography.labelLarge.capitalization
+                        }
                         color: Theme.primaryDark
                         Layout.preferredWidth: 60
                         horizontalAlignment: Text.AlignHCenter
                     }
                     Label {
                         text: model.amount ? Number(model.amount).toLocaleString('vi-VN') + " đ" : "0 đ"
-                        font: Theme.typography.labelLarge
-                        font.weight: Font.Medium
+                        font {
+                            family: Theme.typography.labelLarge.family
+                            pixelSize: Theme.typography.labelLarge.pixelSize
+                            weight: Font.Medium
+                            capitalization: Theme.typography.labelLarge.capitalization
+                        }
                         color: Theme.backgroundText
                         Layout.fillWidth: true
                         horizontalAlignment: Text.AlignRight

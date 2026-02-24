@@ -327,10 +327,11 @@ Item {
     // Reset confirm dialog
     ConfirmDialog {
         id: resetConfirmDialog
-        title: "Reset cài đặt"
-        message: "Khôi phục tất cả cài đặt về mặc định? Thao tác này không thể hoàn tác."
-        confirmText: "Reset"
-        onConfirmed: settingsVM.resetDefaults()
+        function open() {
+            resetConfirmDialog.show("Reset cài đặt", "Khôi phục tất cả cài đặt về mặc định? Thao tác này không thể hoàn tác.", function() {
+                settingsVM.resetDefaults()
+            })
+        }
     }
 
     Connections {

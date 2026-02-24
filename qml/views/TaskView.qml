@@ -150,9 +150,14 @@ Item {
 
                         Label {
                             text: model.description || ""
-                            font: Theme.typography.labelLarge
+                            font {
+                                family: Theme.typography.labelLarge.family
+                                pixelSize: Theme.typography.labelLarge.pixelSize
+                                weight: Theme.typography.labelLarge.weight
+                                capitalization: Theme.typography.labelLarge.capitalization
+                                strikeout: model.completed || false
+                            }
                             color: model.completed ? Theme.textDisabled : Theme.backgroundText
-                            font.strikeout: model.completed || false
                             elide: Text.ElideRight
                             Layout.fillWidth: true
                         }
