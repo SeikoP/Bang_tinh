@@ -1,0 +1,119 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wms"
+version = "2.0.0"
+description = "WMS - Warehouse Management System (Phần mềm Quản lý Xuất kho & Dịch vụ)"
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Nguyen Cuong"},
+]
+
+dependencies = [
+    # GUI Framework
+    "PyQt6>=6.10.0",
+    "PyQt6-Qt6>=6.10.0",
+    "PyQt6-sip>=13.11.0",
+    # HTTP and Networking
+    "requests>=2.32.0",
+    # Data Processing
+    "beautifulsoup4>=4.14.0",
+    "lxml>=6.0.0",
+    # Utilities
+    "psutil>=6.1.0",
+    "packaging>=26.0",
+    # QR Code Generation
+    "qrcode>=8.0",
+    "pillow>=11.1.0",
+    # Security and Cryptography
+    "cryptography>=46.0.0",
+    # Text-to-Speech
+    "edge-tts>=7.2.7",
+    "num2words>=0.5.13",
+    "pyttsx3>=2.98",
+    "pywin32>=308",
+    # Environment Variables
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "flake8>=6.0",
+    "hypothesis>=6.0",
+    "radon>=6.0",
+]
+
+[project.scripts]
+wms = "wms.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+wms = [
+    "assets/**/*",
+    "config/*.yaml",
+]
+
+# ─── Pytest ───────────────────────────────────────
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --strict-markers --tb=short --disable-warnings"
+markers = [
+    "unit: Unit tests for individual components",
+    "integration: Integration tests for component interactions",
+    "property: Property-based tests using Hypothesis",
+    "slow: Tests that take significant time to run",
+    "e2e: End-to-end workflow tests",
+    "smoke: Quick smoke tests for critical functionality",
+]
+
+# ─── Coverage ─────────────────────────────────────
+[tool.coverage.run]
+source = ["src/wms"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# ─── Flake8 (via pyproject-flake8) ───────────────
+[tool.flake8]
+max-line-length = 120
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    "archive",
+    ".venv",
+    "venv",
+]
