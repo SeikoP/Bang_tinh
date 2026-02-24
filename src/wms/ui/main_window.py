@@ -141,21 +141,16 @@ class MainWindow(QMainWindow):
 
     def _setup_animations_internal(self):
         """Setup animations for UI elements - called internally after content_stack is ready"""
-        # Fade animation for content stack
+        # Fade effect for content stack
         self.fade_effect = QGraphicsOpacityEffect(self.content_stack)
         self.content_stack.setGraphicsEffect(self.fade_effect)
 
-        # Fade-in animation — smooth ease-out for natural feel
+        # Single fade-in animation — applied after instant page switch
         self.fade_animation = QPropertyAnimation(self.fade_effect, b"opacity")
-        self.fade_animation.setDuration(150)
-        self.fade_animation.setStartValue(0.3)
+        self.fade_animation.setDuration(120)
+        self.fade_animation.setStartValue(0.55)
         self.fade_animation.setEndValue(1.0)
-        self.fade_animation.setEasingCurve(QEasingCurve.Type.OutQuad)
-
-        # Fade-out animation — quick snap
-        self.fade_out_animation = QPropertyAnimation(self.fade_effect, b"opacity")
-        self.fade_out_animation.setDuration(50)
-        self.fade_out_animation.setEasingCurve(QEasingCurve.Type.InQuad)
+        self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
     def _setup_window(self):
         title = f"{APP_NAME} v{APP_VERSION}"
@@ -466,46 +461,28 @@ class MainWindow(QMainWindow):
         self._peek_timer.stop()
 
     def _switch_view(self, index):
-        """Switch view with fade animation"""
+        """Switch view instantly with a subtle fade-in effect (no delay)"""
         if self.content_stack.currentIndex() == index:
             return
 
+        # Switch page and update UI immediately
+        self.content_stack.setCurrentIndex(index)
+        names = ["Quản lý", "Ghi chú", "Bank", "Lịch sử", "Cài đặt", "Máy tính"]
+        self.breadcrumb.setText(f"Trang chủ / {names[index]}")
+
+        # Update nav buttons
+        for i, btn in enumerate(self.nav_btns):
+            btn.setProperty("active", i == index)
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+
+        # Subtle fade-in on the new view (no fade-out = no blank/delay)
         try:
-            # Check if animations are ready
-            if not hasattr(self, "fade_effect") or not hasattr(self, "fade_animation"):
-                # Fallback to direct switch without animation
-                self._switch_view_direct(index)
-                return
-
-            # Fade out current view (reuse animation object)
-            self.fade_out_animation.setStartValue(1.0)
-            self.fade_out_animation.setEndValue(0.0)
-
-            def switch_and_fade_in():
-                self.content_stack.setCurrentIndex(index)
-                names = ["Quản lý", "Ghi chú", "Bank", "Lịch sử", "Cài đặt", "Máy tính"]
-                self.breadcrumb.setText(f"Trang chủ / {names[index]}")
-
-                # Update nav buttons
-                for i, btn in enumerate(self.nav_btns):
-                    btn.setProperty("active", i == index)
-                    btn.style().unpolish(btn)
-                    btn.style().polish(btn)
-
-                # Fade in new view
+            if hasattr(self, "fade_animation"):
+                self.fade_animation.stop()
                 self.fade_animation.start()
-
-            # Disconnect previous connections to avoid signal accumulation
-            try:
-                self.fade_out_animation.finished.disconnect()
-            except TypeError:
-                pass  # No connections to disconnect
-            self.fade_out_animation.finished.connect(switch_and_fade_in)
-            self.fade_out_animation.start()
-        except Exception as e:
-            # Fallback to direct switch if animation fails
-            self.logger.error(f"Animation error: {e}")
-            self._switch_view_direct(index)
+        except Exception:
+            pass  # Animation not critical
 
     def _switch_view_direct(self, index):
         """Switch view directly without animation (fallback)"""
