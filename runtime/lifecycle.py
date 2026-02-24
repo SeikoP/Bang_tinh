@@ -1,4 +1,4 @@
-"""
+﻿"""
 Application Lifecycle Management
 
 Handles the application lifecycle:
@@ -12,16 +12,14 @@ import logging
 import signal
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import Callable, Optional
 
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
 
 from core.config import Config
 from core.container import Container
-
-if TYPE_CHECKING:
-    from runtime.profiler import ApplicationProfiler
-    from runtime.watchdog import ApplicationWatchdog
 
 
 class ApplicationLifecycle:
@@ -30,6 +28,7 @@ class ApplicationLifecycle:
 
     This class handles:
     - Application startup
+    - QML engine loading
     - Main event loop
     - Graceful shutdown
     - Resource cleanup
@@ -39,18 +38,19 @@ class ApplicationLifecycle:
         self,
         config: Config,
         container: Container,
-        qt_app: QApplication,
+        qt_app: QGuiApplication,
+        qml_engine: QQmlApplicationEngine,
         logger: logging.Logger,
-        profiler: Optional["ApplicationProfiler"] = None,
-        watchdog: Optional["ApplicationWatchdog"] = None,
+        profiler: Optional['ApplicationProfiler'] = None,
+        watchdog: Optional['ApplicationWatchdog'] = None,
     ):
         self.config = config
         self.container = container
         self.qt_app = qt_app
+        self.qml_engine = qml_engine
         self.logger = logger
         self.profiler = profiler
         self.watchdog = watchdog
-        self.main_window: Optional[QMainWindow] = None
         self._shutdown_handlers: list[Callable] = []
         self._is_shutting_down = False
 
@@ -84,51 +84,51 @@ class ApplicationLifecycle:
         self._shutdown_handlers.append(handler)
         self.logger.debug(f"Registered shutdown handler: {handler.__name__}")
 
-    def start(self, main_window: QMainWindow) -> int:
+    def start(self, qml_url: QUrl) -> int:
         """
-        Start the application.
+        Start the application by loading the QML entry point.
 
         Args:
-            main_window: The main application window
+            qml_url: URL to the main QML file
 
         Returns:
             int: Application exit code
         """
-        self.main_window = main_window
         startup_metric = None
 
         try:
-            self.logger.info("Starting application...")
-
+            self.logger.info("Starting QML application...")
+            
             if self.profiler:
                 startup_metric = self.profiler.start_metric("application_startup")
 
-            # Show main window
-            self.main_window.show()
+            # Load main QML file
+            self.qml_engine.load(qml_url)
 
-            # Log window info
-            self.logger.info(
-                f"Main window displayed: {self.main_window.width()}x{self.main_window.height()}"
-            )
+            # Check that the root object was created
+            if not self.qml_engine.rootObjects():
+                self.logger.error("Failed to load QML — no root objects created")
+                return 1
+
+            self.logger.info("QML UI loaded successfully")
 
             # Set up periodic tasks (if needed)
             self._setup_periodic_tasks()
-
+            
             if startup_metric and self.profiler:
                 self.profiler.end_metric(startup_metric)
                 self.profiler.startup_time = startup_metric.duration
 
             # Start Qt event loop
             self.logger.info("Entering Qt event loop...")
-
+            
             # Update watchdog heartbeat periodically (avoid deadlock)
             if self.watchdog:
-                from PyQt6.QtCore import QTimer
-
+                from PySide6.QtCore import QTimer
                 self._heartbeat_timer = QTimer()
                 self._heartbeat_timer.timeout.connect(self._update_heartbeat)
                 self._heartbeat_timer.start(30000)  # Every 30 seconds
-
+            
             exit_code = self.qt_app.exec()
 
             self.logger.info(f"Qt event loop exited with code: {exit_code}")
@@ -156,7 +156,7 @@ class ApplicationLifecycle:
         # health_timer.start(60000)  # Every minute
 
         pass
-
+    
     def _update_heartbeat(self):
         """Update watchdog heartbeat (called from Qt timer)"""
         try:
@@ -199,7 +199,7 @@ class ApplicationLifecycle:
             if self.watchdog:
                 self.logger.info("Stopping watchdog...")
                 self.watchdog.stop()
-
+            
             # Call registered shutdown handlers
             for handler in self._shutdown_handlers:
                 try:
@@ -210,24 +210,22 @@ class ApplicationLifecycle:
                         f"Shutdown handler {handler.__name__} failed: {e}"
                     )
 
-            # Close main window
-            if self.main_window:
-                self.logger.info("Closing main window...")
-                self.main_window.close()
+            # Dispose QML engine (closes all QML windows)
+            if self.qml_engine:
+                self.logger.info("Disposing QML engine...")
+                del self.qml_engine
+                self.qml_engine = None
 
             # Stop notification server (if running)
             self._stop_notification_server()
 
             # Close database connections
             self._close_database_connections()
-
+            
             # Generate profiler report
             if self.profiler:
                 try:
-                    report_path = (
-                        self.config.log_dir
-                        / f"performance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-                    )
+                    report_path = self.config.log_dir / f"performance_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
                     self.profiler.generate_report(report_path)
                     self.profiler.cleanup()
                 except Exception as e:

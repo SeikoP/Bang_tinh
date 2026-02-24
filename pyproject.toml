@@ -1,0 +1,129 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wms"
+version = "2.0.0"
+description = "Warehouse Management System — Phần mềm Quản lý Xuất kho & Dịch vụ"
+requires-python = ">=3.11"
+license = {file = "LICENSE.txt"}
+readme = "README.md"
+
+dependencies = [
+    # GUI Framework — PySide6 provides Qt6 bindings for QML / Qt Quick UI
+    "PySide6>=6.7.0",
+    "PySide6-Addons>=6.7.0",
+    "PySide6-Essentials>=6.7.0",
+
+    # HTTP client — used by updater and license validation
+    "requests>=2.32",
+
+    # HTML parsing — bank statement parsing from SMS/notification HTML
+    "beautifulsoup4>=4.14",
+    "lxml>=6.0",
+
+    # QR code generation — connection pairing with mobile devices
+    "qrcode>=8.0",
+    "pillow>=11.1",
+
+    # Cryptography — license key validation & data encryption
+    "cryptography>=46.0",
+
+    # TTS — Vietnamese voice notifications for incoming bank transactions
+    "edge-tts>=7.2",
+    "num2words>=0.5",
+    "pyttsx3>=2.98",
+
+    # System monitoring — healthcheck, watchdog, profiler
+    "psutil>=6.1",
+
+    # Environment variable loading from .env files
+    "python-dotenv>=1.0",
+
+    # Windows COM automation for TTS fallback
+    "pywin32>=308;sys_platform=='win32'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-cov>=4.1",
+    "hypothesis>=6.100",
+    "radon>=6.0",
+    "pylint>=3.0",
+    "flake8>=6.1",
+    "black>=23.0",
+    "mypy>=1.5",
+    "pyinstaller>=6.18",
+    "setuptools>=80.0",
+]
+
+[project.scripts]
+wms = "runtime.bootstrap:main"
+
+# ──────────────────────────────────────────────────────────
+# KEY DESIGN DECISION: flat src/ layout
+#
+# All Python packages live under src/ (core/, database/, services/, etc.)
+# By setting package-dir = {"" = "src"}, pip install -e . adds src/ to
+# sys.path, so existing imports like `from core.config import Config`
+# work without any sys.path hacks.
+# ──────────────────────────────────────────────────────────
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+app = ["resources/**/*"]
+
+# ───── Pytest ─────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --strict-markers --tb=short --disable-warnings"
+markers = [
+    "unit: Unit tests for individual components",
+    "integration: Integration tests for component interactions",
+    "property: Property-based tests using Hypothesis",
+    "slow: Tests that take significant time to run",
+    "e2e: End-to-end workflow tests",
+    "smoke: Quick smoke tests for critical functionality",
+]
+
+# ───── Coverage ─────
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/venv/*", "*/__pycache__/*", "*/migrations/*"]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+# ───── Black ─────
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+# ───── Mypy ─────
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
