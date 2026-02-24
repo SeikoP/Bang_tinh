@@ -88,6 +88,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(PROJECT_ROOT / 'src' / 'wms' / 'assets' / 'icons' / 'icon.png'),
+    icon=str(PROJECT_ROOT / 'src' / 'wms' / 'assets' / 'icons' / 'icon.ico'),
     version=str(PROJECT_ROOT / 'build' / 'version_info.txt'),
 )

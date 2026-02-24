@@ -102,6 +102,19 @@ jobs:
           pip install -e .
           pip install pyinstaller
       
+      - name: Ensure .ico exists
+        run: |
+          $ico = "src\wms\assets\icons\icon.ico"
+          if (-not (Test-Path $ico)) {
+            python -c "
+from PIL import Image
+img = Image.open('src/wms/assets/icons/icon.png').convert('RGBA')
+sizes = [(s,s) for s in [16,20,24,32,40,48,64,128,256]]
+img.save('src/wms/assets/icons/icon.ico', format='ICO', sizes=sizes)
+"
+            Write-Host "Generated icon.ico from PNG"
+          }
+
       - name: Build executable
         run: |
           pyinstaller build/warehouse_app.spec
@@ -217,6 +230,19 @@ jobs:
           pip install -e .
           pip install pyinstaller
       
+      - name: Ensure .ico exists
+        run: |
+          $ico = "src\wms\assets\icons\icon.ico"
+          if (-not (Test-Path $ico)) {
+            python -c "
+from PIL import Image
+img = Image.open('src/wms/assets/icons/icon.png').convert('RGBA')
+sizes = [(s,s) for s in [16,20,24,32,40,48,64,128,256]]
+img.save('src/wms/assets/icons/icon.ico', format='ICO', sizes=sizes)
+"
+            Write-Host "Generated icon.ico from PNG"
+          }
+
       - name: Build executable
         run: |
           pyinstaller build/warehouse_app.spec

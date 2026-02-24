@@ -27,6 +27,7 @@ OutputDir=..\Output
 OutputBaseFilename=BangTinhSetup
 Compression=lzma2/ultra64
 SolidCompression=yes
+SetupIconFile=..\src\wms\assets\icons\icon.ico
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
@@ -55,11 +56,11 @@ Source: "..\data\logs\.gitkeep"; DestDir: "{app}\logs"; Flags: ignoreversion ski
 
 [Icons]
 ; Start Menu shortcuts
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icons\icon.ico"
 Name: "{group}\Gỡ cài đặt {#MyAppName}"; Filename: "{uninstallexe}"
 
 ; Desktop shortcut
-Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icons\icon.ico"; Tasks: desktopicon
 
 [Run]
 ; Option to launch application after installation
