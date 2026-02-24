@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Callable, Optional
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 
 
 class TaskPriority(Enum):
@@ -43,10 +43,10 @@ class Task:
 
 class WorkerSignals(QObject):
     """Signals for worker communication"""
-    started = Signal(str)  # task_id
-    progress = Signal(str, int)  # task_id, progress (0-100)
-    finished = Signal(str, object)  # task_id, result
-    error = Signal(str, Exception)  # task_id, exception
+    started = pyqtSignal(str)  # task_id
+    progress = pyqtSignal(str, int)  # task_id, progress (0-100)
+    finished = pyqtSignal(str, object)  # task_id, result
+    error = pyqtSignal(str, Exception)  # task_id, exception
 
 
 class BaseWorker(QThread):

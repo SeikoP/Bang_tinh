@@ -1,13 +1,15 @@
 """
 Standard Calculator Tool View - Professional Windows-style Full Feature Set
+Includes Money Counter for all Vietnamese currency denominations.
 """
 
 import math
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import (QApplication, QFrame, QGridLayout, QHBoxLayout,
                              QLabel, QLineEdit, QPushButton, QScrollArea,
-                             QVBoxLayout, QWidget)
+                             QSizePolicy, QSpinBox, QVBoxLayout, QWidget)
 
 from ..theme import AppColors
 
@@ -185,6 +187,9 @@ class CalculatorToolView(QWidget):
         calc_layout.addLayout(grid)
         main_h_layout.addWidget(calc_container)
 
+        # --- MIDDLE: MONEY COUNTER ---
+        self._build_money_counter(main_h_layout)
+
         # --- RIGHT: HISTORY ---
         history_side = QFrame()
         history_side.setFixedWidth(260)
@@ -223,6 +228,263 @@ class CalculatorToolView(QWidget):
         hist_layout.addWidget(clear_btn)
 
         main_h_layout.addWidget(history_side)
+
+    # ================================================================
+    # MONEY COUNTER
+    # ================================================================
+
+    # All Vietnamese currency denominations (polymer notes + coins)
+    VND_DENOMINATIONS = [
+        500_000, 200_000, 100_000, 50_000, 20_000, 10_000,
+        5_000, 2_000, 1_000, 500, 200, 100,
+    ]
+
+    # Color coding by denomination tier
+    _DENOM_COLORS = {
+        500_000: "#dc2626", 200_000: "#ea580c", 100_000: "#d97706",
+        50_000:  "#16a34a", 20_000: "#2563eb", 10_000: "#7c3aed",
+        5_000:   "#0d9488", 2_000:  "#64748b", 1_000:  "#64748b",
+        500:     "#78716c", 200:    "#78716c", 100:    "#78716c",
+    }
+
+    def _build_money_counter(self, parent_layout):
+        """Build the Vietnamese money counting panel."""
+        container = QFrame()
+        container.setFixedWidth(340)
+        container.setStyleSheet(f"""
+            QFrame {{
+                background-color: white;
+                border-radius: 16px;
+                border: 1px solid {AppColors.BORDER};
+            }}
+        """)
+
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(16, 18, 16, 16)
+        layout.setSpacing(8)
+
+        # Header
+        header = QLabel("ĐẾM TIỀN VIỆT NAM")
+        header.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; "
+            f"font-size: 10px; letter-spacing: 1.5px; margin-bottom: 2px;"
+        )
+        layout.addWidget(header)
+
+        # Scrollable area for denomination rows
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("background: transparent; border: none;")
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        inner = QWidget()
+        inner_layout = QVBoxLayout(inner)
+        inner_layout.setContentsMargins(0, 0, 0, 0)
+        inner_layout.setSpacing(5)
+
+        self._money_inputs: dict[int, QLineEdit] = {}
+        self._money_subtotals: dict[int, QLabel] = {}
+
+        for denom in self.VND_DENOMINATIONS:
+            row = self._create_denom_row(denom)
+            inner_layout.addWidget(row)
+
+        inner_layout.addStretch()
+        scroll.setWidget(inner)
+        layout.addWidget(scroll)
+
+        # Separator
+        sep = QFrame()
+        sep.setFixedHeight(1)
+        sep.setStyleSheet(f"background: {AppColors.BORDER};")
+        layout.addWidget(sep)
+
+        # Grand total
+        total_row = QHBoxLayout()
+        total_label = QLabel("TỔNG CỘNG:")
+        total_label.setStyleSheet(
+            f"color: {AppColors.TEXT}; font-weight: 800; font-size: 13px;"
+        )
+        self._money_total_label = QLabel("0 ₫")
+        self._money_total_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self._money_total_label.setStyleSheet(
+            f"color: {AppColors.PRIMARY}; font-weight: 900; font-size: 18px;"
+        )
+        total_row.addWidget(total_label)
+        total_row.addWidget(self._money_total_label)
+        layout.addLayout(total_row)
+
+        # Count summary
+        self._money_count_label = QLabel("Tổng số tờ/xu: 0")
+        self._money_count_label.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;"
+        )
+        layout.addWidget(self._money_count_label)
+
+        # Action buttons
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(8)
+
+        copy_btn = QPushButton("📋 Copy")
+        copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        copy_btn.setFixedHeight(34)
+        copy_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: white; color: {AppColors.PRIMARY};
+                border-radius: 6px; border: 1px solid {AppColors.BORDER};
+                font-size: 11px; font-weight: 700; padding: 0 12px;
+            }}
+            QPushButton:hover {{ background: #f0fdf4; border-color: {AppColors.PRIMARY}; }}
+        """)
+        copy_btn.clicked.connect(self._copy_money_total)
+        btn_row.addWidget(copy_btn)
+
+        send_btn = QPushButton("📤 Gửi → Máy tính")
+        send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        send_btn.setFixedHeight(34)
+        send_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {AppColors.PRIMARY}; color: white;
+                border-radius: 6px; border: none;
+                font-size: 11px; font-weight: 700; padding: 0 12px;
+            }}
+            QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
+        """)
+        send_btn.clicked.connect(self._send_money_to_calc)
+        btn_row.addWidget(send_btn)
+
+        reset_btn = QPushButton("🗑️ Xóa")
+        reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        reset_btn.setFixedHeight(34)
+        reset_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: white; color: {AppColors.ERROR};
+                border-radius: 6px; border: 1px solid {AppColors.BORDER};
+                font-size: 11px; font-weight: 700; padding: 0 12px;
+            }}
+            QPushButton:hover {{ background: #fef2f2; border-color: {AppColors.ERROR}; }}
+        """)
+        reset_btn.clicked.connect(self._reset_money_counter)
+        btn_row.addWidget(reset_btn)
+
+        layout.addLayout(btn_row)
+        parent_layout.addWidget(container)
+
+    def _create_denom_row(self, denom: int) -> QFrame:
+        """Create a single denomination row: [color dot] [label] [qty input] [subtotal]."""
+        row = QFrame()
+        row.setStyleSheet(
+            f"QFrame {{ background: #f8fafc; border-radius: 8px; padding: 2px; "
+            f"border: 1px solid transparent; }}"
+            f"QFrame:hover {{ border-color: {AppColors.BORDER_HOVER}; }}"
+        )
+
+        h = QHBoxLayout(row)
+        h.setContentsMargins(8, 4, 8, 4)
+        h.setSpacing(8)
+
+        # Color indicator
+        dot = QLabel()
+        dot.setFixedSize(8, 8)
+        color = self._DENOM_COLORS.get(denom, "#64748b")
+        dot.setStyleSheet(f"background: {color}; border-radius: 4px;")
+        h.addWidget(dot)
+
+        # Denomination label
+        if denom >= 1000:
+            text = f"{denom // 1000:,}k"
+        else:
+            text = f"{denom:,}"
+        lbl = QLabel(text)
+        lbl.setFixedWidth(48)
+        lbl.setStyleSheet(
+            f"color: {AppColors.TEXT}; font-weight: 700; font-size: 12px;"
+        )
+        h.addWidget(lbl)
+
+        # Quantity input
+        qty_input = QLineEdit()
+        qty_input.setPlaceholderText("0")
+        qty_input.setValidator(QIntValidator(0, 99999))
+        qty_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        qty_input.setFixedWidth(60)
+        qty_input.setFixedHeight(30)
+        qty_input.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 6px;
+                background: white;
+                color: {AppColors.TEXT};
+                font-size: 13px;
+                font-weight: 600;
+            }}
+            QLineEdit:focus {{
+                border-color: {AppColors.PRIMARY};
+                background: #f0fdf4;
+            }}
+        """)
+        qty_input.textChanged.connect(lambda _: self._update_money_totals())
+        h.addWidget(qty_input)
+        self._money_inputs[denom] = qty_input
+
+        # Subtotal
+        sub = QLabel("0 ₫")
+        sub.setAlignment(Qt.AlignmentFlag.AlignRight)
+        sub.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600;"
+        )
+        sub.setMinimumWidth(90)
+        h.addWidget(sub)
+        self._money_subtotals[denom] = sub
+
+        return row
+
+    def _update_money_totals(self):
+        """Recalculate all subtotals and grand total."""
+        grand_total = 0
+        total_count = 0
+
+        for denom, inp in self._money_inputs.items():
+            txt = inp.text().strip()
+            qty = int(txt) if txt.isdigit() else 0
+            sub = denom * qty
+            grand_total += sub
+            total_count += qty
+
+            lbl = self._money_subtotals[denom]
+            if qty > 0:
+                lbl.setText(f"{sub:,.0f} ₫")
+                lbl.setStyleSheet(
+                    f"color: {AppColors.TEXT}; font-size: 12px; font-weight: 700;"
+                )
+            else:
+                lbl.setText("0 ₫")
+                lbl.setStyleSheet(
+                    f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600;"
+                )
+
+        self._money_total_label.setText(f"{grand_total:,.0f} ₫")
+        self._money_count_label.setText(f"Tổng số tờ/xu: {total_count:,}")
+
+    def _copy_money_total(self):
+        """Copy the grand total to clipboard."""
+        text = self._money_total_label.text().replace(" ₫", "").replace(",", "")
+        QApplication.clipboard().setText(text)
+
+    def _send_money_to_calc(self):
+        """Send the money counter total into the calculator display."""
+        text = self._money_total_label.text().replace(" ₫", "").replace(",", "")
+        if text and text != "0":
+            self.current_value = text
+            self._update_display()
+            self.new_num = True
+
+    def _reset_money_counter(self):
+        """Clear all denomination inputs."""
+        for inp in self._money_inputs.values():
+            inp.clear()
+        self._update_money_totals()
 
     def _on_btn(self, t):
         if t.isdigit():

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from PySide6.QtCore import Signal
+from PyQt6.QtCore import pyqtSignal
 
 from .base_worker import BaseWorker, TaskPriority
 
@@ -154,7 +154,7 @@ class NotificationWorker(BaseWorker):
     """
     
     # Signal for UI update
-    notification_parsed = Signal(object)  # ParsedNotification
+    notification_parsed = pyqtSignal(object)  # ParsedNotification
     
     def __init__(self, logger: logging.Logger, repository):
         super().__init__("NotificationWorker", logger)

@@ -5,8 +5,8 @@ Standardized table with common features
 
 from typing import List, Optional, Callable
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import (
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (
     QTableWidget, QTableWidgetItem, QHeaderView,
     QWidget, QHBoxLayout, QPushButton, QVBoxLayout, QLabel
 )
@@ -32,9 +32,9 @@ class DataTable(QTableWidget):
     """
     
     # Signals
-    row_clicked = Signal(int)  # row index
-    row_double_clicked = Signal(int)
-    action_clicked = Signal(str, int)  # action_name, row_index
+    row_clicked = pyqtSignal(int)  # row index
+    row_double_clicked = pyqtSignal(int)
+    action_clicked = pyqtSignal(str, int)  # action_name, row_index
     
     def __init__(
         self,

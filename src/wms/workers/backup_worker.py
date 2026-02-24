@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-from PySide6.QtCore import QTimer, Signal
+from PyQt6.QtCore import QTimer, pyqtSignal
 
 from .base_worker import BaseWorker, TaskPriority
 
@@ -25,8 +25,8 @@ class BackupWorker(BaseWorker):
     """
     
     # Signals
-    backup_completed = Signal(str)  # backup_path
-    backup_failed = Signal(str)  # error_message
+    backup_completed = pyqtSignal(str)  # backup_path
+    backup_failed = pyqtSignal(str)  # error_message
     
     def __init__(
         self,

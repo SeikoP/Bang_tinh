@@ -7,27 +7,9 @@ from contextlib import contextmanager
 from typing import Generator
 
 # Import centralized paths
-<<<<<<<< HEAD:src/wms/database/connection.py
 from ..core.paths import DATABASE
 
 DB_PATH = DATABASE
-========
-try:
-    # Keep DB path aligned with runtime bootstrap config
-    from core.config import DATABASE
-
-    DB_PATH = DATABASE
-except ImportError:
-    try:
-        from app.core.paths import DATABASE
-
-        DB_PATH = DATABASE
-    except ImportError:
-        # Fallback: compute from current file location
-        from pathlib import Path as _Path
-
-        DB_PATH = _Path(__file__).resolve().parents[2] / "storage.db"
->>>>>>>> 7d399a9b3b4c170a1f26da7f8bb4a36cbe0e1cdf:src/database/connection.py
 
 # Import connection pool
 from .connection_pool import get_pooled_connection, initialize_pool

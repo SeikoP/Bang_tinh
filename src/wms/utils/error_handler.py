@@ -2,7 +2,7 @@
 
 import logging
 
-from PySide6.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox
 
 from ..core.exceptions import AppException
 

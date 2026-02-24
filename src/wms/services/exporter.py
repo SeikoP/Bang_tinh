@@ -7,19 +7,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
-<<<<<<<< HEAD:src/wms/services/exporter.py
 from ..core.constants import EXPORT_DATE_FORMAT
 from ..core.config import EXPORTS as EXPORT_DIR
 from ..core.exceptions import AppException, ValidationError
 from ..database.repositories import (HistoryRepository, SessionRepository)
 from ..core.models import SessionData, SessionHistory
-========
-from app.core.paths import EXPORTS as EXPORT_DIR
-from core.constants import EXPORT_DATE_FORMAT
-from core.exceptions import AppException, ValidationError
-from database import (HistoryRepository, SessionData, SessionHistory,
-                      SessionRepository)
->>>>>>>> 7d399a9b3b4c170a1f26da7f8bb4a36cbe0e1cdf:src/services/exporter.py
 
 
 class ExportService:

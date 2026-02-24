@@ -4,10 +4,10 @@
 # Install with: pip install -r requirements.txt
 # For reproducible builds, all versions are pinned
 
-# GUI Framework (PySide6 with QML/Qt Quick support)
-PySide6>=6.7.0
-PySide6-Addons>=6.7.0
-PySide6-Essentials>=6.7.0
+# GUI Framework (PyQt6)
+PyQt6>=6.10.0
+PyQt6-Qt6>=6.10.0
+PyQt6-sip>=13.11.0
 
 # HTTP and Networking
 requests==2.32.5

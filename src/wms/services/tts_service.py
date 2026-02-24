@@ -11,8 +11,8 @@ import re
 from pathlib import Path
 from typing import Optional, Dict, List
 
-from PySide6.QtCore import QObject, QThread, Signal, QUrl, QTimer
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PyQt6.QtCore import QObject, QThread, pyqtSignal, QUrl, QTimer
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 
 # Cache directory for pre-generated audio
 CACHE_DIR = Path(tempfile.gettempdir()) / "tts_cache"
@@ -22,8 +22,8 @@ CACHE_DIR.mkdir(exist_ok=True)
 class TTSWorker(QThread):
     """Worker thread for background TTS generation/download"""
     
-    finished_generating = Signal(str, str)  # cache_key, file_path
-    error = Signal(str)
+    finished_generating = pyqtSignal(str, str)  # cache_key, file_path
+    error = pyqtSignal(str)
     
     def __init__(self, text: str, voice: str, cache_key: str):
         super().__init__()
@@ -67,9 +67,9 @@ class TTSWorker(QThread):
 class TTSBatchWorker(QThread):
     """Worker that generates multiple TTS files in a single asyncio event loop"""
     
-    item_generated = Signal(str, str)  # cache_key, file_path
-    all_done = Signal()
-    error = Signal(str)
+    item_generated = pyqtSignal(str, str)  # cache_key, file_path
+    all_done = pyqtSignal()
+    error = pyqtSignal(str)
     
     def __init__(self, items: list, voice: str):
         """items: list of (cache_key, text) tuples"""
@@ -120,7 +120,7 @@ class TTSService(QObject):
     - Hybrid offline/online fallback system
     """
     
-    error_occurred = Signal(str)
+    error_occurred = pyqtSignal(str)
     
     VOICES = {
         "edge_female": "vi-VN-HoaiMyNeural",      # South Female (Default)
