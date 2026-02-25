@@ -13,6 +13,10 @@ on:
       - 'android_notifier/**'
   workflow_dispatch:
 
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -36,23 +40,23 @@ jobs:
         distribution: 'temurin'
         cache: 'gradle'
         
-    - name: Cache Gradle packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('android_notifier/**/*.gradle*', 'android_notifier/**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-        
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
       working-directory: android_notifier
       
     - name: Build APK
-      run: ./gradlew assembleDebug --stacktrace
+      run: ./gradlew clean assembleDebug --stacktrace --info --no-daemon
       working-directory: android_notifier
+
+    - name: Upload build reports (always)
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: android-gradle-reports
+        path: |
+          android_notifier/app/build/reports
+          android_notifier/build/reports
+        if-no-files-found: ignore
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -61,7 +65,8 @@ jobs:
         path: android_notifier/app/build/outputs/apk/debug/app-debug.apk
     
     - name: Create Rolling Release
-      uses: softprops/action-gh-release@v1
+      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: android-latest
         name: Latest Android Build (WMS Notifier)
@@ -88,7 +93,7 @@ jobs:
 
     - name: Create Versioned Release
       if: startsWith(github.ref, 'refs/tags/android-v')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
         body: |

@@ -63,6 +63,12 @@ bang_tinh/
 git clone --recurse-submodules https://github.com/SeikoP/Bang_tinh.git
 cd Bang_tinh
 
+# If you already cloned without submodules
+git submodule update --init --recursive
+
+# Optional: make future pull/update recurse submodules automatically
+git config --global submodule.recurse true
+
 # Create virtual environment
 python -m venv .venv
 .venv\Scripts\activate
@@ -104,6 +110,20 @@ pip install pyinstaller
 pyinstaller build/warehouse_app.spec
 # Output: dist/WarehouseManagement.exe
 ```
+
+### Debug Build (Local)
+
+```bash
+# Build with verbose PyInstaller logs
+pyinstaller --clean --noconfirm --log-level DEBUG build/warehouse_app.spec > build/pyinstaller-local-debug.log 2>&1
+
+# Quick check output
+dir dist
+```
+
+If build fails, inspect:
+- `build/pyinstaller-local-debug.log`
+- `build/warehouse_app/warn-*.txt`
 
 ## Configuration
 

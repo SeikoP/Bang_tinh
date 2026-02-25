@@ -13,6 +13,22 @@ Main CI/CD pipeline that runs on push, pull requests, and releases.
 - `build`: Build Windows executable (main/develop branches only)
 - `release`: Create installer and upload to GitHub Releases (tagged releases only)
 
+**Debugging support:**
+- Build and release jobs run PyInstaller with debug logs (`--log-level DEBUG`)
+- Diagnostics artifacts are uploaded even on failures (`build-diagnostics-*`, `release-diagnostics-*`)
+
+**Scope:**
+- Desktop/Windows pipeline only (Android jobs were removed to avoid duplicate workflow nodes)
+
+### android-build.yml
+Dedicated Android pipeline for debug APK build and Android releases.
+
+**Jobs:**
+- `build`: Build debug APK with verbose Gradle logs (`--stacktrace --info`)
+- Upload APK artifact + Gradle reports for debugging failures
+- Publish rolling release (`android-latest`) on `main`
+- Publish versioned release on tags `android-v*`
+
 **Optimizations:**
 - Pip dependency caching for faster installs
 - PyInstaller build cache for incremental builds
@@ -100,6 +116,8 @@ Build artifacts are available for 30 days after each build:
 1. Go to Actions tab
 2. Select the workflow run
 3. Download artifacts from the Artifacts section
+
+Debug artifacts include PyInstaller full logs and warning/xref outputs for troubleshooting build failures.
 
 ## Troubleshooting
 
