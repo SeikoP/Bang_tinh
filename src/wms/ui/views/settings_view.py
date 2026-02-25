@@ -8,8 +8,9 @@ from pathlib import Path
 
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFrame,
-                             QHBoxLayout, QLabel, QMessageBox, QPushButton,
-                             QScrollArea, QSlider, QVBoxLayout, QWidget)
+                             QHBoxLayout, QLabel, QLineEdit, QMessageBox,
+                             QPushButton, QScrollArea, QSlider, QVBoxLayout,
+                             QWidget)
 
 
 class NoWheelComboBox(QComboBox):
@@ -35,9 +36,10 @@ class SettingsView(QWidget):
         finished = pyqtSignal(str, int, str, object, list)  # IP, Port, SecretKey, QPixmap, AllIPs
         error = pyqtSignal()
 
-        def __init__(self, container=None):
+        def __init__(self, container=None, tunnel_url: str = ""):
             super().__init__()
             self.container = container
+            self.tunnel_url = tunnel_url.strip()
 
         def run(self):
             from io import BytesIO
@@ -46,10 +48,11 @@ class SettingsView(QWidget):
             from PyQt6.QtGui import QPixmap
 
             try:
-                # Get all local IPs
-                from ...network.discovery_server import get_all_local_ips
-                ips = get_all_local_ips()
-                ip = ips[0] if ips else "127.0.0.1"
+                # Get all local IPs (including USB tethering, hotspot)
+                from ...network.network_monitor import get_best_ip, get_all_ips_flat
+                best_ip, best_type = get_best_ip()
+                ips = get_all_ips_flat()
+                ip = best_ip if best_ip != "127.0.0.1" else (ips[0] if ips else "127.0.0.1")
 
                 # Get port and secret key from config
                 port = 5005
@@ -62,7 +65,11 @@ class SettingsView(QWidget):
 
                 # Generate QR code with JSON data
                 # h=primary host, p=port, k=key, ips=all fallback IPs
-                qr_data = json.dumps({"h": ip, "p": port, "k": secret_key, "ips": ips})
+                # If tunnel URL is set, include it as "t" field for remote access
+                qr_payload = {"h": ip, "p": port, "k": secret_key, "ips": ips}
+                if self.tunnel_url:
+                    qr_payload["t"] = self.tunnel_url
+                qr_data = json.dumps(qr_payload)
 
                 qr = qrcode.QRCode(version=1, box_size=10, border=2)
                 qr.add_data(qr_data)
@@ -448,6 +455,61 @@ class SettingsView(QWidget):
         )
         layout.addWidget(guide)
 
+        # ── Tunnel URL section (for remote access without same WiFi) ──
+        tunnel_header = QLabel("🌐 Kết nối từ xa (khác WiFi)")
+        tunnel_header.setStyleSheet(f"""
+            font-weight: 700; font-size: 13px; color: {AppColors.TEXT};
+            margin-top: 12px;
+        """)
+        layout.addWidget(tunnel_header)
+
+        tunnel_desc = QLabel(
+            "Nếu điện thoại và máy tính KHÔNG cùng WiFi, dùng một trong các cách sau:\n"
+            "• Tailscale: Cài trên cả PC và điện thoại → dùng IP 100.x.x.x\n"
+            "• ngrok: Chạy 'ngrok http 5005' trên PC → dán URL bên dưới\n"
+            "• USB Tethering: Kết nối điện thoại qua USB → IP tự phát hiện\n"
+            "• Hotspot: Bật hotspot trên điện thoại, PC kết nối vào → IP tự phát hiện"
+        )
+        tunnel_desc.setWordWrap(True)
+        tunnel_desc.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; line-height: 1.4;"
+        )
+        layout.addWidget(tunnel_desc)
+
+        tunnel_row = QHBoxLayout()
+        self.tunnel_input = QLineEdit()
+        self.tunnel_input.setPlaceholderText("VD: https://abc123.ngrok-free.app hoặc http://100.64.0.1:5005")
+        self.tunnel_input.setStyleSheet(f"""
+            QLineEdit {{
+                padding: 8px 12px;
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 6px;
+                font-size: 13px;
+                background: white;
+            }}
+            QLineEdit:focus {{
+                border-color: {AppColors.PRIMARY};
+            }}
+        """)
+        tunnel_row.addWidget(self.tunnel_input)
+
+        tunnel_apply_btn = QPushButton("Tạo QR")
+        tunnel_apply_btn.setFixedWidth(80)
+        tunnel_apply_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {AppColors.PRIMARY}; color: white;
+                padding: 8px; border-radius: 6px; font-weight: 600;
+            }}
+            QPushButton:hover {{ background: #059669; }}
+        """)
+        tunnel_apply_btn.clicked.connect(self._refresh_ip)
+        tunnel_row.addWidget(tunnel_apply_btn)
+        layout.addLayout(tunnel_row)
+
+        self.tunnel_status = QLabel("")
+        self.tunnel_status.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 11px;")
+        layout.addWidget(self.tunnel_status)
+
         # Initial refresh
         QTimer.singleShot(500, self._refresh_ip)
         return content
@@ -455,7 +517,8 @@ class SettingsView(QWidget):
     def _refresh_ip(self):
         """Async refresh IP & QR"""
         self.ip_label.setText("Đang lấy IP...")
-        self._worker = self.IPWorker(self.container)
+        tunnel_url = self.tunnel_input.text().strip() if hasattr(self, 'tunnel_input') else ""
+        self._worker = self.IPWorker(self.container, tunnel_url=tunnel_url)
         self._worker.finished.connect(self._on_ip_ready)
         self._worker.error.connect(lambda: self.ip_label.setText("127.0.0.1 (Offline)"))
         self._worker.start()
@@ -471,6 +534,15 @@ class SettingsView(QWidget):
         # Show partial key for verification
         short_key = secret_key[:8] + "..." if secret_key else "None"
         self.key_label.setText(f"Key: {short_key}")
+
+        # Show tunnel status
+        if hasattr(self, 'tunnel_status') and hasattr(self, 'tunnel_input'):
+            tunnel_url = self.tunnel_input.text().strip()
+            if tunnel_url:
+                self.tunnel_status.setText(f"✅ QR bao gồm tunnel URL: {tunnel_url}")
+                self.tunnel_status.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 11px;")
+            else:
+                self.tunnel_status.setText("")
 
         scaled = pixmap.scaled(
             190,

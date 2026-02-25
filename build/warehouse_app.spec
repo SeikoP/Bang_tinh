@@ -3,8 +3,12 @@
 
 import os
 from pathlib import Path
+from PyInstaller.utils.hooks import collect_submodules
 
 PROJECT_ROOT = Path(SPECPATH).parent  # build/ -> project root
+
+# Auto-collect ALL wms submodules to avoid ModuleNotFoundError in built app
+wms_hiddenimports = collect_submodules('wms')
 
 block_cipher = None
 
@@ -30,19 +34,9 @@ a = Analysis(
         'socketserver',
         'json',
         'pathlib',
-        'wms',
-        'wms.core',
-        'wms.runtime',
-        'wms.runtime.bootstrap',
-        'wms.runtime.lifecycle',
-        'wms.runtime.crash_handler',
-        'wms.database',
-        'wms.services',
-        'wms.ui',
-        'wms.utils',
-        'wms.workers',
-        'wms.network',
-    ],
+        'qrcode',
+        'qrcode.image.pure',
+    ] + wms_hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
