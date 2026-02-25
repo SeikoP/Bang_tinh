@@ -46,5 +46,8 @@ num2words==0.5.13
 pyttsx3==2.98
 pywin32>=308
 
+# Ngrok Tunnel (auto-tunnel from within app)
+pyngrok>=7.0.0
+
 # Environment Variables
 python-dotenv==1.0.0

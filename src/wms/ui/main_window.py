@@ -1085,6 +1085,13 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_tts_service"):
             self._tts_service.stop()
 
+        # Stop ngrok/cloudflare tunnel (if running via settings_view)
+        if hasattr(self, "settings_view") and hasattr(self.settings_view, "_tunnel_service"):
+            svc = self.settings_view._tunnel_service
+            if svc and svc.is_running:
+                svc.stop()
+                self.logger.info("Tunnel stopped")
+
         # Stop notification server
         if hasattr(self, "notif_thread"):
             self.notif_thread.stop()

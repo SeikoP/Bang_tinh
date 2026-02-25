@@ -455,7 +455,7 @@ class SettingsView(QWidget):
         )
         layout.addWidget(guide)
 
-        # ── Tunnel URL section (for remote access without same WiFi) ──
+        # ── Auto-Tunnel section ──
         tunnel_header = QLabel("🌐 Kết nối từ xa (khác WiFi)")
         tunnel_header.setStyleSheet(f"""
             font-weight: 700; font-size: 13px; color: {AppColors.TEXT};
@@ -464,11 +464,8 @@ class SettingsView(QWidget):
         layout.addWidget(tunnel_header)
 
         tunnel_desc = QLabel(
-            "Nếu điện thoại và máy tính KHÔNG cùng WiFi, dùng một trong các cách sau:\n"
-            "• ngrok: Chạy 'ngrok http 5005' trên PC → dán URL vào ô bên dưới\n"
-            "• Cloudflare Tunnel: Chạy 'cloudflared tunnel --url localhost:5005' → dán URL\n"
-            "• Port Forwarding: Mở port 5005 trên router → dùng IP public của bạn\n"
-            "• ZeroTier: Cài trên cả PC và điện thoại → dùng IP mạng ảo ZeroTier"
+            "Tự động tạo tunnel để điện thoại kết nối từ xa (không cần cùng WiFi).\n"
+            "Cloudflare nhanh hơn và không cần đăng ký. Ngrok cần authtoken miễn phí."
         )
         tunnel_desc.setWordWrap(True)
         tunnel_desc.setStyleSheet(
@@ -476,9 +473,103 @@ class SettingsView(QWidget):
         )
         layout.addWidget(tunnel_desc)
 
+        # ── Provider selector row ──
+        provider_row = QHBoxLayout()
+        provider_label = QLabel("Dịch vụ:")
+        provider_label.setFixedWidth(60)
+        provider_label.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px;")
+        provider_row.addWidget(provider_label)
+
+        self.tunnel_provider_combo = NoWheelComboBox()
+        self.tunnel_provider_combo.addItem("☁️  Cloudflare Tunnel (khuyên dùng)", "cloudflare")
+        self.tunnel_provider_combo.addItem("🔗  ngrok", "ngrok")
+        self.tunnel_provider_combo.setFixedWidth(300)
+        self.tunnel_provider_combo.setStyleSheet(f"""
+            QComboBox {{
+                padding: 6px 10px;
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 6px;
+                font-size: 12px;
+                background: white;
+            }}
+        """)
+        self.tunnel_provider_combo.currentIndexChanged.connect(self._on_provider_changed)
+        provider_row.addWidget(self.tunnel_provider_combo)
+        provider_row.addStretch()
+        layout.addLayout(provider_row)
+
+        # ── Authtoken row (hidden by default — only for ngrok) ──
+        self.ngrok_token_widget = QWidget()
+        token_row = QHBoxLayout(self.ngrok_token_widget)
+        token_row.setContentsMargins(0, 0, 0, 0)
+        token_label = QLabel("Authtoken:")
+        token_label.setFixedWidth(75)
+        token_label.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px;")
+        token_row.addWidget(token_label)
+
+        self.ngrok_token_input = QLineEdit()
+        self.ngrok_token_input.setPlaceholderText("Dán authtoken ngrok vào đây (chỉ cần lần đầu)")
+        self.ngrok_token_input.setEchoMode(QLineEdit.EchoMode.Password)
+        self.ngrok_token_input.setStyleSheet(f"""
+            QLineEdit {{
+                padding: 6px 10px;
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 6px;
+                font-size: 12px;
+                background: white;
+            }}
+            QLineEdit:focus {{
+                border-color: {AppColors.PRIMARY};
+            }}
+        """)
+        self._load_ngrok_token()
+        token_row.addWidget(self.ngrok_token_input)
+        self.ngrok_token_widget.setVisible(False)  # hidden — cloudflare is default
+        layout.addWidget(self.ngrok_token_widget)
+
+        # ── Start/Stop button row ──
+        tunnel_btn_row = QHBoxLayout()
+
+        self.tunnel_toggle_btn = QPushButton("🚀 Bật Cloudflare Tunnel")
+        self.tunnel_toggle_btn.setFixedWidth(220)
+        self.tunnel_toggle_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {AppColors.PRIMARY}; color: white;
+                padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;
+            }}
+            QPushButton:hover {{ background: #059669; }}
+        """)
+        self.tunnel_toggle_btn.clicked.connect(self._toggle_tunnel)
+        tunnel_btn_row.addWidget(self.tunnel_toggle_btn)
+
+        self.tunnel_url_label = QLabel("")
+        self.tunnel_url_label.setStyleSheet(f"""
+            color: {AppColors.TEXT}; font-size: 12px;
+            padding: 6px 10px;
+            border: 1px solid {AppColors.BORDER};
+            border-radius: 6px;
+            background: #f8fafc;
+        """)
+        self.tunnel_url_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        tunnel_btn_row.addWidget(self.tunnel_url_label, 1)
+        layout.addLayout(tunnel_btn_row)
+
+        self.tunnel_status = QLabel("")
+        self.tunnel_status.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+        layout.addWidget(self.tunnel_status)
+
+        # ── Manual tunnel URL (fallback) ──
+        manual_header = QLabel("Hoặc nhập URL tunnel thủ công:")
+        manual_header.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; margin-top: 6px;"
+        )
+        layout.addWidget(manual_header)
+
         tunnel_row = QHBoxLayout()
         self.tunnel_input = QLineEdit()
-        self.tunnel_input.setPlaceholderText("VD: https://abc123.ngrok-free.app hoặc https://your-tunnel.trycloudflare.com")
+        self.tunnel_input.setPlaceholderText("VD: https://abc123.ngrok-free.app hoặc https://xxx.trycloudflare.com")
         self.tunnel_input.setStyleSheet(f"""
             QLineEdit {{
                 padding: 8px 12px;
@@ -506,13 +597,149 @@ class SettingsView(QWidget):
         tunnel_row.addWidget(tunnel_apply_btn)
         layout.addLayout(tunnel_row)
 
-        self.tunnel_status = QLabel("")
-        self.tunnel_status.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 11px;")
-        layout.addWidget(self.tunnel_status)
+        # ── Init tunnel service reference ──
+        self._tunnel_service = None
 
         # Initial refresh
         QTimer.singleShot(500, self._refresh_ip)
         return content
+
+    # ── Tunnel helpers ──────────────────────────────────────
+    def _on_provider_changed(self, index: int):
+        """Show/hide authtoken field based on selected provider."""
+        provider = self.tunnel_provider_combo.currentData()
+        is_ngrok = provider == "ngrok"
+        self.ngrok_token_widget.setVisible(is_ngrok)
+        label = "🚀 Bật ngrok" if is_ngrok else "🚀 Bật Cloudflare Tunnel"
+        if not (self._tunnel_service and self._tunnel_service.is_running):
+            self.tunnel_toggle_btn.setText(label)
+            self.tunnel_toggle_btn.setFixedWidth(220)
+
+    def _load_ngrok_token(self):
+        """Load saved ngrok authtoken from config."""
+        try:
+            from ...core.config import Config
+            config = Config.from_env()
+            token = getattr(config, "ngrok_authtoken", "") or ""
+            if not token:
+                import os
+                token = os.environ.get("NGROK_AUTHTOKEN", "")
+            if token:
+                self.ngrok_token_input.setText(token)
+        except Exception:
+            pass
+
+    def _save_ngrok_token(self, token: str):
+        """Persist ngrok authtoken to .env."""
+        try:
+            from pathlib import Path
+            env_file = Path(".env")
+            lines = []
+            found = False
+            if env_file.exists():
+                lines = env_file.read_text(encoding="utf-8").splitlines()
+                for i, line in enumerate(lines):
+                    if line.startswith("NGROK_AUTHTOKEN="):
+                        lines[i] = f"NGROK_AUTHTOKEN={token}"
+                        found = True
+                        break
+            if not found:
+                lines.append(f"NGROK_AUTHTOKEN={token}")
+            env_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        except Exception:
+            pass
+
+    def _toggle_tunnel(self):
+        """Start or stop the selected tunnel provider."""
+        from ...services.tunnel_service import TunnelService
+
+        if self._tunnel_service and self._tunnel_service.is_running:
+            self._tunnel_service.stop()
+            self._tunnel_service = None
+            provider = self.tunnel_provider_combo.currentData()
+            label = "🚀 Bật ngrok" if provider == "ngrok" else "🚀 Bật Cloudflare Tunnel"
+            self.tunnel_toggle_btn.setText(label)
+            self.tunnel_toggle_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: {AppColors.PRIMARY}; color: white;
+                    padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;
+                }}
+                QPushButton:hover {{ background: #059669; }}
+            """)
+            self.tunnel_url_label.setText("")
+            self.tunnel_status.setText("⏹ Tunnel đã tắt")
+            self.tunnel_status.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+            self.tunnel_input.clear()
+            self._refresh_ip()
+            return
+
+        provider = self.tunnel_provider_combo.currentData()
+        token = self.ngrok_token_input.text().strip() if provider == "ngrok" else ""
+        if token:
+            self._save_ngrok_token(token)
+
+        port = 5005
+        if self.container:
+            config = self.container.get("config")
+            if config:
+                port = config.notification_port
+
+        self._tunnel_service = TunnelService(parent=self)
+        self._tunnel_service.tunnel_started.connect(self._on_tunnel_started)
+        self._tunnel_service.tunnel_error.connect(self._on_tunnel_error)
+        self._tunnel_service.tunnel_stopped.connect(self._on_tunnel_stopped)
+        self._tunnel_service.progress.connect(self._on_tunnel_progress)
+
+        self.tunnel_toggle_btn.setText("⏳ Đang kết nối...")
+        self.tunnel_toggle_btn.setEnabled(False)
+        self.tunnel_status.setText("Đang khởi động...")
+        self.tunnel_status.setStyleSheet(f"color: {AppColors.WARNING}; font-size: 11px;")
+
+        self._tunnel_service.start(port, provider=provider, authtoken=token)
+
+    def _on_tunnel_progress(self, msg: str):
+        self.tunnel_status.setText(f"⏳ {msg}")
+        self.tunnel_status.setStyleSheet(f"color: {AppColors.WARNING}; font-size: 11px;")
+
+    def _on_tunnel_started(self, url: str):
+        self.tunnel_toggle_btn.setText("⏹ Tắt tunnel")
+        self.tunnel_toggle_btn.setEnabled(True)
+        self.tunnel_toggle_btn.setFixedWidth(220)
+        self.tunnel_toggle_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: #ef4444; color: white;
+                padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;
+            }}
+            QPushButton:hover {{ background: #dc2626; }}
+        """)
+        self.tunnel_url_label.setText(url)
+        provider_name = self._tunnel_service.provider if self._tunnel_service else "tunnel"
+        self.tunnel_status.setText(f"✅ {provider_name} đang chạy — URL đã thêm vào QR code")
+        self.tunnel_status.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 11px;")
+        self.tunnel_input.setText(url)
+        self._refresh_ip()
+
+    def _on_tunnel_error(self, msg: str):
+        provider = self.tunnel_provider_combo.currentData()
+        label = "🚀 Bật ngrok" if provider == "ngrok" else "🚀 Bật Cloudflare Tunnel"
+        self.tunnel_toggle_btn.setText(label)
+        self.tunnel_toggle_btn.setEnabled(True)
+        self.tunnel_toggle_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {AppColors.PRIMARY}; color: white;
+                padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px;
+            }}
+            QPushButton:hover {{ background: #059669; }}
+        """)
+        self.tunnel_url_label.setText("")
+        self.tunnel_status.setText(f"❌ {msg}")
+        self.tunnel_status.setStyleSheet(f"color: #ef4444; font-size: 11px;")
+
+    def _on_tunnel_stopped(self):
+        provider = self.tunnel_provider_combo.currentData()
+        label = "🚀 Bật ngrok" if provider == "ngrok" else "🚀 Bật Cloudflare Tunnel"
+        self.tunnel_toggle_btn.setText(label)
+        self.tunnel_toggle_btn.setEnabled(True)
 
     def _refresh_ip(self):
         """Async refresh IP & QR"""

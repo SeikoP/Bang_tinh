@@ -39,6 +39,8 @@ dependencies = [
     "pywin32>=308",
     # Environment Variables
     "python-dotenv>=1.0.0",
+    # Ngrok tunnel
+    "pyngrok>=7.0.0",
 ]
 
 [project.optional-dependencies]
