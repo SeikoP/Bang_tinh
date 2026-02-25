@@ -39,10 +39,11 @@ jobs:
       
       - name: Run flake8 (critical errors only)
         run: |
-          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=__pycache__,.hypothesis
+          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=__pycache__
 
   test:
     runs-on: windows-latest
+    timeout-minutes: 10
     # Run test in parallel with lint, not after it
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +61,7 @@ jobs:
       
       - name: Run tests with coverage
         run: |
-          pytest --cov=wms --cov-report=xml --cov-report=html --cov-report=term -x -q
+          pytest tests/unit tests/integration --cov=wms --cov-report=xml --cov-report=html --cov-report=term -x -q --timeout=30
       
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4

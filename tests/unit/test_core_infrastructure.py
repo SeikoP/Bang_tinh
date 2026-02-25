@@ -294,7 +294,7 @@ class TestErrorHandler:
 
         assert handler.logger is logger
 
-    @patch("utils.error_handler.QMessageBox")
+    @patch("wms.utils.error_handler.QMessageBox")
     def test_handle_app_exception(self, mock_msgbox):
         """Test handling AppException"""
         logger = Mock()
@@ -306,7 +306,7 @@ class TestErrorHandler:
         logger.error.assert_called_once()
         mock_msgbox.assert_called()
 
-    @patch("utils.error_handler.QMessageBox")
+    @patch("wms.utils.error_handler.QMessageBox")
     def test_handle_generic_exception(self, mock_msgbox):
         """Test handling generic exception"""
         logger = Mock()
@@ -318,7 +318,7 @@ class TestErrorHandler:
         logger.exception.assert_called_once()
         mock_msgbox.assert_called()
 
-    @patch("utils.error_handler.QMessageBox")
+    @patch("wms.utils.error_handler.QMessageBox")
     def test_handle_critical(self, mock_msgbox):
         """Test handling critical error"""
         logger = Mock()
@@ -330,7 +330,7 @@ class TestErrorHandler:
         logger.critical.assert_called_once()
         mock_msgbox.assert_called()
 
-    @patch("utils.error_handler.QMessageBox")
+    @patch("wms.utils.error_handler.QMessageBox")
     def test_handle_warning(self, mock_msgbox):
         """Test handling warning"""
         logger = Mock()
@@ -341,7 +341,7 @@ class TestErrorHandler:
         logger.warning.assert_called_once()
         mock_msgbox.assert_called()
 
-    @patch("utils.error_handler.QMessageBox")
+    @patch("wms.utils.error_handler.QMessageBox")
     def test_handle_info(self, mock_msgbox):
         """Test handling info message"""
         logger = Mock()

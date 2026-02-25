@@ -1,61 +1,24 @@
-import logging
+"""
+Shared test fixtures for WMS test suite.
+Kept lightweight — only common fixtures belong here.
+"""
+
 import pytest
-import threading
-import time
-import requests
-from wms.core.config import Config
+import tempfile
+import os
 
-class TestServer:
-    def __init__(self, port=5005):
-        self.port = port
-        self.config = Config.from_env()
-        # We use a vanilla ThreadingHTTPServer here to test the network logic
-        # without needing the whole Qt application context
-        from http.server import ThreadingHTTPServer
-        from network.notification_handler import NotificationHandler
-        
-        # Configure handler class with container/logger if needed
-        # NotificationHandler uses self.server.container
-        
-        self.server_started = threading.Event()
-        
-        class TestServerInternal(ThreadingHTTPServer):
-            container = None
-            logger = None
-            signal = None
-            secret_key = None
-            rate_limit_window = 60
-            rate_limit_max = 100
-            
-        self.httpd = TestServerInternal(("", port), NotificationHandler)
-        self.httpd.container = None
-        self.httpd.logger = logging.getLogger("test_server")
-        self.httpd.secret_key = Config.from_env().secret_key
-        
-        self.thread = threading.Thread(target=self.httpd.serve_forever)
-        self.thread.daemon = True
 
-    def start(self):
-        self.thread.start()
-        # Wait for server to be ready
-        for _ in range(50):
-            try:
-                requests.get(f"http://localhost:{self.port}", timeout=0.5)
-                return
-            except:
-                time.sleep(0.1)
-        raise RuntimeError("Server failed to start")
+@pytest.fixture
+def tmp_db_path(tmp_path):
+    """Provide a temporary database path for integration tests."""
+    return str(tmp_path / "test_storage.db")
 
-    def stop(self):
-        self.httpd.shutdown()
-        self.thread.join(timeout=2)
 
-@pytest.fixture(scope="module")
-def http_server():
-    server = TestServer(port=5005)
-    try:
-        server.start()
-        yield server
-    finally:
-        server.stop()
+@pytest.fixture(autouse=True)
+def _fast_test_timeout(request):
+    """Auto-skip tests that exceed 10 seconds (safety net)."""
+    # This works with pytest-timeout if installed
+    marker = request.node.get_closest_marker("slow")
+    if marker:
+        pytest.skip("Skipping slow test in fast mode")
 

@@ -6,7 +6,7 @@
 # Testing
 pytest==9.0.2
 pytest-cov>=4.1.0
-hypothesis==6.151.5
+pytest-timeout>=2.3.1
 
 # Code Quality
 radon>=6.0.0

@@ -21,17 +21,13 @@ class NotificationServer(QThread):
         self.logger = logger
         self.container = container
         self._server = None
-        self._running = False
 
     def run(self):
-        self._running = True
         try:
-            # Sử dụng ThreadingHTTPServer để xử lý đa luồng
             self._server = ThreadingHTTPServer(
                 (self.host, self.port), NotificationHandler
             )
             self._server.allow_reuse_address = True
-            self._server.timeout = 5
             self._server.signal = self.msg_received
             self._server.logger = self.logger
             self._server.container = self.container
@@ -39,42 +35,43 @@ class NotificationServer(QThread):
             # --- AUTH CONFIG ---
             from ..core.config import Config
 
-            self.secret_key = Config.from_env().secret_key
-            self._server.secret_key = self.secret_key
+            secret_key = Config.from_env().secret_key
+            self._server.secret_key = secret_key
 
             if self.logger:
                 self.logger.info(
                     f"Notification Server started on {self.host}:{self.port}"
                 )
                 self.logger.info(
-                    f"Using Secret Key for Authentication: {self.secret_key[:8]}..."
+                    f"Using Secret Key for Authentication: {secret_key[:8]}..."
                 )
 
-            # Serve forever with proper shutdown handling
-            while self._running:
-                self._server.handle_request()
+            # serve_forever() blocks until shutdown() is called from another thread
+            self._server.serve_forever(poll_interval=0.5)
 
+        except OSError as e:
+            if self.logger:
+                self.logger.error(f"Could not bind server to {self.host}:{self.port}: {e}")
         except Exception as e:
             if self.logger:
-                self.logger.error(f"Could not start server: {e}")
+                self.logger.error(f"Notification Server error: {e}")
         finally:
-            self.cleanup()
+            self._cleanup()
 
     def stop(self):
         """Stop the server gracefully"""
-        self._running = False
         if self._server:
             try:
                 self._server.shutdown()
-            except:
+            except OSError:
                 pass
 
-    def cleanup(self):
+    def _cleanup(self):
         """Cleanup server resources"""
         if self._server:
             try:
                 self._server.server_close()
-            except:
+            except OSError:
                 pass
             self._server = None
 

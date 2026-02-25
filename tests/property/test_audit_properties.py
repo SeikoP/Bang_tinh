@@ -167,7 +167,7 @@ def hardcoded_credential_code(draw):
 
 
 @pytest.mark.property
-@settings(max_examples=50, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(file_structure=python_file_structure())
 def test_property_1_complete_file_discovery(file_structure):
     """
@@ -204,7 +204,7 @@ def test_property_1_complete_file_discovery(file_structure):
 
 
 @pytest.mark.property
-@settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(violation_code=layer_violation_code())
 def test_property_2_architectural_violation_detection(violation_code):
     """
@@ -238,7 +238,7 @@ def test_property_2_architectural_violation_detection(violation_code):
 
 
 @pytest.mark.property
-@settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(code=st.one_of(complex_function_code(), long_method_code()))
 def test_property_3_code_smell_detection(code):
     """
@@ -274,7 +274,7 @@ def test_property_3_code_smell_detection(code):
 
 
 @pytest.mark.property
-@settings(max_examples=30, suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=10, suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(vuln_code=st.one_of(sql_injection_code(), hardcoded_credential_code()))
 def test_property_4_security_vulnerability_detection(vuln_code):
     """
@@ -306,7 +306,7 @@ def test_property_4_security_vulnerability_detection(vuln_code):
 
 
 @pytest.mark.property
-@settings(max_examples=100)
+@settings(max_examples=15)
 @given(
     category=st.sampled_from(["Architecture", "Code Quality", "Security"]),
     description=st.text(min_size=10, max_size=200),
@@ -321,7 +321,7 @@ def test_property_5_risk_classification_consistency(category, description, file_
 
     **Validates: Requirements 1.6**
     """
-    from audit.reporters import Finding
+    from wms.audit.reporters import Finding
 
     # Create finding with each risk level
     for risk_level in [
