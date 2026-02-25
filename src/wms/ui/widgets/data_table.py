@@ -66,6 +66,7 @@ class DataTable(QTableWidget):
         # Vertical header
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setDefaultSectionSize(self.row_height)
+        self.verticalHeader().setMinimumSectionSize(max(30, self.row_height - 10))
         
         # Styling
         self.setAlternatingRowColors(alternating_colors)

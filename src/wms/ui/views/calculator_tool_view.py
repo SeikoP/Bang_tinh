@@ -25,7 +25,15 @@ class CalculatorToolView(QWidget):
         self.last_val = None
         self.new_num = True  # Flag: Start entering a new number?
 
+        # Accept keyboard focus so keyPressEvent fires without needing a click
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
         self._setup_ui()
+
+    def showEvent(self, event):
+        """Auto-grab keyboard focus whenever this tab becomes visible."""
+        super().showEvent(event)
+        self.setFocus()
 
     def _setup_ui(self):
         # Background main
@@ -117,7 +125,7 @@ class CalculatorToolView(QWidget):
         self.prev_display = QLabel("")
         self.prev_display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.prev_display.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 13px; min-height: 20px; background: transparent;"
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 13px; min-height: 1.6em; background: transparent;"
         )
         display_layout.addWidget(self.prev_display)
 
@@ -125,7 +133,7 @@ class CalculatorToolView(QWidget):
         self.display = QLineEdit()
         self.display.setReadOnly(True)
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.display.setFixedHeight(50)
+        self.display.setMinimumHeight(50)
         self.display.setText("0")
         self.display.setStyleSheet(f"""
             QLineEdit {{
@@ -149,7 +157,7 @@ class CalculatorToolView(QWidget):
 
         for text, fg in actions:
             btn = QPushButton(text)
-            btn.setFixedHeight(34)
+            btn.setMinimumHeight(34)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(f"""
                 QPushButton {{
@@ -209,7 +217,7 @@ class CalculatorToolView(QWidget):
                 real_op = "-"
 
             btn = QPushButton(text)
-            btn.setFixedSize(78, 54)
+            btn.setMinimumSize(78, 54)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
             is_digit = text.isdigit() or text == "."
@@ -422,7 +430,7 @@ class CalculatorToolView(QWidget):
             qty_input.setValidator(QIntValidator(0, 99999))
             qty_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
             qty_input.setFixedWidth(80)
-            qty_input.setFixedHeight(34)
+            qty_input.setMinimumHeight(34)
             qty_input.setStyleSheet(f"""
                 QLineEdit {{
                     border: 1px solid {AppColors.BORDER};
@@ -496,7 +504,7 @@ class CalculatorToolView(QWidget):
 
         copy_btn = QPushButton("Copy kết quả")
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        copy_btn.setFixedHeight(38)
+        copy_btn.setMinimumHeight(38)
         copy_btn.setStyleSheet(f"""
             QPushButton {{
                 background: white; color: {AppColors.PRIMARY};
@@ -511,7 +519,7 @@ class CalculatorToolView(QWidget):
 
         send_btn = QPushButton("Gửi sang Máy tính")
         send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        send_btn.setFixedHeight(38)
+        send_btn.setMinimumHeight(38)
         send_btn.setStyleSheet(f"""
             QPushButton {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -528,7 +536,7 @@ class CalculatorToolView(QWidget):
 
         reset_btn = QPushButton("Xóa tất cả")
         reset_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        reset_btn.setFixedHeight(38)
+        reset_btn.setMinimumHeight(38)
         reset_btn.setStyleSheet(f"""
             QPushButton {{
                 background: white; color: {AppColors.ERROR};

@@ -3,9 +3,10 @@ UDP Discovery Server - Allows Android app to find PC without knowing IP.
 
 Protocol:
   Android sends UDP broadcast: "WMS_DISCOVER" → port 5006
-  PC responds with JSON:       {"h": "192.168.1.x", "p": 5005, "k": "secret"}
+  PC responds with JSON:       {"h": "192.168.1.x", "p": 5005, "k": "secret",
+                                 "ips": [...], "type": "wifi"}
 
-This way Android only needs to be on the same WiFi network.
+Supports discovery over: WiFi, Ethernet, USB Tethering, Hotspot.
 """
 
 import json
@@ -13,6 +14,8 @@ import socket
 import struct
 
 from PyQt6.QtCore import QThread, pyqtSignal
+
+from .network_monitor import get_active_interfaces, get_best_ip, get_all_ips_flat
 
 
 DISCOVERY_PORT = 5006
@@ -83,22 +86,24 @@ class DiscoveryServer(QThread):
                 try:
                     data, addr = self._sock.recvfrom(256)
                     if data.strip() == DISCOVERY_MSG:
-                        # Determine which local IP to report
-                        ips = get_all_local_ips()
-                        primary_ip = ips[0] if ips else "127.0.0.1"
+                        # Use enhanced interface detection
+                        best_ip, best_type = get_best_ip()
+                        all_ips = get_all_ips_flat()
 
                         response = json.dumps({
-                            "h": primary_ip,
+                            "h": best_ip,
                             "p": self.http_port,
                             "k": secret_key,
-                            "ips": ips,
+                            "ips": all_ips,
+                            "type": best_type,
                         }).encode("utf-8")
 
                         self._sock.sendto(response, addr)
 
                         if self.logger:
                             self.logger.info(
-                                f"Discovery: responded to {addr[0]} → {primary_ip}:{self.http_port}"
+                                f"Discovery: responded to {addr[0]} → "
+                                f"{best_ip}:{self.http_port} ({best_type})"
                             )
                         self.client_discovered.emit(addr[0])
 

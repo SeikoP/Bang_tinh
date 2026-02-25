@@ -239,7 +239,7 @@ class ProductView(QWidget):
                 edit_btn.setSizePolicy(
                     QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
                 )
-                edit_btn.setFixedSize(64, 30)  # Room for Vietnamese text
+                edit_btn.setMinimumSize(64, 30)  # Room for Vietnamese text
                 edit_btn.clicked.connect(lambda _, it=item: self._edit_quick_price(it))
                 actions_layout.addWidget(edit_btn)
 
@@ -250,7 +250,7 @@ class ProductView(QWidget):
                 del_btn.setSizePolicy(
                     QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
                 )
-                del_btn.setFixedSize(64, 30)  # Room for Vietnamese text
+                del_btn.setMinimumSize(64, 30)  # Room for Vietnamese text
                 del_btn.clicked.connect(
                     lambda _, i_id=item.id: self._delete_quick_price(i_id)
                 )

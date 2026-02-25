@@ -10,6 +10,10 @@ Usage:
 """
 
 import sys
+from pathlib import Path
+
+# Add src directory to path for module imports
+sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
 def main() -> int:

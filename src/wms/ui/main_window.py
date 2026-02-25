@@ -23,6 +23,8 @@ from ..core.paths import ASSETS
 # Import network components
 from ..network.notification_server import NotificationServer
 from ..network.discovery_server import DiscoveryServer
+from ..network.network_monitor import NetworkMonitor, get_best_ip
+from ..network.connection_heartbeat import ConnectionHeartbeat
 # Import views
 from .views.calculation_view import CalculationView
 from .views.calculator_tool_view import CalculatorToolView
@@ -108,6 +110,10 @@ class MainWindow(QMainWindow):
         # Start notification server
         self._start_notification_server()
 
+        # Start network monitor + heartbeat
+        self._start_network_monitor()
+        self._start_heartbeat()
+
         # Timer để ẩn Quick Peek có độ trễ nhỏ (tránh flickering)
         self._peek_timer = QTimer()
         self._peek_timer.setSingleShot(True)
@@ -131,7 +137,12 @@ class MainWindow(QMainWindow):
         # Track last notification time for health monitoring
         self._last_notification_at = None
 
-        # Create startup backup
+        # Create startup backup (deferred 3s so window shows first)
+        if self.backup_service:
+            QTimer.singleShot(3000, self._do_startup_backup)
+
+    def _do_startup_backup(self):
+        """Run startup backup after window is shown (non-blocking startup)"""
         if self.backup_service:
             try:
                 backup_file = self.backup_service.auto_backup_on_startup()
@@ -154,14 +165,7 @@ class MainWindow(QMainWindow):
         self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
     def _setup_window(self):
-        title = f"{APP_NAME} v{APP_VERSION}"
-
-        # Check license status
-        is_licensed = self.container.get("is_license_valid") if self.container else None
-        if not is_licensed:
-            title += " [TRIAL MODE]"
-
-        self.setWindowTitle(title)
+        self.setWindowTitle(APP_NAME)
         self.resize(WINDOW_WIDTH, WINDOW_HEIGHT)
         self.setMinimumSize(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT)
 
@@ -332,7 +336,7 @@ class MainWindow(QMainWindow):
 
         # Global Header - Clean with subtle bottom shadow
         header = QFrame()
-        header.setFixedHeight(52)
+        header.setMinimumHeight(52)
         header.setStyleSheet(f"""
             QFrame {{
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -362,24 +366,19 @@ class MainWindow(QMainWindow):
         self.notif_banner.clicked.connect(
             lambda: self._switch_view(2)
         )  # Cmd 2: Bank View
+        self.notif_banner.installEventFilter(self)  # Enable hover → QuickBankPeek
         header_layout.addWidget(self.notif_banner)
 
         content_layout.addWidget(header)
 
-        # Task Notification Widget
+        content_layout.addWidget(self.content_stack)
+
+        # Bottom Ticker Bar — system/task/Android notifications
         self.task_banner = SystemNotificationBanner()
         self.task_banner.clicked.connect(
             lambda: self._switch_view(1)
         )  # Cmd 1: Task View
-
-        # Add task notification container below header
-        notif_container = QHBoxLayout()
-        notif_container.addStretch()
-        notif_container.addWidget(self.task_banner)
-        notif_container.addStretch()
-        content_layout.addLayout(notif_container)
-
-        content_layout.addWidget(self.content_stack)
+        content_layout.addWidget(self.task_banner)
 
         # Add main_content to main_layout
         main_layout.addWidget(main_content)
@@ -485,10 +484,13 @@ class MainWindow(QMainWindow):
         except Exception:
             pass  # Animation not critical
 
+        # Give calculator keyboard focus when switching to it
+        if index == 5 and hasattr(self, "calculator_view"):
+            QTimer.singleShot(50, self.calculator_view.setFocus)
+
     def _switch_view_direct(self, index):
         """Switch view directly without animation (fallback)"""
         self.content_stack.setCurrentIndex(index)
-        icons = []
         names = ["Quản lý", "Ghi chú", "Bank", "Lịch sử", "Cài đặt", "Máy tính"]
         self.breadcrumb.setText(f"Trang chủ / {names[index]}")
         for i, btn in enumerate(self.nav_btns):
@@ -532,6 +534,9 @@ class MainWindow(QMainWindow):
 
     def _start_notification_server(self):
         """Khởi chạy server ngầm để nhận thông báo"""
+        # Get config early so it's available for DiscoveryServer below
+        config = self.container.get("config")
+
         # Get notification service from container
         notification_service = self.container.get("notification")
         if notification_service:
@@ -540,7 +545,6 @@ class MainWindow(QMainWindow):
             self.logger.info("Notification server started successfully")
         else:
             # Fallback to direct implementation
-            config = self.container.get("config")
             http_port = config.notification_port if config else 5005
             if config:
                 self.notif_thread = NotificationServer(
@@ -564,6 +568,132 @@ class MainWindow(QMainWindow):
         )
         self._discovery_thread.start()
 
+        # Track discovery for heartbeat
+        self._discovery_thread.client_discovered.connect(self._on_device_discovered)
+
+    def _start_network_monitor(self):
+        """Start background network monitor for auto-retry on connection loss."""
+        server_port = 5005
+        config = self.container.get("config")
+        if config:
+            server_port = config.notification_port
+
+        self._network_monitor = NetworkMonitor(
+            check_interval=5.0,
+            server_port=server_port,
+            logger=self.logger,
+        )
+        self._network_monitor.network_changed.connect(self._on_network_changed)
+        self._network_monitor.server_down.connect(self._on_server_down)
+        self._network_monitor.network_lost.connect(self._on_network_lost)
+        self._network_monitor.network_restored.connect(self._on_network_restored)
+        self._network_monitor.start()
+
+        # Set initial connection type
+        best_ip, best_type = get_best_ip()
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.set_connection_type(best_type)
+
+    def _start_heartbeat(self):
+        """Start heartbeat service for tracking Android devices."""
+        secret_key = ""
+        config = self.container.get("config")
+        if config:
+            secret_key = config.secret_key
+
+        self._heartbeat = ConnectionHeartbeat(
+            ping_interval=15.0,
+            server_port=config.notification_port if config else 5005,
+            secret_key=secret_key,
+            logger=self.logger,
+        )
+        self._heartbeat.device_online.connect(self._on_heartbeat_device_online)
+        self._heartbeat.device_offline.connect(self._on_heartbeat_device_offline)
+        self._heartbeat.status_update.connect(self._on_heartbeat_status)
+        self._heartbeat.start()
+
+    # ── Network event handlers ──────────────────────────────────
+
+    def _on_device_discovered(self, ip: str):
+        """When UDP discovery finds an Android device, track it for heartbeat."""
+        if hasattr(self, "_heartbeat"):
+            self._heartbeat.add_device(ip)
+
+    def _on_network_changed(self, info: dict):
+        """Network interfaces changed (e.g. switched WiFi → Ethernet)."""
+        best_type = info.get("best_type", "")
+        best_ip = info.get("best_ip", "")
+        self.logger.info(f"Network changed: {best_ip} ({best_type})")
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.set_connection_type(best_type)
+
+    def _on_server_down(self):
+        """Notification server port is unreachable — attempt restart."""
+        self.logger.warning("Server appears down — attempting auto-restart...")
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.set_state(StatusIndicator.STATE_RECONNECTING)
+        # Attempt restart on main thread via single-shot timer
+        QTimer.singleShot(1000, self._restart_notification_server)
+
+    def _on_network_lost(self):
+        """All network interfaces lost."""
+        self.logger.warning("All network interfaces lost!")
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.set_state(StatusIndicator.STATE_NO_NETWORK)
+            self.status_indicator.set_connection_type("")
+
+    def _on_network_restored(self, best_ip: str):
+        """Network came back — restart servers."""
+        self.logger.info(f"Network restored ({best_ip}) — restarting servers...")
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.set_state(StatusIndicator.STATE_RECONNECTING)
+        QTimer.singleShot(2000, self._restart_notification_server)
+
+    def _on_heartbeat_device_online(self, ip: str, latency: float):
+        self.logger.info(f"Device online: {ip} ({latency:.0f}ms)")
+
+    def _on_heartbeat_device_offline(self, ip: str):
+        self.logger.warning(f"Device offline: {ip}")
+
+    def _on_heartbeat_status(self, status: dict):
+        """Update device count in status indicator."""
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.set_device_count(status.get("online_count", 0))
+
+    def _restart_notification_server(self):
+        """Stop and restart notification + discovery servers."""
+        self.logger.info("Restarting notification infrastructure...")
+        try:
+            # Stop existing servers
+            notification_service = self.container.get("notification")
+            if notification_service and hasattr(notification_service, "stop_server"):
+                try:
+                    notification_service.stop_server()
+                except Exception:
+                    pass
+
+            if hasattr(self, "notif_thread"):
+                try:
+                    self.notif_thread.stop()
+                    self.notif_thread.wait(2000)
+                except Exception:
+                    pass
+
+            if hasattr(self, "_discovery_thread"):
+                try:
+                    self._discovery_thread.stop()
+                    self._discovery_thread.wait(2000)
+                except Exception:
+                    pass
+
+            # Re-start
+            self._start_notification_server()
+            self.logger.info("Notification infrastructure restarted successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to restart notification server: {e}")
+            if hasattr(self, "status_indicator"):
+                self.status_indicator.set_state(StatusIndicator.STATE_STOPPED)
+
     def _process_notification(self, message):
         """Process notification using worker"""
         self._notification_processor.process_notification(message)
@@ -578,10 +708,12 @@ class MainWindow(QMainWindow):
 
             # Change notif_box color to INFO (Emerald Dark or Blue) for system/command events
             if cmd == "PING_SUCCESS":
-                # Message from "Test Connection" button or KeepAlive
-                # Log to Bank View but DO NOT show popup notification
+                # Show test-connection result in the bottom ticker bar
                 if hasattr(self, "bank_view"):
                     self.bank_view.add_system_log(f"{data['content']}")
+                self.task_banner.show_message(
+                    f"📱 {data['content']}", duration=4000
+                )
                 return
 
             # Use task notification area for system messages
@@ -935,6 +1067,19 @@ class MainWindow(QMainWindow):
             self._backup_timer.stop()
         if hasattr(self, "_status_timer"):
             self._status_timer.stop()
+
+        # Stop network monitor + heartbeat
+        if hasattr(self, "_network_monitor"):
+            self._network_monitor.stop()
+            self._network_monitor.wait(2000)
+        if hasattr(self, "_heartbeat"):
+            self._heartbeat.stop()
+            self._heartbeat.wait(2000)
+
+        # Stop discovery server
+        if hasattr(self, "_discovery_thread"):
+            self._discovery_thread.stop()
+            self._discovery_thread.wait(2000)
 
         # Stop TTS
         if hasattr(self, "_tts_service"):

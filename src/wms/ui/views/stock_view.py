@@ -1,25 +1,40 @@
 ﻿"""
 Stock View - Quản lý kho hàng
 Modern Premium Design with Real-time History
+DPI-aware: all sizes use em / QFontMetrics so text never clips.
 """
 
 from datetime import datetime
 from typing import Optional
 
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QFont
+from PyQt6.QtGui import QColor, QFont, QFontMetrics
 from PyQt6.QtWidgets import (QFrame, QHBoxLayout, QHeaderView, QLabel,
-                             QLineEdit, QMessageBox, QPushButton, QTableWidget,
-                             QTableWidgetItem, QVBoxLayout, QWidget, QScrollArea)
+                             QLineEdit, QMessageBox, QPushButton, QSizePolicy,
+                             QTableWidget, QTableWidgetItem, QVBoxLayout,
+                             QWidget, QScrollArea)
 
 from ...database import SessionRepository, StockChangeLogRepository
 from ...services import CalculatorService
 from ..theme import AppColors
 
 
+# ---------------------------------------------------------------------------
+# Helpers – compute pixel values from the current font so every measurement
+# scales automatically when Windows DPI scaling changes.
+# ---------------------------------------------------------------------------
+def _em(widget: QWidget, multiplier: float = 1.0) -> int:
+    """Return *multiplier* × the em-height of *widget*'s font, in pixels."""
+    return max(1, round(QFontMetrics(widget.font()).height() * multiplier))
+
+
 class StockStepper(QFrame):
-    """Modern Stepper Component for adjusting quantities"""
-    
+    """DPI-aware stepper component for adjusting quantities.
+
+    Every dimension is derived from the widget's own font metrics so it
+    renders correctly at 100 %, 125 %, 150 % and 200 % Windows scaling.
+    """
+
     value_changed = pyqtSignal(int)
 
     def __init__(self, value: int, label: str = "", parent=None):
@@ -28,27 +43,41 @@ class StockStepper(QFrame):
         self.label = label
         self._setup_ui()
 
+    # ----- helpers that resolve once the widget has a real font -----
+    def _btn_side(self) -> int:
+        """Minimum side-length for the +/− buttons."""
+        return _em(self, 2.4)           # ≈ 38 px at 96 dpi / 12 px font
+
+    def _stepper_height(self) -> int:
+        """Minimum height for the whole stepper frame."""
+        return _em(self, 2.8)           # ≈ 42 px at 96 dpi
+
     def _setup_ui(self):
-        self.setFixedHeight(42)
+        side = self._btn_side()
+        h = self._stepper_height()
+
+        self.setMinimumHeight(h)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         self.setObjectName("stepper")
         self.setStyleSheet(f"""
             QFrame#stepper {{
                 background: white;
                 border: 2px solid {AppColors.BORDER};
-                border-radius: 8px;
+                border-radius: {max(6, h // 6)}px;
             }}
             QFrame#stepper:hover {{
                 border-color: {AppColors.PRIMARY};
             }}
         """)
-        
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # Minus button
+        # ── Minus button ──
         self.minus_btn = QPushButton("−")
-        self.minus_btn.setFixedSize(38, 38)
+        self.minus_btn.setMinimumSize(side, side)
+        self.minus_btn.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.minus_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.minus_btn.setStyleSheet(f"""
             QPushButton {{
@@ -56,10 +85,10 @@ class StockStepper(QFrame):
                 border-right: 1px solid {AppColors.BORDER};
                 background: #F8FAFC;
                 color: {AppColors.ERROR};
-                font-size: 20px;
+                font-size: 1.25em;
                 font-weight: bold;
-                border-top-left-radius: 6px;
-                border-bottom-left-radius: 6px;
+                border-top-left-radius: {max(4, h // 8)}px;
+                border-bottom-left-radius: {max(4, h // 8)}px;
             }}
             QPushButton:hover {{ background: #FEE2E2; }}
             QPushButton:pressed {{ background: {AppColors.ERROR}; color: white; }}
@@ -67,21 +96,25 @@ class StockStepper(QFrame):
         self.minus_btn.clicked.connect(lambda: self.adjust_value(-1))
         layout.addWidget(self.minus_btn)
 
-        # Value display
+        # ── Value display ──
         self.display = QLabel(str(self.value))
         self.display.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.display.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.display.setStyleSheet(f"""
-            font-weight: 800;
-            font-size: 15px;
-            color: {AppColors.TEXT};
-            min-width: 45px;
-            background: transparent;
+            QLabel {{
+                font-weight: 800;
+                font-size: 1em;
+                color: {AppColors.TEXT};
+                min-width: 2.6em;
+                background: transparent;
+            }}
         """)
         layout.addWidget(self.display, 1)
 
-        # Plus button
+        # ── Plus button ──
         self.plus_btn = QPushButton("+")
-        self.plus_btn.setFixedSize(38, 38)
+        self.plus_btn.setMinimumSize(side, side)
+        self.plus_btn.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.plus_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.plus_btn.setStyleSheet(f"""
             QPushButton {{
@@ -89,10 +122,10 @@ class StockStepper(QFrame):
                 border-left: 1px solid {AppColors.BORDER};
                 background: #F8FAFC;
                 color: {AppColors.SUCCESS};
-                font-size: 18px;
+                font-size: 1.15em;
                 font-weight: bold;
-                border-top-right-radius: 6px;
-                border-bottom-right-radius: 6px;
+                border-top-right-radius: {max(4, h // 8)}px;
+                border-bottom-right-radius: {max(4, h // 8)}px;
             }}
             QPushButton:hover {{ background: #DCFCE7; }}
             QPushButton:pressed {{ background: {AppColors.SUCCESS}; color: white; }}
@@ -125,9 +158,9 @@ class StockView(QWidget):
         main_layout.setContentsMargins(20, 16, 20, 20)
         main_layout.setSpacing(20)
 
-        # Header Section: Stats & Search
+        # ── Header Section: Stats & Search ──
         header_panel = QHBoxLayout()
-        
+
         # Stats summary
         stats_frame = QFrame()
         stats_frame.setObjectName("stats_card")
@@ -140,29 +173,26 @@ class StockView(QWidget):
         """)
         stats_layout = QHBoxLayout(stats_frame)
         stats_layout.setContentsMargins(20, 12, 20, 12)
-        
+
         self.total_products_label = QLabel("Sản phẩm: 0")
         self.total_products_label.setStyleSheet("color: white; font-weight: 700; font-size: 14px;")
         stats_layout.addWidget(self.total_products_label)
-        
         stats_layout.addSpacing(20)
-        
+
         self.total_stock_label = QLabel("Tổng tồn: 0")
         self.total_stock_label.setStyleSheet("color: #94A3B8; font-weight: 600; font-size: 14px;")
         stats_layout.addWidget(self.total_stock_label)
-        
         header_panel.addWidget(stats_frame)
-        
         header_panel.addStretch()
-        
+
         # Search & Refresh
         search_layout = QHBoxLayout()
         search_layout.setSpacing(10)
-        
+
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Tìm sản phẩm...")
         self.search_input.setFixedWidth(250)
-        self.search_input.setFixedHeight(42)
+        self.search_input.setMinimumHeight(_em(self, 2.6))
         self.search_input.setStyleSheet(f"""
             QLineEdit {{
                 border: 2px solid {AppColors.BORDER};
@@ -175,20 +205,18 @@ class StockView(QWidget):
         """)
         self.search_input.textChanged.connect(self.filter_table)
         search_layout.addWidget(self.search_input)
-        
+
         refresh_btn = QPushButton("Làm mới")
         refresh_btn.setObjectName("secondary")
-        refresh_btn.setFixedHeight(42)
+        refresh_btn.setMinimumHeight(_em(self, 2.6))
         refresh_btn.setFixedWidth(120)
         refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         refresh_btn.clicked.connect(self.refresh_data)
         search_layout.addWidget(refresh_btn)
-        
         header_panel.addLayout(search_layout)
-        
         main_layout.addLayout(header_panel)
 
-        # Content Section: Table & History
+        # ── Content Section: Table & History ──
         content_layout = QHBoxLayout()
         content_layout.setSpacing(20)
 
@@ -196,11 +224,10 @@ class StockView(QWidget):
         table_container = QWidget()
         table_v_layout = QVBoxLayout(table_container)
         table_v_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         self.table = QTableWidget()
         self._setup_main_table()
         table_v_layout.addWidget(self.table)
-        
         content_layout.addWidget(table_container, 3)
 
         # Right: History panel
@@ -217,30 +244,30 @@ class StockView(QWidget):
         """)
         history_layout = QVBoxLayout(history_panel)
         history_layout.setContentsMargins(16, 16, 16, 16)
-        
+
         h_header = QHBoxLayout()
         h_title = QLabel("🕒 Lịch sử kiểm kho")
         h_title.setStyleSheet(f"font-weight: 800; font-size: 15px; color: {AppColors.TEXT};")
         h_header.addWidget(h_title)
         h_header.addStretch()
-        
+
         clear_btn = QPushButton("X")
-        clear_btn.setFixedSize(30, 30)
+        clear_btn.setMinimumSize(_em(self, 1.8), _em(self, 1.8))
         clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         clear_btn.setToolTip("Xóa trắng lịch sử")
         clear_btn.setStyleSheet("""
-            QPushButton { border: none; background: transparent; font-size: 16px; border-radius: 15px; }
+            QPushButton { border: none; background: transparent; font-size: 1em; border-radius: 15px; }
             QPushButton:hover { background: #fee2e2; }
         """)
         clear_btn.clicked.connect(self._clear_history)
         h_header.addWidget(clear_btn)
         history_layout.addLayout(h_header)
-        
+
         self.history_scroll = QScrollArea()
         self.history_scroll.setWidgetResizable(True)
         self.history_scroll.setFrameShape(QFrame.Shape.NoFrame)
         self.history_scroll.setStyleSheet("background: transparent;")
-        
+
         self.history_content = QWidget()
         self.history_content.setStyleSheet("background: transparent;")
         self.history_list_layout = QVBoxLayout(self.history_content)
@@ -260,25 +287,31 @@ class StockView(QWidget):
         self.table.setHorizontalHeaderLabels([
             "STT", "Sản phẩm", "Đơn vị", "Quy đổi", "SỐ LƯỢNG LỚN", "SỐ LƯỢNG LẺ", "TỔNG TỒN"
         ])
-        
+
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         for i in [0, 2, 3, 4, 5, 6]:
             header.setSectionResizeMode(i, QHeaderView.ResizeMode.Fixed)
-            
+
         self.table.setColumnWidth(0, 50)
         self.table.setColumnWidth(2, 90)
         self.table.setColumnWidth(3, 80)
         self.table.setColumnWidth(4, 160)
         self.table.setColumnWidth(5, 160)
         self.table.setColumnWidth(6, 120)
-        
+
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(60)
-        
+
+        # Row height derived from font metrics – guarantees stepper fits
+        row_h = _em(self, 3.8)          # ≈ 60 px at 96 dpi, scales up at higher DPI
+        self.table.verticalHeader().setDefaultSectionSize(row_h)
+        self.table.verticalHeader().setMinimumSectionSize(max(40, row_h - _em(self, 1)))
+        # Let rows grow if the cell widget needs more space
+        self.table.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+
         self.table.setStyleSheet(f"""
             QTableWidget {{
                 border: 1px solid {AppColors.BORDER};
@@ -367,9 +400,10 @@ class StockView(QWidget):
         self.total_stock_label.setText(f"Tổng tồn: {total_qty:,}")
 
     def _wrap_widget(self, widget):
+        """Wrap a cell widget with minimal margins – let it fill the row."""
         container = QWidget()
         layout = QHBoxLayout(container)
-        layout.setContentsMargins(10, 5, 10, 5)
+        layout.setContentsMargins(4, 2, 4, 2)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(widget)
         return container

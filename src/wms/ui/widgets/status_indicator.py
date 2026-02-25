@@ -54,12 +54,16 @@ class StatusIndicator(QFrame):
     STATE_STOPPED = "stopped"
     STATE_STARTING = "starting"
     STATE_NO_DATA = "no_data"
+    STATE_NO_NETWORK = "no_network"
+    STATE_RECONNECTING = "reconnecting"
     
     _COLORS = {
-        STATE_RUNNING: "#22c55e",    # Green
-        STATE_STOPPED: "#ef4444",    # Red
-        STATE_STARTING: "#f59e0b",   # Yellow  
-        STATE_NO_DATA: "#f97316",    # Amber/Orange
+        STATE_RUNNING: "#22c55e",       # Green
+        STATE_STOPPED: "#ef4444",       # Red
+        STATE_STARTING: "#f59e0b",      # Yellow  
+        STATE_NO_DATA: "#f97316",       # Amber/Orange
+        STATE_NO_NETWORK: "#dc2626",    # Dark Red
+        STATE_RECONNECTING: "#a855f7",  # Purple
     }
     
     _LABELS = {
@@ -67,6 +71,18 @@ class StatusIndicator(QFrame):
         STATE_STOPPED: "Server: OFF",
         STATE_STARTING: "Starting...",
         STATE_NO_DATA: "No data",
+        STATE_NO_NETWORK: "No network",
+        STATE_RECONNECTING: "Reconnecting...",
+    }
+
+    # Interface type display names
+    _INTERFACE_LABELS = {
+        "wifi": "WiFi",
+        "ethernet": "LAN",
+        "usb_tether": "USB",
+        "hotspot": "Hotspot",
+        "loopback": "Local",
+        "other": "Network",
     }
     
     def __init__(self, parent=None):
@@ -74,6 +90,8 @@ class StatusIndicator(QFrame):
         self._state = self.STATE_STARTING
         self._last_notification_time = None
         self._no_data_threshold_ms = 600_000  # 10 minutes
+        self._connection_type = ""
+        self._device_count = 0
         
         self._setup_ui()
     
@@ -96,6 +114,18 @@ class StatusIndicator(QFrame):
             }
         """)
         layout.addWidget(self._label)
+
+        # Extra info label (connection type / device count)
+        self._info_label = QLabel("")
+        self._info_label.setStyleSheet("""
+            QLabel {
+                color: rgba(255, 255, 255, 0.45);
+                font-size: 9px;
+                background: transparent;
+                border: none;
+            }
+        """)
+        layout.addWidget(self._info_label)
         layout.addStretch()
         
         self.setStyleSheet("""
@@ -117,6 +147,29 @@ class StatusIndicator(QFrame):
         label = self._LABELS.get(state, "Unknown")
         self._dot.set_color(color)
         self._label.setText(label)
+        self._update_info()
+
+    def set_connection_type(self, conn_type: str):
+        """Update the displayed connection type (wifi, ethernet, usb_tether, etc.)."""
+        self._connection_type = conn_type
+        self._update_info()
+
+    def set_device_count(self, count: int):
+        """Update the number of connected Android devices."""
+        self._device_count = count
+        self._update_info()
+
+    def _update_info(self):
+        """Refresh the info label with connection type + device count."""
+        parts = []
+        if self._connection_type:
+            display = self._INTERFACE_LABELS.get(
+                self._connection_type, self._connection_type
+            )
+            parts.append(display)
+        if self._device_count > 0:
+            parts.append(f"{self._device_count} device{'s' if self._device_count > 1 else ''}")
+        self._info_label.setText(" · ".join(parts))
     
     def record_notification(self):
         """Record that a notification was received (for no-data detection)"""

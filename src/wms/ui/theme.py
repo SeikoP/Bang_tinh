@@ -119,7 +119,7 @@ class AppTheme:
             padding: 8px 16px;
             font-weight: 600;
             font-size: 12px;
-            min-height: 32px;
+            min-height: 2em;
         }}
         
         QPushButton:hover {{
@@ -169,7 +169,7 @@ class AppTheme:
             font-weight: 600;
             font-size: 13px;
             border: none;
-            min-height: 40px;
+            min-height: 2.4em;
             letter-spacing: 0.3px;
         }}
         
@@ -210,7 +210,7 @@ class AppTheme:
             padding: 6px;
             font-size: 12px;
             font-weight: 600;
-            min-height: 32px;
+            min-height: 2em;
         }}
         
         QPushButton#iconBtn:hover {{
@@ -232,7 +232,7 @@ class AppTheme:
             padding: 8px 10px;
             selection-background-color: {c.PRIMARY};
             font-size: 12px;
-            min-height: 32px;
+            min-height: 2em;
         }}
         
         QLineEdit:focus {{
@@ -266,7 +266,7 @@ class AppTheme:
             padding: 8px 10px;
             font-weight: 600;
             font-size: 12px;
-            min-height: 32px;
+            min-height: 2em;
         }}
         
         QSpinBox:focus, QDoubleSpinBox:focus {{
@@ -283,8 +283,7 @@ class AppTheme:
             border: 2px solid {c.BORDER};
             border-radius: 6px;
             padding: 8px 10px;
-            min-height: 32px;
-            max-height: 32px;
+            min-height: 2em;
             font-weight: 500;
             font-size: 12px;
         }}
@@ -324,7 +323,7 @@ class AppTheme:
         QComboBox QAbstractItemView::item {{
             padding: 8px 10px;
             border-radius: 4px;
-            min-height: 32px;
+            min-height: 2em;
             color: {c.TEXT};
         }}
         
@@ -386,7 +385,7 @@ class AppTheme:
         QTableWidget::item {{
             padding: 6px 8px;
             border: none;
-            min-height: 40px;
+            min-height: 2.4em;
         }}
         
         QTableWidget::item:selected {{
@@ -409,7 +408,7 @@ class AppTheme:
             border: none;
             border-right: 1px solid {c.BORDER};
             border-bottom: 2px solid {c.BORDER};
-            min-height: 44px;
+            min-height: 2.6em;
         }}
         
         QHeaderView::section:hover {{

@@ -12,6 +12,51 @@ from ...services import CalculatorService, ReportService
 from ..theme import AppColors
 from .product_dialog import ProductDialog
 
+# ---------------------------------------------------------------------------
+# Module-level style constants — defined once, reused per row (no GC pressure)
+# ---------------------------------------------------------------------------
+_LINEEDIT_STYLE = f"""
+    QLineEdit {{
+        border: 2px solid {AppColors.BORDER};
+        border-radius: 5px;
+        padding: 0px;
+        font-weight: 700;
+        font-size: 13px;
+        background: white;
+    }}
+    QLineEdit:focus {{
+        border-color: {AppColors.PRIMARY};
+    }}
+"""
+
+_BTN_PROD_STYLE = """
+    QPushButton {
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        background-color: white;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 0px;
+        margin: 0px;
+    }
+    QPushButton:hover { background-color: #f1f5f9; border-color: #94a3b8; }
+"""
+
+_BTN_DEL_STYLE = """
+    QPushButton {
+        border: 1px solid #ef4444;
+        border-radius: 4px;
+        background-color: white;
+        color: #ef4444;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 0px;
+        margin: 0px;
+    }
+    QPushButton:hover { background-color: #fef2f2; }
+"""
+
 
 class DragDropTableWidget(QTableWidget):
     """Custom QTableWidget with drag & drop support"""
@@ -79,7 +124,8 @@ class SaveSessionDialog(QDialog):
 
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Ghi chú (tuỳ chọn)")
-        self.notes_input.setFixedHeight(80)
+        self.notes_input.setMinimumHeight(80)
+        self.notes_input.setMaximumHeight(200)
         form.addRow("Ghi chú:", self.notes_input)
 
         layout.addLayout(form)
@@ -159,11 +205,6 @@ class CalculationView(QWidget):
         # Setup prod tab separately (will be used by parent)
         self.prod_tab = QWidget()
         self._setup_prod_tab()
-
-    def _setup_calc_tab(self):
-        layout = QVBoxLayout(self.calc_tab)
-        layout.setContentsMargins(20, 16, 20, 20)
-        layout.setSpacing(16)
 
     def _setup_calc_tab_direct(self, parent_layout):
         layout = parent_layout
@@ -401,21 +442,9 @@ class CalculationView(QWidget):
                 handover_edit.setMinimumHeight(self._widget_height)
                 # Ensure it expands to fill column width
                 handover_edit.setSizePolicy(
-                    QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+                    QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
                 )
-                handover_edit.setStyleSheet(f"""
-                    QLineEdit {{
-                        border: 2px solid {AppColors.BORDER};
-                        border-radius: 5px;
-                        padding: 0px;
-                        font-weight: 700;
-                        font-size: 13px;
-                        background: white;
-                    }}
-                    QLineEdit:focus {{
-                        border-color: {AppColors.PRIMARY};
-                    }}
-                """)
+                handover_edit.setStyleSheet(_LINEEDIT_STYLE)
                 handover_edit.setProperty("product_id", p.id)
                 handover_edit.setProperty("conversion", p.conversion)
                 handover_edit.setProperty("row", row)
@@ -436,21 +465,9 @@ class CalculationView(QWidget):
                 closing_edit.setMinimumHeight(self._widget_height)
                 # Ensure it expands to fill column width
                 closing_edit.setSizePolicy(
-                    QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+                    QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
                 )
-                closing_edit.setStyleSheet(f"""
-                    QLineEdit {{
-                        border: 2px solid {AppColors.BORDER};
-                        border-radius: 5px;
-                        padding: 0px;
-                        font-weight: 700;
-                        font-size: 13px;
-                        background: white;
-                    }}
-                    QLineEdit:focus {{
-                        border-color: {AppColors.PRIMARY};
-                    }}
-                """)
+                closing_edit.setStyleSheet(_LINEEDIT_STYLE)
                 closing_edit.setProperty("product_id", p.id)
                 closing_edit.setProperty("conversion", p.conversion)
                 closing_edit.setProperty("row", row)
@@ -612,44 +629,17 @@ class CalculationView(QWidget):
                 al.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 al.setSpacing(10)
 
-                # Action Button Style
-                btn_style = """
-                    QPushButton {
-                        border: 1px solid #cbd5e1;
-                        border-radius: 4px;
-                        background-color: white;
-                        color: #334155;
-                        font-size: 12px;
-                        font-weight: 600;
-                        padding: 0px;
-                        margin: 0px;
-                    }
-                    QPushButton:hover { background-color: #f1f5f9; border-color: #94a3b8; }
-                """
-                del_style = """
-                    QPushButton {
-                        border: 1px solid #ef4444;
-                        border-radius: 4px;
-                        background-color: white;
-                        color: #ef4444;
-                        font-size: 12px;
-                        font-weight: 600;
-                        padding: 0px;
-                        margin: 0px;
-                    }
-                    QPushButton:hover { background-color: #fef2f2; }
-                """
-
+                # Action Button Style (module-level constants)
                 eb = QPushButton("Sửa")
-                eb.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
-                eb.setStyleSheet(btn_style)
+                eb.setMinimumSize(62, self._widget_height + 2)
+                eb.setStyleSheet(_BTN_PROD_STYLE)
                 eb.setCursor(Qt.CursorShape.PointingHandCursor)
                 eb.clicked.connect(lambda _, pid=p.id: self._edit_product(pid))
                 al.addWidget(eb)
 
                 db = QPushButton("Xóa")
-                db.setFixedSize(62, self._widget_height + 2)  # Buttons cao hơn 2px
-                db.setStyleSheet(del_style)
+                db.setMinimumSize(62, self._widget_height + 2)
+                db.setStyleSheet(_BTN_DEL_STYLE)
                 db.setCursor(Qt.CursorShape.PointingHandCursor)
                 db.clicked.connect(
                     lambda _, pid=p.id, name=p.name: self._delete_product(pid, name)

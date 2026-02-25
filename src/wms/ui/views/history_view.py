@@ -89,7 +89,7 @@ class HistoryDetailDialog(QDialog):
             notes = QTextEdit()
             notes.setPlainText(self.history.notes)
             notes.setReadOnly(True)
-            notes.setMaximumHeight(60)
+            notes.setMaximumHeight(120)
             layout.addWidget(notes)
 
         # Close
@@ -105,8 +105,15 @@ class HistoryView(QWidget):
 
     def __init__(self):
         super().__init__()
+        self._data_loaded = False
         self._setup_ui()
-        self.refresh_list()
+
+    def showEvent(self, event):
+        """Lazy-load data on first show"""
+        super().showEvent(event)
+        if not self._data_loaded:
+            self._data_loaded = True
+            self.refresh_list()
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)

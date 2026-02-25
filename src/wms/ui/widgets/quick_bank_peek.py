@@ -19,7 +19,7 @@ class QuickBankPeek(QFrame):
         super().__init__(parent, Qt.WindowType.ToolTip)
         self.setObjectName("card")
         self.setFixedWidth(350)
-        self.setFixedHeight(400)
+        self.setMinimumHeight(400)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -55,6 +55,7 @@ class QuickBankPeek(QFrame):
         self.table.setAlternatingRowColors(True)
         self.table.setStyleSheet("font-size: 11px;")
         self.table.verticalHeader().setDefaultSectionSize(40)
+        self.table.verticalHeader().setMinimumSectionSize(30)
         layout.addWidget(self.table)
 
         hint = QLabel("Nhấn vào nút Ngân hàng để xem đầy đủ")

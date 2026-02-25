@@ -104,7 +104,8 @@ class TaskDialog(QDialog):
         # Notes
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Ghi chú thêm (tuỳ chọn)")
-        self.notes_input.setFixedHeight(80)
+        self.notes_input.setMinimumHeight(80)
+        self.notes_input.setMaximumHeight(200)
         if self.task:
             self.notes_input.setPlainText(self.task.notes)
         form.addRow("Ghi chú:", self.notes_input)
@@ -178,8 +179,15 @@ class TaskView(QWidget):
         self._reminder_timer.timeout.connect(self._check_pending_tasks)
         self._reminder_timer.start(300000)  # Check every 5 minutes
 
+        self._data_loaded = False
         self._setup_ui()
-        self.refresh_list()
+
+    def showEvent(self, event):
+        """Lazy-load data on first show"""
+        super().showEvent(event)
+        if not self._data_loaded:
+            self._data_loaded = True
+            self.refresh_list()
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)

@@ -3,6 +3,7 @@ Bank View - Transaction history and raw logs
 """
 
 import html
+import logging
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import (
@@ -20,8 +21,15 @@ class BankView(QWidget):
 
     def __init__(self):
         super().__init__()
+        self._data_loaded = False
         self._setup_ui()
-        self.load_history()
+
+    def showEvent(self, event):
+        """Lazy-load history on first show"""
+        super().showEvent(event)
+        if not self._data_loaded:
+            self._data_loaded = True
+            self.load_history()
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
@@ -134,6 +142,7 @@ class BankView(QWidget):
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
         self.table.verticalHeader().setDefaultSectionSize(45)
+        self.table.verticalHeader().setMinimumSectionSize(35)
         trans_layout.addWidget(self.table)
 
     def _setup_logs_tab(self):
@@ -172,6 +181,7 @@ class BankView(QWidget):
         self.logs_table.setAlternatingRowColors(True)
         self.logs_table.verticalHeader().setVisible(False)
         self.logs_table.verticalHeader().setDefaultSectionSize(40)
+        self.logs_table.verticalHeader().setMinimumSectionSize(30)
         logs_layout.addWidget(self.logs_table)
 
     def load_history(self):
@@ -202,11 +212,11 @@ class BankView(QWidget):
                 time_str, source, amount, raw_message, sender_name
             )
 
-            # 2. Hiển thị lên UI (transactions tab)
-            self._add_row_ui(new_id, time_str, source, amount, sender_name, raw_message)
+            # 2. Hiển thị lên UI (chỉ khi view đã được load lần đầu)
+            if self._data_loaded:
+                self._add_row_ui(new_id, time_str, source, amount, sender_name, raw_message)
         except Exception as e:
             # Log error silently
-            import logging
             logging.error(f"Error in add_notif: {e}")
 
     def add_raw_log(self, time_str, package, raw_message):
