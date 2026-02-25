@@ -14,7 +14,7 @@ a = Analysis(
     binaries=[],
     datas=[
         (str(PROJECT_ROOT / 'src' / 'wms' / 'assets'), 'wms/assets'),
-        (str(PROJECT_ROOT / 'config'), 'config'),
+        *( [(str(PROJECT_ROOT / 'config'), 'config')] if (PROJECT_ROOT / 'config').exists() else [] ),
     ],
     hiddenimports=[
         'PyQt6.QtCore',
