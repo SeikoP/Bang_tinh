@@ -71,21 +71,6 @@ jobs:
         tag_name: android-latest
         name: Latest Android Build (WMS Notifier)
         files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
-        body: |
-          ## WMS Notifier - Android App (Rolling Build)
-
-          Phiên bản build tự động mới nhất từ nhánh `${{ github.ref_name }}`.
-
-          ### 📥 Tải về
-          - [Tải app-debug.apk](https://github.com/${{ github.repository }}/releases/download/android-latest/app-debug.apk)
-
-          ### 🛠 Cài đặt
-          1. Tải `app-debug.apk` về điện thoại Android
-          2. Cài đặt (cho phép cài từ nguồn không rõ nếu được hỏi)
-          3. Cấp quyền Notification Listener
-          4. Quét mã QR từ màn hình PC để ghép nối
-
-          _Cập nhật lúc: ${{ github.event.head_commit.timestamp }}_
         draft: false
         prerelease: true
       env:
@@ -96,13 +81,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
-        body: |
-          ## WMS Notifier Android App ${{ github.ref_name }}
-          
-          ### Installation
-          1. Download `app-debug.apk`
-          2. Install on Android device
-          3. Grant notification access
         draft: false
         prerelease: false
       env:

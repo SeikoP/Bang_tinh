@@ -102,7 +102,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e .
-          pip install pyinstaller
+          pip install -r requirements.txt
+          pip install pyinstaller build
       
       - name: Ensure .ico exists
         run: |
@@ -113,7 +114,11 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --clean --noconfirm --log-level DEBUG build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-build.log
+          pyinstaller --clean --noconfirm --log-level DEBUG --workpath .pyi-build --distpath dist build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-build.log
+
+      - name: Remove non-essential text docs in dist
+        run: |
+          Get-ChildItem -Path dist -Recurse -Include *.md,*.txt -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
       - name: Upload build diagnostics
         if: always()
@@ -124,7 +129,6 @@ jobs:
             build/pyinstaller-build.log
             build/warehouse_app/warn-*.txt
             build/warehouse_app/xref-*.html
-            build/installer/info_before.txt
           if-no-files-found: ignore
           retention-days: 14
       
@@ -238,7 +242,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e .
-          pip install pyinstaller
+          pip install -r requirements.txt
+          pip install pyinstaller build
       
       - name: Ensure .ico exists
         run: |
@@ -249,7 +254,11 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --clean --noconfirm --log-level DEBUG build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-release.log
+          pyinstaller --clean --noconfirm --log-level DEBUG --workpath .pyi-build --distpath dist build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-release.log
+
+      - name: Remove non-essential text docs in dist
+        run: |
+          Get-ChildItem -Path dist -Recurse -Include *.md,*.txt -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
       - name: Upload release diagnostics
         if: always()
@@ -260,7 +269,6 @@ jobs:
             build/pyinstaller-release.log
             build/warehouse_app/warn-*.txt
             build/warehouse_app/xref-*.html
-            build/installer/info_before.txt
           if-no-files-found: ignore
           retention-days: 14
       

@@ -2,7 +2,7 @@
 # WMS Project .gitignore
 # ========================================
 
-# Python bytecode & artifacts
+# Python bytecode & packaging artifacts
 __pycache__/
 *.py[cod]
 *$py.class
@@ -13,13 +13,13 @@ __pycache__/
 *.egg-info/
 *.egg
 
-# Virtual Environment
+# Virtual environments
 .venv/
 venv/
 ENV/
 env/
 
-# IDE / Editor
+# IDE / editor
 .vscode/
 .idea/
 *.swp
@@ -27,7 +27,7 @@ env/
 *~
 .kiro/
 
-# Testing
+# Testing / quality caches
 .pytest_cache/
 .hypothesis/
 .coverage
@@ -51,31 +51,34 @@ data/cache/*
 !data/backups/.gitkeep
 !data/cache/.gitkeep
 
-# Database
+# Databases
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
 
-# Build output (NOT the build/ config directory)
+# Build outputs
 dist/
 Output/
+.pyi-build/
 *.spec.bak
 *.manifest
 
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Environment
-.env
-.env.local
-!.env.example
+# Keep build configuration in repo, ignore generated files under build/
+build/*
+!build/warehouse_app.spec
+!build/version_info.txt
+!build/installer/
+!build/installer/setup.iss
 
 # Logs
 logs/
 *.log
+
+# Environment files
+.env
+.env.local
+!.env.example
 
 # Android notifier build artifacts
 android_notifier/local.properties
@@ -83,5 +86,10 @@ android_notifier/.gradle/
 android_notifier/build/
 android_notifier/app/build/
 
-# TTS Cache
+# TTS cache
 tts_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

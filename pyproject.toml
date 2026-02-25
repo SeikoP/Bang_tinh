@@ -23,6 +23,7 @@ dependencies = [
     # Data Processing
     "beautifulsoup4>=4.14.0",
     "lxml>=6.0.0",
+    "openpyxl>=3.1.5",
     # Utilities
     "psutil>=6.1.0",
     "packaging>=26.0",
