@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK (WMS Notifier)
 
 on:
   push:
@@ -57,29 +57,30 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: BankNotifier-APK
+        name: WMS-Notifier-APK
         path: android_notifier/app/build/outputs/apk/debug/app-debug.apk
     
     - name: Create Rolling Release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: android-latest
-        name: Latest Android Build
+        name: Latest Android Build (WMS Notifier)
         files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
         body: |
-          ## Bank Notifier Android App (Rolling Build)
-          
-          This release contains the latest automated build from the `${{ github.ref_name }}` branch.
-          
-          ### 📥 Download
-          - [Download app-debug.apk](https://github.com/${{ github.repository }}/releases/download/android-latest/app-debug.apk)
-          
-          ### 🛠 Installation
-          1. Download `app-debug.apk`
-          2. Install on your Android device
-          3. Grant notification access
-          
-          _Last updated: ${{ github.event.head_commit.timestamp }}_
+          ## WMS Notifier - Android App (Rolling Build)
+
+          Phiên bản build tự động mới nhất từ nhánh `${{ github.ref_name }}`.
+
+          ### 📥 Tải về
+          - [Tải app-debug.apk](https://github.com/${{ github.repository }}/releases/download/android-latest/app-debug.apk)
+
+          ### 🛠 Cài đặt
+          1. Tải `app-debug.apk` về điện thoại Android
+          2. Cài đặt (cho phép cài từ nguồn không rõ nếu được hỏi)
+          3. Cấp quyền Notification Listener
+          4. Quét mã QR từ màn hình PC để ghép nối
+
+          _Cập nhật lúc: ${{ github.event.head_commit.timestamp }}_
         draft: false
         prerelease: true
       env:
@@ -91,7 +92,7 @@ jobs:
       with:
         files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
         body: |
-          ## Bank Notifier Android App ${{ github.ref_name }}
+          ## WMS Notifier Android App ${{ github.ref_name }}
           
           ### Installation
           1. Download `app-debug.apk`
