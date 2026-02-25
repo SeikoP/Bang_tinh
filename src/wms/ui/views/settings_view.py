@@ -48,7 +48,7 @@ class SettingsView(QWidget):
             from PyQt6.QtGui import QPixmap
 
             try:
-                # Get all local IPs (including USB tethering, hotspot)
+                # Get all local IPs
                 from ...network.network_monitor import get_best_ip, get_all_ips_flat
                 best_ip, best_type = get_best_ip()
                 ips = get_all_ips_flat()
@@ -465,10 +465,10 @@ class SettingsView(QWidget):
 
         tunnel_desc = QLabel(
             "Nếu điện thoại và máy tính KHÔNG cùng WiFi, dùng một trong các cách sau:\n"
-            "• Tailscale: Cài trên cả PC và điện thoại → dùng IP 100.x.x.x\n"
-            "• ngrok: Chạy 'ngrok http 5005' trên PC → dán URL bên dưới\n"
-            "• USB Tethering: Kết nối điện thoại qua USB → IP tự phát hiện\n"
-            "• Hotspot: Bật hotspot trên điện thoại, PC kết nối vào → IP tự phát hiện"
+            "• ngrok: Chạy 'ngrok http 5005' trên PC → dán URL vào ô bên dưới\n"
+            "• Cloudflare Tunnel: Chạy 'cloudflared tunnel --url localhost:5005' → dán URL\n"
+            "• Port Forwarding: Mở port 5005 trên router → dùng IP public của bạn\n"
+            "• ZeroTier: Cài trên cả PC và điện thoại → dùng IP mạng ảo ZeroTier"
         )
         tunnel_desc.setWordWrap(True)
         tunnel_desc.setStyleSheet(
@@ -478,7 +478,7 @@ class SettingsView(QWidget):
 
         tunnel_row = QHBoxLayout()
         self.tunnel_input = QLineEdit()
-        self.tunnel_input.setPlaceholderText("VD: https://abc123.ngrok-free.app hoặc http://100.64.0.1:5005")
+        self.tunnel_input.setPlaceholderText("VD: https://abc123.ngrok-free.app hoặc https://your-tunnel.trycloudflare.com")
         self.tunnel_input.setStyleSheet(f"""
             QLineEdit {{
                 padding: 8px 12px;

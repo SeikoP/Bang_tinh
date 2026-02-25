@@ -6,7 +6,7 @@ Monitors:
   - Server port availability
   - Auto-restart notification + discovery servers on failure
 
-Supports fallback interfaces: WiFi, USB Tethering, Hotspot, Ethernet.
+Supports interfaces: WiFi, Ethernet, and other network adapters.
 """
 
 import socket
@@ -17,12 +17,10 @@ import psutil
 from PyQt6.QtCore import QThread, pyqtSignal
 
 
-# Known interface patterns for fallback detection
+# Known interface patterns for detection
 INTERFACE_PATTERNS = {
     "wifi": ["Wi-Fi", "wlan", "WLAN", "Wireless"],
     "ethernet": ["Ethernet", "eth", "Local Area Connection"],
-    "usb_tether": ["USB", "RNDIS", "192.168.42.", "192.168.137."],
-    "hotspot": ["Local Area Connection*", "Microsoft Wi-Fi Direct", "vEthernet"],
 }
 
 
@@ -35,8 +33,6 @@ def get_active_interfaces() -> dict[str, list[str]]:
     result: dict[str, list[str]] = {
         "wifi": [],
         "ethernet": [],
-        "usb_tether": [],
-        "hotspot": [],
         "other": [],
     }
 
@@ -58,16 +54,7 @@ def get_active_interfaces() -> dict[str, list[str]]:
 
                 # Classify interface
                 classified = False
-
-                # USB tethering detection (IP-based)
-                if ip.startswith("192.168.42.") or ip.startswith("192.168.137."):
-                    result["usb_tether"].append(ip)
-                    classified = True
-                    continue
-
                 for itype, patterns in INTERFACE_PATTERNS.items():
-                    if itype == "usb_tether":
-                        continue  # Already checked above
                     for pattern in patterns:
                         if pattern.lower() in iface_name.lower():
                             result[itype].append(ip)
@@ -93,7 +80,7 @@ def get_best_ip() -> tuple[str, str]:
     """
     interfaces = get_active_interfaces()
 
-    priority = ["wifi", "ethernet", "usb_tether", "hotspot", "other"]
+    priority = ["wifi", "ethernet", "other"]
     for itype in priority:
         if interfaces.get(itype):
             return interfaces[itype][0], itype

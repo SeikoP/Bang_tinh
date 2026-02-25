@@ -79,8 +79,6 @@ class StatusIndicator(QFrame):
     _INTERFACE_LABELS = {
         "wifi": "WiFi",
         "ethernet": "LAN",
-        "usb_tether": "USB",
-        "hotspot": "Hotspot",
         "loopback": "Local",
         "other": "Network",
     }
