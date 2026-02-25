@@ -21,13 +21,13 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\WMS
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=..\LICENSE.txt
+LicenseFile=..\..\LICENSE.txt
 InfoBeforeFile=info_before.txt
-OutputDir=..\Output
+OutputDir=..\..\Output
 OutputBaseFilename=BangTinhSetup
 Compression=lzma2/ultra64
 SolidCompression=yes
-SetupIconFile=..\src\wms\assets\icons\icon.ico
+SetupIconFile=..\..\src\wms\assets\icons\icon.ico
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
@@ -42,17 +42,17 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Main executable from PyInstaller output
-Source: "..\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Assets directory
-Source: "..\src\wms\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\src\wms\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Configuration template
-Source: "..\.env.example"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist skipifsourcedoesntexist
+Source: "..\..\.env.example"; DestDir: "{app}"; DestName: ".env"; Flags: onlyifdoesntexist skipifsourcedoesntexist
 
 ; Create necessary directories
-Source: "..\data\exports\.gitkeep"; DestDir: "{app}\exports"; Flags: ignoreversion skipifsourcedoesntexist
-Source: "..\data\logs\.gitkeep"; DestDir: "{app}\logs"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\..\data\exports\.gitkeep"; DestDir: "{app}\exports"; Flags: ignoreversion skipifsourcedoesntexist
+Source: "..\..\data\logs\.gitkeep"; DestDir: "{app}\logs"; Flags: ignoreversion skipifsourcedoesntexist
 
 [Icons]
 ; Start Menu shortcuts
