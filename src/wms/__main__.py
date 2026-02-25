@@ -13,18 +13,27 @@ import sys
 # Without this, relative imports fail with:
 #   "attempted relative import with no known parent package"
 if __name__ == "__main__" and (not __package__ or __package__ == ""):
-    from pathlib import Path
-
-    _pkg_dir = Path(__file__).resolve().parent        # .../src/wms
-    _src_dir = str(_pkg_dir.parent)                   # .../src
-
-    if _src_dir not in sys.path:
-        sys.path.insert(0, _src_dir)
-
-    __package__ = "wms"
-    # Ensure the package itself is importable so relative imports resolve
     import importlib
-    importlib.import_module("wms")
+
+    if getattr(sys, 'frozen', False):
+        # PyInstaller frozen app – modules live in the archive,
+        # so we must NOT touch sys.path with filesystem paths.
+        # Just declare the package and let PyInstaller's import hooks
+        # resolve everything.
+        __package__ = "wms"
+        importlib.import_module("wms")
+    else:
+        # Development / direct script execution
+        from pathlib import Path
+
+        _pkg_dir = Path(__file__).resolve().parent        # .../src/wms
+        _src_dir = str(_pkg_dir.parent)                   # .../src
+
+        if _src_dir not in sys.path:
+            sys.path.insert(0, _src_dir)
+
+        __package__ = "wms"
+        importlib.import_module("wms")
 
 # Fix Unicode encoding for Windows console BEFORE any imports
 if sys.platform == "win32":

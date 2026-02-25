@@ -2,10 +2,16 @@
 # Run from project root: pyinstaller build/warehouse_app.spec
 
 import os
+import sys
 from pathlib import Path
 from PyInstaller.utils.hooks import collect_submodules
 
 PROJECT_ROOT = Path(SPECPATH).parent  # build/ -> project root
+
+# Add src/ to sys.path so collect_submodules can find the 'wms' package
+_src_dir = str(PROJECT_ROOT / 'src')
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
 
 # Auto-collect ALL wms submodules to avoid ModuleNotFoundError in built app
 wms_hiddenimports = collect_submodules('wms')
@@ -17,7 +23,7 @@ a = Analysis(
     pathex=[str(PROJECT_ROOT / 'src')],
     binaries=[],
     datas=[
-        (str(PROJECT_ROOT / 'src' / 'wms' / 'assets'), 'wms/assets'),
+        (str(PROJECT_ROOT / 'src' / 'wms' / 'assets'), 'assets'),
         *( [(str(PROJECT_ROOT / 'config'), 'config')] if (PROJECT_ROOT / 'config').exists() else [] ),
     ],
     hiddenimports=[
