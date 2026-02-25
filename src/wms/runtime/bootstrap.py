@@ -7,8 +7,7 @@ Handles the initialization sequence for the application:
 3. Initialize database
 4. Initialize dependency injection container
 5. Set up global exception handling
-6. Check license
-7. Start the UI
+6. Start the UI
 """
 
 import logging
@@ -20,7 +19,6 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from ..core.config import Config
 from ..core.container import Container
 from ..core.exceptions import ConfigurationError
-from ..core.license import LicenseManager, LicenseValidator
 from ..database.connection import init_db
 from .crash_handler import CrashHandler
 from ..utils.logging import LoggerFactory
@@ -99,10 +97,7 @@ class ApplicationBootstrap:
             # Step 8: Initialize health check system
             self._initialize_health_check()
 
-            # Step 9: Check license (if in production)
-            self._check_license()
-
-            # Step 10: Initialize Qt Application
+            # Step 9: Initialize Qt Application
             qt_metric = self.profiler.start_metric("qt_init")
             self._initialize_qt_application()
             self.profiler.end_metric(qt_metric)
@@ -274,48 +269,6 @@ class ApplicationBootstrap:
 
         except Exception as e:
             self.logger.error(f"Initial health check failed: {e}")
-
-    def _check_license(self):
-        """Check license key validation"""
-        self.logger.info("Checking license...")
-
-        # Skip license validation for dev/local environments
-        if self.config.environment in ["dev", "development", "local"]:
-            self.logger.info("License validation skipped (development environment)")
-            return
-
-        try:
-            # Create license validator
-            validator = LicenseValidator(logger=self.logger)
-
-            # Create license manager
-            license_manager = LicenseManager(validator=validator, logger=self.logger)
-
-            # Validate license at startup
-            is_valid = False
-            if self.config.license_key:
-                is_valid = license_manager.validate_startup_license(
-                    license_key=self.config.license_key,
-                    environment=self.config.environment,
-                )
-
-            # Store license manager and status in container
-            self.container.register_singleton("license_manager", license_manager)
-            self.container.register_singleton("is_license_valid", is_valid)
-
-            if not is_valid:
-                self.logger.warning(
-                    "License validation failed or missing. Running in TRIAL MODE."
-                )
-                # Optional: Show trial warning dialog here if needed
-                return
-
-            self.logger.info("License validation completed successfully")
-
-        except Exception as e:
-            self.logger.warning(f"License validation error: {e}")
-            self.logger.info("Continuing in TRIAL MODE")
-            self.container.register_singleton("is_license_valid", False)
 
     def _initialize_qt_application(self):
         """Initialize Qt Application"""

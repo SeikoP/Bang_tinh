@@ -88,22 +88,20 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
       
-      # Cache PyInstaller bootloader + intermediate build artifacts
-      - name: Cache PyInstaller build
+      # Cache PyInstaller bootloader only (NOT the build directory)
+      - name: Cache PyInstaller bootloader
         uses: actions/cache@v4
         with:
-          path: |
-            build
-            ~\AppData\Local\pyinstaller
-          key: ${{ runner.os }}-pyinstaller-${{ hashFiles('build/warehouse_app.spec', 'requirements.txt') }}
+          path: ~\AppData\Local\pyinstaller
+          key: ${{ runner.os }}-pyinstaller-boot-${{ hashFiles('build/warehouse_app.spec') }}
           restore-keys: |
-            ${{ runner.os }}-pyinstaller-
+            ${{ runner.os }}-pyinstaller-boot-
       
       - name: Install dependencies
         run: |
           pip install -e .
           pip install -r requirements.txt
-          pip install pyinstaller build
+          pip install pyinstaller
       
       - name: Ensure .ico exists
         run: |
@@ -112,13 +110,13 @@ jobs:
             Write-Host "Generated icon.ico from PNG"
           }
 
+      - name: Verify hidden imports
+        run: |
+          python -c "import sys; sys.path.insert(0,'src'); from PyInstaller.utils.hooks import collect_submodules; mods = collect_submodules('wms'); print(f'Collected {len(mods)} modules'); assert 'wms.ui.main_window' in mods, 'MISSING wms.ui.main_window!'; print('wms.ui.main_window: OK')"
+
       - name: Build executable
         run: |
-          pyinstaller --clean --noconfirm --log-level DEBUG --workpath .pyi-build --distpath dist build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-build.log
-
-      - name: Remove non-essential text docs in dist
-        run: |
-          Get-ChildItem -Path dist -Recurse -Include *.md,*.txt -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+          pyinstaller --clean --noconfirm --log-level INFO --distpath dist build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-build.log
 
       - name: Upload build diagnostics
         if: always()
@@ -220,16 +218,14 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
       
-      # Cache PyInstaller
-      - name: Cache PyInstaller build
+      # Cache PyInstaller bootloader only
+      - name: Cache PyInstaller bootloader
         uses: actions/cache@v4
         with:
-          path: |
-            build
-            ~\AppData\Local\pyinstaller
-          key: ${{ runner.os }}-pyinstaller-release-${{ hashFiles('build/warehouse_app.spec', 'requirements.txt') }}
+          path: ~\AppData\Local\pyinstaller
+          key: ${{ runner.os }}-pyinstaller-boot-release-${{ hashFiles('build/warehouse_app.spec') }}
           restore-keys: |
-            ${{ runner.os }}-pyinstaller-
+            ${{ runner.os }}-pyinstaller-boot-
       
       # Cache Inno Setup installation (saves ~2-3 minutes)
       - name: Cache Inno Setup
@@ -243,7 +239,7 @@ jobs:
         run: |
           pip install -e .
           pip install -r requirements.txt
-          pip install pyinstaller build
+          pip install pyinstaller
       
       - name: Ensure .ico exists
         run: |
@@ -254,11 +250,7 @@ jobs:
 
       - name: Build executable
         run: |
-          pyinstaller --clean --noconfirm --log-level DEBUG --workpath .pyi-build --distpath dist build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-release.log
-
-      - name: Remove non-essential text docs in dist
-        run: |
-          Get-ChildItem -Path dist -Recurse -Include *.md,*.txt -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+          pyinstaller --clean --noconfirm --log-level INFO --distpath dist build/warehouse_app.spec *>&1 | Tee-Object -FilePath build\pyinstaller-release.log
 
       - name: Upload release diagnostics
         if: always()

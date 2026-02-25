@@ -1170,8 +1170,6 @@ def main():
 
     from ..core.config import Config
     from ..core.container import Container
-    from ..core.license import LicenseManager, LicenseValidator
-
     config = Config.from_env()
 
     # Validate configuration
@@ -1183,34 +1181,6 @@ def main():
 
     container = Container(config)
     logger = container.get("logger")
-
-    # Validate license at startup
-    try:
-        validator = LicenseValidator(logger=logger)
-        license_manager = LicenseManager(validator, logger)
-
-        if not license_manager.validate_startup_license(
-            config.license_key, config.environment
-        ):
-            QMessageBox.critical(
-                None,
-                "License Error",
-                "Invalid or expired license key.\n\n"
-                "Please contact support to obtain a valid license.",
-            )
-            logger.error("Application startup blocked: Invalid license")
-            sys.exit(1)
-
-        # Store license manager in container for later use
-        container.register_singleton("license_manager", license_manager)
-
-    except Exception as e:
-        logger.error(f"License validation error: {e}")
-        if config.environment == "production":
-            QMessageBox.critical(
-                None, "License Error", f"Failed to validate license: {str(e)}"
-            )
-            sys.exit(1)
 
     # Create main window with injected container
     window = MainWindow(container=container)
