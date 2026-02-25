@@ -28,6 +28,7 @@ class NotificationServer(QThread):
                 (self.host, self.port), NotificationHandler
             )
             self._server.allow_reuse_address = True
+            self._server.timeout = 5  # Socket timeout for graceful shutdown
             self._server.signal = self.msg_received
             self._server.logger = self.logger
             self._server.container = self.container
