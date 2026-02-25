@@ -20,6 +20,7 @@ from .network_monitor import get_active_interfaces, get_best_ip, get_all_ips_fla
 
 DISCOVERY_PORT = 5006
 DISCOVERY_MSG = b"WMS_DISCOVER"
+DISCOVERY_MSG_LEGACY = b"BANK_NOTIFIER_DISCOVER"  # Backward compat
 
 
 def get_all_local_ips() -> list[str]:
@@ -85,7 +86,7 @@ class DiscoveryServer(QThread):
             while self._running:
                 try:
                     data, addr = self._sock.recvfrom(256)
-                    if data.strip() == DISCOVERY_MSG:
+                    if data.strip() in (DISCOVERY_MSG, DISCOVERY_MSG_LEGACY):
                         # Use enhanced interface detection
                         best_ip, best_type = get_best_ip()
                         all_ips = get_all_ips_flat()
