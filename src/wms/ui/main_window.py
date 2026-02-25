@@ -22,6 +22,7 @@ from ..core.paths import ASSETS
 
 # Import network components
 from ..network.notification_server import NotificationServer
+from ..network.discovery_server import DiscoveryServer
 # Import views
 from .views.calculation_view import CalculationView
 from .views.calculator_tool_view import CalculatorToolView
@@ -540,10 +541,11 @@ class MainWindow(QMainWindow):
         else:
             # Fallback to direct implementation
             config = self.container.get("config")
+            http_port = config.notification_port if config else 5005
             if config:
                 self.notif_thread = NotificationServer(
                     host=config.notification_host,
-                    port=config.notification_port,
+                    port=http_port,
                     logger=self.logger,
                     container=self.container,
                 )
@@ -553,6 +555,14 @@ class MainWindow(QMainWindow):
                 )
             self.notif_thread.msg_received.connect(self._process_notification)
             self.notif_thread.start()
+
+        # Start UDP discovery server (fallback: Android finds PC without knowing IP)
+        self._discovery_thread = DiscoveryServer(
+            http_port=config.notification_port if config else 5005,
+            logger=self.logger,
+            container=self.container,
+        )
+        self._discovery_thread.start()
 
     def _process_notification(self, message):
         """Process notification using worker"""

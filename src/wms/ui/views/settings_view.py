@@ -32,7 +32,7 @@ class SettingsView(QWidget):
     widget_height_changed = pyqtSignal(int)
 
     class IPWorker(QThread):
-        finished = pyqtSignal(str, int, str, object)  # IP, Port, SecretKey, QPixmap
+        finished = pyqtSignal(str, int, str, object, list)  # IP, Port, SecretKey, QPixmap, AllIPs
         error = pyqtSignal()
 
         def __init__(self, container=None):
@@ -40,19 +40,16 @@ class SettingsView(QWidget):
             self.container = container
 
         def run(self):
-            import socket
             from io import BytesIO
 
             import qrcode
             from PyQt6.QtGui import QPixmap
 
             try:
-                # Get local IP
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.settimeout(2)
-                s.connect(("8.8.8.8", 80))
-                ip = s.getsockname()[0]
-                s.close()
+                # Get all local IPs
+                from ...network.discovery_server import get_all_local_ips
+                ips = get_all_local_ips()
+                ip = ips[0] if ips else "127.0.0.1"
 
                 # Get port and secret key from config
                 port = 5005
@@ -64,8 +61,8 @@ class SettingsView(QWidget):
                         secret_key = config.secret_key
 
                 # Generate QR code with JSON data
-                # Using short keys to keep QR simple: h=host, p=port, k=key
-                qr_data = json.dumps({"h": ip, "p": port, "k": secret_key})
+                # h=primary host, p=port, k=key, ips=all fallback IPs
+                qr_data = json.dumps({"h": ip, "p": port, "k": secret_key, "ips": ips})
 
                 qr = qrcode.QRCode(version=1, box_size=10, border=2)
                 qr.add_data(qr_data)
@@ -78,7 +75,7 @@ class SettingsView(QWidget):
                 pixmap = QPixmap()
                 pixmap.loadFromData(buffer.read())
 
-                self.finished.emit(ip, port, secret_key, pixmap)
+                self.finished.emit(ip, port, secret_key, pixmap, ips)
             except Exception as e:
                 if self.container:
                     logger = self.container.get("logger")
@@ -463,9 +460,14 @@ class SettingsView(QWidget):
         self._worker.error.connect(lambda: self.ip_label.setText("127.0.0.1 (Offline)"))
         self._worker.start()
 
-    def _on_ip_ready(self, ip, port, secret_key, pixmap):
-        self.ip_label.setText(ip)
-        self.port_label.setText(f"Port: {port}")
+    def _on_ip_ready(self, ip, port, secret_key, pixmap, ips):
+        # Show all IPs if multiple adapters
+        if len(ips) > 1:
+            self.ip_label.setText(ip)
+            self.ip_label.setToolTip("Tất cả IPs: " + ", ".join(ips))
+        else:
+            self.ip_label.setText(ip)
+        self.port_label.setText(f"Port: {port}  •  UDP Discovery: {port + 1}")
         # Show partial key for verification
         short_key = secret_key[:8] + "..." if secret_key else "None"
         self.key_label.setText(f"Key: {short_key}")
