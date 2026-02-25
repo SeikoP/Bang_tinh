@@ -106,14 +106,8 @@ jobs:
       
       - name: Ensure .ico exists
         run: |
-          $ico = "src\wms\assets\icons\icon.ico"
-          if (-not (Test-Path $ico)) {
-            python -c "
-from PIL import Image
-img = Image.open('src/wms/assets/icons/icon.png').convert('RGBA')
-sizes = [(s,s) for s in [16,20,24,32,40,48,64,128,256]]
-img.save('src/wms/assets/icons/icon.ico', format='ICO', sizes=sizes)
-"
+          if (-not (Test-Path "src\wms\assets\icons\icon.ico")) {
+            python -c "from PIL import Image; img = Image.open('src/wms/assets/icons/icon.png').convert('RGBA'); img.save('src/wms/assets/icons/icon.ico', format='ICO', sizes=[(s,s) for s in [16,20,24,32,40,48,64,128,256]])"
             Write-Host "Generated icon.ico from PNG"
           }
 
@@ -235,14 +229,8 @@ img.save('src/wms/assets/icons/icon.ico', format='ICO', sizes=sizes)
       
       - name: Ensure .ico exists
         run: |
-          $ico = "src\wms\assets\icons\icon.ico"
-          if (-not (Test-Path $ico)) {
-            python -c "
-from PIL import Image
-img = Image.open('src/wms/assets/icons/icon.png').convert('RGBA')
-sizes = [(s,s) for s in [16,20,24,32,40,48,64,128,256]]
-img.save('src/wms/assets/icons/icon.ico', format='ICO', sizes=sizes)
-"
+          if (-not (Test-Path "src\wms\assets\icons\icon.ico")) {
+            python -c "from PIL import Image; img = Image.open('src/wms/assets/icons/icon.png').convert('RGBA'); img.save('src/wms/assets/icons/icon.ico', format='ICO', sizes=[(s,s) for s in [16,20,24,32,40,48,64,128,256]])"
             Write-Host "Generated icon.ico from PNG"
           }
 
