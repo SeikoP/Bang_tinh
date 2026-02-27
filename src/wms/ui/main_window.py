@@ -152,15 +152,26 @@ class MainWindow(QMainWindow):
                 self.logger.error(f"Startup backup failed: {e}")
 
     def _setup_animations_internal(self):
-        """Setup animations for UI elements - called internally after content_stack is ready"""
-        # Fade effect for content stack
-        self.fade_effect = QGraphicsOpacityEffect(self.content_stack)
-        self.content_stack.setGraphicsEffect(self.fade_effect)
+        """Setup animations for UI elements - called internally after content_stack is ready.
 
-        # Single fade-in animation — applied after instant page switch
-        self.fade_animation = QPropertyAnimation(self.fade_effect, b"opacity")
-        self.fade_animation.setDuration(120)
-        self.fade_animation.setStartValue(0.55)
+        The opacity effect is applied *per page* (not on the whole stack)
+        so the outgoing page stays fully opaque while the incoming one
+        fades in.  This eliminates the "ghosting" artefact where old
+        content was visible through the semi-transparent stack widget.
+        """
+        self._page_effects: dict[int, QGraphicsOpacityEffect] = {}
+
+        for i in range(self.content_stack.count()):
+            page = self.content_stack.widget(i)
+            effect = QGraphicsOpacityEffect(page)
+            effect.setOpacity(1.0)
+            page.setGraphicsEffect(effect)
+            self._page_effects[i] = effect
+
+        # Reusable animation — target is reassigned in _switch_view
+        self.fade_animation = QPropertyAnimation()
+        self.fade_animation.setDuration(110)
+        self.fade_animation.setStartValue(0.0)
         self.fade_animation.setEndValue(1.0)
         self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
@@ -476,11 +487,15 @@ class MainWindow(QMainWindow):
             btn.style().unpolish(btn)
             btn.style().polish(btn)
 
-        # Subtle fade-in on the new view (no fade-out = no blank/delay)
+        # Subtle fade-in on the new page only (per-page effect, no ghosting)
         try:
-            if hasattr(self, "fade_animation"):
+            if hasattr(self, "fade_animation") and hasattr(self, "_page_effects"):
                 self.fade_animation.stop()
-                self.fade_animation.start()
+                effect = self._page_effects.get(index)
+                if effect:
+                    self.fade_animation.setTargetObject(effect)
+                    self.fade_animation.setPropertyName(b"opacity")
+                    self.fade_animation.start()
         except Exception:
             pass  # Animation not critical
 

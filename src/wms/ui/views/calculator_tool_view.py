@@ -3,7 +3,7 @@ Standard Calculator Tool View - Professional Windows-style Full Feature Set
 Includes Money Counter for all Vietnamese currency denominations.
 """
 
-import math
+from datetime import datetime
 
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QIntValidator
@@ -21,6 +21,7 @@ class CalculatorToolView(QWidget):
         super().__init__(parent)
         self.current_value = "0"
         self.expression = ""
+        self.expression_parts = []
         self.pending_op = None
         self.last_val = None
         self.new_num = True  # Flag: Start entering a new number?
@@ -86,7 +87,7 @@ class CalculatorToolView(QWidget):
 
         # --- LEFT: CALCULATOR ---
         calc_container = QFrame()
-        calc_container.setFixedWidth(370)
+        calc_container.setFixedWidth(390)
         calc_container.setStyleSheet(f"""
             QFrame {{
                 background-color: white;
@@ -97,7 +98,7 @@ class CalculatorToolView(QWidget):
 
         calc_layout = QVBoxLayout(calc_container)
         calc_layout.setContentsMargins(18, 18, 18, 18)
-        calc_layout.setSpacing(10)
+        calc_layout.setSpacing(12)
 
         # Header info
         header_info = QLabel("STANDARD CALCULATOR")
@@ -157,7 +158,7 @@ class CalculatorToolView(QWidget):
 
         for text, fg in actions:
             btn = QPushButton(text)
-            btn.setMinimumHeight(34)
+            btn.setMinimumHeight(36)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(f"""
                 QPushButton {{
@@ -176,35 +177,31 @@ class CalculatorToolView(QWidget):
 
         calc_layout.addLayout(action_layout)
 
-        # Button grid (6 rows, 4 columns)
+        # Button grid (5 rows, 4 columns) — basic +-×÷ layout
         grid = QGridLayout()
-        grid.setSpacing(6)
+        grid.setSpacing(8)
 
         buttons = [
-            ("%", 0, 0),
-            ("CE", 0, 1),
-            ("C", 0, 2),
-            ("⌫", 0, 3),
-            ("1/x", 1, 0),
-            ("x²", 1, 1),
-            ("√x", 1, 2),
-            ("÷", 1, 3),
-            ("7", 2, 0),
-            ("8", 2, 1),
-            ("9", 2, 2),
-            ("×", 2, 3),
-            ("4", 3, 0),
-            ("5", 3, 1),
-            ("6", 3, 2),
-            ("−", 3, 3),
-            ("1", 4, 0),
-            ("2", 4, 1),
-            ("3", 4, 2),
-            ("+", 4, 3),
-            ("±", 5, 0),
-            ("0", 5, 1),
-            (".", 5, 2),
-            ("=", 5, 3),
+            ("CE", 0, 0),
+            ("C", 0, 1),
+            ("⌫", 0, 2),
+            ("÷", 0, 3),
+            ("7", 1, 0),
+            ("8", 1, 1),
+            ("9", 1, 2),
+            ("×", 1, 3),
+            ("4", 2, 0),
+            ("5", 2, 1),
+            ("6", 2, 2),
+            ("−", 2, 3),
+            ("1", 3, 0),
+            ("2", 3, 1),
+            ("3", 3, 2),
+            ("+", 3, 3),
+            ("±", 4, 0),
+            ("0", 4, 1),
+            (".", 4, 2),
+            ("=", 4, 3),
         ]
 
         for text, r, c in buttons:
@@ -217,7 +214,7 @@ class CalculatorToolView(QWidget):
                 real_op = "-"
 
             btn = QPushButton(text)
-            btn.setMinimumSize(78, 54)
+            btn.setMinimumSize(82, 56)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
 
             is_digit = text.isdigit() or text == "."
@@ -261,7 +258,7 @@ class CalculatorToolView(QWidget):
 
         # --- RIGHT: HISTORY ---
         history_side = QFrame()
-        history_side.setFixedWidth(260)
+        history_side.setFixedWidth(300)
         history_side.setStyleSheet(f"""
             QFrame {{
                 background-color: white;
@@ -272,6 +269,7 @@ class CalculatorToolView(QWidget):
 
         hist_layout = QVBoxLayout(history_side)
         hist_layout.setContentsMargins(14, 18, 14, 14)
+        hist_layout.setSpacing(8)
 
         hist_label = QLabel("LỊCH SỬ")
         hist_label.setStyleSheet(
@@ -288,6 +286,13 @@ class CalculatorToolView(QWidget):
         self.hist_v_layout = QVBoxLayout(self.hist_container)
         self.hist_v_layout.setSpacing(10)
         self.hist_v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.hist_empty = QLabel("Chưa có lịch sử tính")
+        self.hist_empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.hist_empty.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600; padding: 24px 8px;"
+        )
+        self.hist_v_layout.addWidget(self.hist_empty)
 
         self.scroll.setWidget(self.hist_container)
         hist_layout.addWidget(self.scroll)
@@ -314,10 +319,10 @@ class CalculatorToolView(QWidget):
     # MONEY COUNTER
     # ================================================================
 
-    # All Vietnamese currency denominations (polymer notes + coins)
+    # Vietnamese currency denominations (polymer notes only, ≥ 1.000₫)
     VND_DENOMINATIONS = [
-        500_000, 200_000, 100_000, 50_000, 20_000, 10_000,
-        5_000, 2_000, 1_000, 500, 200, 100,
+        500_000, 200_000, 100_000, 50_000, 20_000,
+        10_000, 5_000, 2_000, 1_000,
     ]
 
     # Color coding by denomination tier
@@ -325,7 +330,6 @@ class CalculatorToolView(QWidget):
         500_000: "#dc2626", 200_000: "#ea580c", 100_000: "#d97706",
         50_000:  "#16a34a", 20_000: "#2563eb", 10_000: "#7c3aed",
         5_000:   "#0d9488", 2_000:  "#64748b", 1_000:  "#64748b",
-        500:     "#78716c", 200:    "#78716c", 100:    "#78716c",
     }
 
     def _build_money_counter(self, parent_widget):
@@ -389,10 +393,10 @@ class CalculatorToolView(QWidget):
         spacer.setFixedWidth(32)
         table_grid.addWidget(spacer, 0, 3)
 
-        # --- Denomination rows: 6 rows × 2 groups ---
+        # --- Denomination rows: 5 rows × 2 groups ---
         for idx, denom in enumerate(self.VND_DENOMINATIONS):
-            group = idx // 6       # 0 = left group, 1 = right group
-            row_num = (idx % 6) + 1  # rows 1..6 (row 0 is header)
+            group = idx // 5       # 0 = left group, 1 = right group
+            row_num = (idx % 5) + 1  # rows 1..5 (row 0 is header)
             base_col = group * 4
 
             color = self._DENOM_COLORS.get(denom, "#64748b")
@@ -452,6 +456,11 @@ class CalculatorToolView(QWidget):
             qty_input.textChanged.connect(lambda _: self._update_money_totals())
             table_grid.addWidget(qty_input, row_num, base_col + 1)
             self._money_inputs[denom] = qty_input
+
+            # Enter key → jump to next denomination input
+            qty_input.returnPressed.connect(
+                lambda cur_idx=idx: self._focus_next_money_input(cur_idx)
+            )
 
             # Column 2: Subtotal
             sub = QLabel("0 ₫")
@@ -555,6 +564,17 @@ class CalculatorToolView(QWidget):
         # Push card to top
         page_layout.addWidget(card)
         page_layout.addStretch()
+    def _focus_next_money_input(self, current_idx: int):
+        """Move focus to the next denomination input field."""
+        next_idx = current_idx + 1
+        if next_idx < len(self.VND_DENOMINATIONS):
+            next_denom = self.VND_DENOMINATIONS[next_idx]
+            self._money_inputs[next_denom].setFocus()
+        else:
+            # Wrap to first or just stay
+            first_denom = self.VND_DENOMINATIONS[0]
+            self._money_inputs[first_denom].setFocus()
+
     def _update_money_totals(self):
         """Recalculate all subtotals and grand total."""
         grand_total = 0
@@ -630,6 +650,7 @@ class CalculatorToolView(QWidget):
         elif t == "C":
             self.current_value = "0"
             self.expression = ""
+            self.expression_parts = []
             self.pending_op = None
             self.last_val = None
             self.new_num = True
@@ -657,43 +678,7 @@ class CalculatorToolView(QWidget):
                     self.current_value = "-" + self.current_value
                 self._update_display()
 
-        elif t == "%":
-            try:
-                val = float(self.current_value)
-                if self.last_val is not None:
-                    # Business style: 100 + 10% = 110
-                    res = self.last_val * (val / 100)
-                    self.current_value = str(res)
-                else:
-                    self.current_value = str(val / 100)
-                self._update_display()
-            except:
-                pass
-
-        elif t == "√x":
-            try:
-                self.current_value = str(math.sqrt(float(self.current_value)))
-                self._update_display()
-                self.new_num = True
-            except:
-                self.display.setText("Lỗi")
-
-        elif t == "x²":
-            try:
-                self.current_value = str(float(self.current_value) ** 2)
-                self._update_display()
-                self.new_num = True
-            except:
-                pass
-
-        elif t == "1/x":
-            try:
-                v = float(self.current_value)
-                self.current_value = str(1 / v) if v != 0 else "0"
-                self._update_display()
-                self.new_num = True
-            except:
-                pass
+        # (Advanced buttons %, √x, x², 1/x removed — basic calculator only)
 
     def _update_display(self):
         try:
@@ -709,6 +694,21 @@ class CalculatorToolView(QWidget):
 
     def _handle_op(self, next_op):
         val = float(self.current_value)
+        display_op = self._display_op(next_op)
+        display_ops = {"+", "-", "×", "÷"}
+
+        if self.new_num and self.expression_parts:
+            self.expression_parts[-1] = display_op
+            self.expression = " ".join(self.expression_parts)
+            self.prev_display.setText(self.expression)
+            self.pending_op = next_op
+            return
+
+        if not self.expression_parts:
+            self.expression_parts.append(self._fmt(val))
+        elif self.expression_parts[-1] in display_ops:
+            self.expression_parts.append(self._fmt(val))
+        self.expression_parts.append(display_op)
 
         if self.last_val is None:
             self.last_val = val
@@ -719,7 +719,7 @@ class CalculatorToolView(QWidget):
             self._update_display()
 
         self.pending_op = next_op
-        self.expression = f"{self._fmt(self.last_val)} {next_op}"
+        self.expression = " ".join(self.expression_parts)
         self.prev_display.setText(self.expression)
         self.new_num = True
 
@@ -730,7 +730,8 @@ class CalculatorToolView(QWidget):
         val = float(self.current_value)
         res = self._do_math(self.last_val, val, self.pending_op)
 
-        full_expr = f"{self._fmt(self.last_val)} {self.pending_op} {self._fmt(val)} ="
+        self.expression_parts.append(self._fmt(val))
+        full_expr = " ".join(self.expression_parts) + " ="
         self.prev_display.setText(full_expr)
 
         self.current_value = str(res)
@@ -739,6 +740,7 @@ class CalculatorToolView(QWidget):
         # Add to history
         self._add_to_history(full_expr, self.display.text())
 
+        self.expression_parts = []
         self.last_val = None
         self.pending_op = None
         self.new_num = True
@@ -761,7 +763,13 @@ class CalculatorToolView(QWidget):
             return f"{int(val):,}"
         return f"{val:,.4f}".rstrip("0").rstrip(".")
 
+    def _display_op(self, op):
+        return {"*": "×", "/": "÷", "-": "-", "+": "+"}.get(op, op)
+
     def _add_to_history(self, expr, res):
+        if self.hist_empty and self.hist_empty.parent() is not None:
+            self.hist_empty.setParent(None)
+
         frame = QFrame()
         frame.setStyleSheet(f"""
             QFrame {{
@@ -780,12 +788,20 @@ class CalculatorToolView(QWidget):
         layout = QVBoxLayout(frame)
         layout.setContentsMargins(10, 8, 10, 8)
 
+        # Timestamp
+        ts = QLabel(datetime.now().strftime("%H:%M:%S"))
+        ts.setStyleSheet(
+            "color: #94a3b8; font-size: 10px; font-weight: 600; background: transparent;"
+        )
+        ts.setAlignment(Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(ts)
+
         eq = QLabel(expr)
-        eq.setStyleSheet("color: #64748b; font-size: 11px; background: transparent;")
+        eq.setStyleSheet("color: #475569; font-size: 13px; font-weight: 600; background: transparent;")
         eq.setWordWrap(True)
 
         rs = QLabel(res)
-        rs.setStyleSheet(f"color: {AppColors.TEXT}; font-weight: 800; font-size: 16px; background: transparent;")
+        rs.setStyleSheet(f"color: {AppColors.TEXT}; font-weight: 800; font-size: 18px; background: transparent;")
         rs.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         layout.addWidget(eq)
@@ -807,6 +823,12 @@ class CalculatorToolView(QWidget):
             w = self.hist_v_layout.takeAt(0).widget()
             if w:
                 w.deleteLater()
+        self.hist_empty = QLabel("Chưa có lịch sử tính")
+        self.hist_empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.hist_empty.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600; padding: 24px 8px;"
+        )
+        self.hist_v_layout.addWidget(self.hist_empty)
 
     def _on_special_action(self, action):
         try:
@@ -830,13 +852,18 @@ class CalculatorToolView(QWidget):
         key = event.key()
         text = event.text()
 
+        # If money counter tab is active, let its inputs handle events
+        if self.sub_tabs.currentIndex() == 1:
+            super().keyPressEvent(event)
+            return
+
         # Handle number keys (both top row and numpad)
         if Qt.Key.Key_0 <= key <= Qt.Key.Key_9:
             self._on_btn(text if text else chr(key))
             return
 
         # Handle operators
-        if text in "+-*/%.":
+        if text in "+-*/.":
             self._on_btn(text)
             return
 
