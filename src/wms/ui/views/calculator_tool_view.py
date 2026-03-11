@@ -5,13 +5,14 @@ Includes Money Counter for all Vietnamese currency denominations.
 
 from datetime import datetime
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtWidgets import (QApplication, QFrame, QGridLayout, QHBoxLayout,
                              QLabel, QLineEdit, QPushButton, QScrollArea,
                              QTabWidget, QVBoxLayout, QWidget)
 
 from ..theme import AppColors
+from ...database.repositories import BankRepository
 
 
 class CalculatorToolView(QWidget):
@@ -30,6 +31,14 @@ class CalculatorToolView(QWidget):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self._setup_ui()
+        
+        # Timer to update bank total periodically
+        self._bank_timer = QTimer()
+        self._bank_timer.timeout.connect(self._update_bank_total)
+        self._bank_timer.start(5000)  # Update every 5 seconds
+        
+        # Initial update
+        QTimer.singleShot(500, self._update_bank_total)
 
     def showEvent(self, event):
         """Auto-grab keyboard focus whenever this tab becomes visible."""
@@ -563,6 +572,43 @@ class CalculatorToolView(QWidget):
 
         # Push card to top
         page_layout.addWidget(card)
+        
+        # Bank Total Card
+        bank_card = QFrame()
+        bank_card.setStyleSheet(f"""
+            QFrame#bank_card {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 rgba(16, 185, 129, 0.08), stop:1 rgba(59, 130, 246, 0.08));
+                border-radius: 16px;
+                border: 1px solid rgba(16, 185, 129, 0.2);
+            }}
+        """)
+        bank_card.setObjectName("bank_card")
+        bank_card.setMaximumHeight(120)
+        
+        bank_layout = QVBoxLayout(bank_card)
+        bank_layout.setContentsMargins(24, 16, 24, 16)
+        bank_layout.setSpacing(8)
+        
+        bank_header = QLabel("💰 TỔNG TIỀN NGÂN HÀNG")
+        bank_header.setStyleSheet(f"""
+            color: {AppColors.TEXT_SECONDARY};
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 2px;
+        """)
+        bank_layout.addWidget(bank_header)
+        
+        self.bank_total_label = QLabel("0 VND")
+        self.bank_total_label.setStyleSheet(f"""
+            color: {AppColors.SUCCESS};
+            font-weight: 800;
+            font-size: 32px;
+            letter-spacing: -0.5px;
+        """)
+        bank_layout.addWidget(self.bank_total_label)
+        
+        page_layout.addWidget(bank_card)
         page_layout.addStretch()
     def _focus_next_money_input(self, current_idx: int):
         """Move focus to the next denomination input field."""
@@ -888,3 +934,52 @@ class CalculatorToolView(QWidget):
             self._on_special_action("Copy Kết quả")
 
         super().keyPressEvent(event)
+
+    def _update_bank_total(self):
+        """Update bank total from database"""
+        try:
+            if not hasattr(self, 'bank_total_label'):
+                return
+                
+            # Get all transactions from database
+            notifs = BankRepository.get_all()
+            total = 0.0
+            
+            for n in notifs:
+                if n.amount:
+                    amt_text = n.amount.strip()
+                    if amt_text and amt_text != "---":
+                        try:
+                            # Parse amount: "+5,000,000 VND" -> 5000000
+                            clean = amt_text.replace("+", "").replace("-", "").replace("VND", "").replace(",", "").replace(" ", "").strip()
+                            value = float(clean)
+                            # Add or subtract based on sign
+                            if amt_text.startswith("-"):
+                                total -= value
+                            else:
+                                total += value
+                        except:
+                            pass
+            
+            # Format total with thousand separators
+            formatted = f"{total:,.0f}".replace(",", ".")
+            self.bank_total_label.setText(f"{formatted} VND")
+            
+            # Change color based on positive/negative
+            if total >= 0:
+                self.bank_total_label.setStyleSheet(f"""
+                    color: {AppColors.SUCCESS};
+                    font-weight: 800;
+                    font-size: 32px;
+                    letter-spacing: -0.5px;
+                """)
+            else:
+                self.bank_total_label.setStyleSheet(f"""
+                    color: {AppColors.ERROR};
+                    font-weight: 800;
+                    font-size: 32px;
+                    letter-spacing: -0.5px;
+                """)
+        except Exception as e:
+            # Silently fail if database not ready
+            pass

@@ -44,6 +44,21 @@ class BankView(QWidget):
         )
         header_layout.addWidget(header)
         header_layout.addStretch()
+        
+        # Total amount display
+        self.total_label = QLabel("Tổng: 0 VND")
+        self.total_label.setStyleSheet(f"""
+            font-size: 18px;
+            font-weight: 700;
+            color: {AppColors.SUCCESS};
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 rgba(16, 185, 129, 0.1), stop:1 rgba(16, 185, 129, 0.05));
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        """)
+        header_layout.addWidget(self.total_label)
+        
         layout.addLayout(header_layout)
 
         # Sub-tabs
@@ -191,6 +206,60 @@ class BankView(QWidget):
             self._add_row_ui(
                 n.id, n.time_str, n.source, n.amount, n.sender_name or "", n.content
             )
+        self._update_total()
+    
+    def _update_total(self):
+        """Cập nhật tổng tiền từ tất cả giao dịch"""
+        total = 0.0
+        for row in range(self.table.rowCount()):
+            # Skip hidden rows (filtered out)
+            if self.table.isRowHidden(row):
+                continue
+                
+            amt_item = self.table.item(row, 2)
+            if amt_item:
+                amt_text = amt_item.text().strip()
+                if amt_text and amt_text != "---":
+                    # Parse amount: "+5,000,000 VND" -> 5000000
+                    try:
+                        # Remove +/-, VND, spaces, commas
+                        clean = amt_text.replace("+", "").replace("-", "").replace("VND", "").replace(",", "").replace(" ", "").strip()
+                        value = float(clean)
+                        # Add or subtract based on sign
+                        if amt_text.startswith("-"):
+                            total -= value
+                        else:
+                            total += value
+                    except:
+                        pass
+        
+        # Format total with thousand separators
+        formatted = f"{total:,.0f}".replace(",", ".")
+        self.total_label.setText(f"Tổng: {formatted} VND")
+        
+        # Change color based on positive/negative
+        if total >= 0:
+            self.total_label.setStyleSheet(f"""
+                font-size: 18px;
+                font-weight: 700;
+                color: {AppColors.SUCCESS};
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 rgba(16, 185, 129, 0.1), stop:1 rgba(16, 185, 129, 0.05));
+                padding: 8px 16px;
+                border-radius: 8px;
+                border: 1px solid rgba(16, 185, 129, 0.2);
+            """)
+        else:
+            self.total_label.setStyleSheet(f"""
+                font-size: 18px;
+                font-weight: 700;
+                color: {AppColors.ERROR};
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 rgba(239, 68, 68, 0.1), stop:1 rgba(239, 68, 68, 0.05));
+                padding: 8px 16px;
+                border-radius: 8px;
+                border: 1px solid rgba(239, 68, 68, 0.2);
+            """)
 
     def apply_filter(self):
         """Apply source filter to transactions table"""
@@ -204,6 +273,9 @@ class BankView(QWidget):
                     self.table.setRowHidden(row, False)
                 else:
                     self.table.setRowHidden(row, True)
+        
+        # Update total after filter
+        self._update_total()
 
     def add_notif(self, time_str, source, amount, sender_name, raw_message):
         try:
@@ -215,6 +287,7 @@ class BankView(QWidget):
             # 2. Hiển thị lên UI (chỉ khi view đã được load lần đầu)
             if self._data_loaded:
                 self._add_row_ui(new_id, time_str, source, amount, sender_name, raw_message)
+                self._update_total()
         except Exception as e:
             # Log error silently
             logging.error(f"Error in add_notif: {e}")
@@ -365,11 +438,13 @@ class BankView(QWidget):
         if target_row != -1:
             BankRepository.delete(db_id)
             self.table.removeRow(target_row)
+            self._update_total()
 
     def clear_history(self):
         """Xóa sạch bảng lịch sử"""
         BankRepository.clear_all()
         self.table.setRowCount(0)
+        self._update_total()
 
     def cleanup(self):
         """Cleanup resources to prevent memory leaks"""
