@@ -47,8 +47,9 @@ class BankView(QWidget):
         
         # Total amount display
         self.total_label = QLabel("Tổng: 0 VND")
+        self.total_label.setWordWrap(True)
         self.total_label.setStyleSheet(f"""
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: {AppColors.SUCCESS};
             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,

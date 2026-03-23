@@ -224,18 +224,19 @@ class ApplicationBootstrap:
         """Initialize application watchdog"""
         from .watchdog import ApplicationWatchdog
 
-        # Enable watchdog in all environments
+        # Disable watchdog - not critical for small desktop app
+        # User can see UI freeze directly, no need for background monitoring
         self.watchdog = ApplicationWatchdog(
-            logger=self.logger, check_interval=60, enabled=True  # Check every minute
+            logger=self.logger, check_interval=60, enabled=False  # Disabled
         )
 
-        # Start watchdog
-        self.watchdog.start()
+        # Don't start watchdog
+        # self.watchdog.start()
 
         # Store in container
         self.container._services["watchdog"] = self.watchdog
 
-        self.logger.info("Watchdog initialized and started")
+        self.logger.info("Watchdog initialized (disabled)")
 
     def _initialize_health_check(self):
         """Initialize health check system"""

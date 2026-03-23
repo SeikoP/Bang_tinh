@@ -37,11 +37,12 @@ class HistoryDetailDialog(QDialog):
         info.addWidget(QLabel(f"Ca: <b>{self.history.shift_name or 'N/A'}</b>"))
 
         total = QLabel(f"Tổng: <b>{int(self.history.total_amount // 1000):,}</b>")
+        total.setWordWrap(True)
         total.setStyleSheet(f"""
             color: white;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
-            padding: 8px 16px;
+            padding: 8px 14px;
             background: {AppColors.SUCCESS};
             border-radius: 6px;
         """)

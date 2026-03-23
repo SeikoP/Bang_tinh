@@ -81,6 +81,7 @@ class ProductPickerDialog(QDialog):
         combo_row.addWidget(combo_price_label)
         
         self._combo_total_label = QLabel("0")
+        self._combo_total_label.setWordWrap(True)
         self._combo_total_label.setStyleSheet(f"font-weight: 700; color: {AppColors.PRIMARY};")
         combo_row.addWidget(self._combo_total_label)
         
@@ -122,7 +123,8 @@ class ProductPickerDialog(QDialog):
         total_label.setStyleSheet("font-size: 14px; font-weight: 600;")
         total_row.addWidget(total_label)
         self._total_label = QLabel("0")
-        self._total_label.setStyleSheet(f"font-size: 20px; font-weight: 800; color: {AppColors.SUCCESS};")
+        self._total_label.setWordWrap(True)
+        self._total_label.setStyleSheet(f"font-size: 18px; font-weight: 800; color: {AppColors.SUCCESS};")
         total_row.addWidget(self._total_label)
         layout.addLayout(total_row)
 

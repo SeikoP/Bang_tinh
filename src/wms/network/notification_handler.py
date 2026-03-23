@@ -356,7 +356,7 @@ class NotificationHandler(BaseHTTPRequestHandler):
             if not container:
                 raise Exception("Container not found")
 
-            repo = container.get("session_repository")
+            repo = container.get("session_repo")
             if not repo:
                 raise Exception("Session repository not found")
 

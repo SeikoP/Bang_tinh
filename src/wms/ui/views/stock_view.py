@@ -175,12 +175,14 @@ class StockView(QWidget):
         stats_layout.setContentsMargins(20, 12, 20, 12)
 
         self.total_products_label = QLabel("Sản phẩm: 0")
-        self.total_products_label.setStyleSheet("color: white; font-weight: 700; font-size: 14px;")
+        self.total_products_label.setWordWrap(True)
+        self.total_products_label.setStyleSheet("color: white; font-weight: 700; font-size: 13px;")
         stats_layout.addWidget(self.total_products_label)
         stats_layout.addSpacing(20)
 
         self.total_stock_label = QLabel("Tổng tồn: 0")
-        self.total_stock_label.setStyleSheet("color: #94A3B8; font-weight: 600; font-size: 14px;")
+        self.total_stock_label.setWordWrap(True)
+        self.total_stock_label.setStyleSheet("color: #94A3B8; font-weight: 600; font-size: 13px;")
         stats_layout.addWidget(self.total_stock_label)
         header_panel.addWidget(stats_frame)
         header_panel.addStretch()
@@ -191,7 +193,8 @@ class StockView(QWidget):
 
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Tìm sản phẩm...")
-        self.search_input.setFixedWidth(250)
+        self.search_input.setMinimumWidth(200)
+        self.search_input.setMaximumWidth(300)
         self.search_input.setMinimumHeight(_em(self, 2.6))
         self.search_input.setStyleSheet(f"""
             QLineEdit {{
@@ -209,7 +212,8 @@ class StockView(QWidget):
         refresh_btn = QPushButton("Làm mới")
         refresh_btn.setObjectName("secondary")
         refresh_btn.setMinimumHeight(_em(self, 2.6))
-        refresh_btn.setFixedWidth(120)
+        refresh_btn.setMinimumWidth(100)
+        refresh_btn.setMaximumWidth(140)
         refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         refresh_btn.clicked.connect(self.refresh_data)
         search_layout.addWidget(refresh_btn)

@@ -20,7 +20,7 @@ class QuickPriceDialog(QDialog):
 
     def _setup_ui(self):
         self.setWindowTitle("Thêm giá nhanh" if not self.item else "Sửa giá nhanh")
-        self.setFixedWidth(350)
+        self.setMinimumWidth(350)
 
         layout = QVBoxLayout(self)
         layout.setSpacing(16)

@@ -215,11 +215,12 @@ class SaveSessionDialog(QDialog):
 
         # Total
         total_label = QLabel(f"Tổng cộng: {int(self.total_amount // 1000):,}")
+        total_label.setWordWrap(True)
         total_label.setStyleSheet(f"""
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             color: white;
-            padding: 16px;
+            padding: 14px;
             background: {AppColors.SUCCESS};
             border-radius: 10px;
         """)
@@ -380,11 +381,12 @@ class CalculationView(QWidget):
         footer.addStretch()
 
         self.total_label = QLabel("TỔNG TIỀN: 0")
+        self.total_label.setWordWrap(True)
         self.total_label.setStyleSheet(f"""
             color: white;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 800;
-            padding: 10px 32px;
+            padding: 10px 24px;
             background: {AppColors.SUCCESS};
             border-radius: 10px;
         """)
