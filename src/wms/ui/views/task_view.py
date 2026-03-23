@@ -2,15 +2,187 @@
 Task View - Quản lý ghi chú công việc
 """
 
+import re
+
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QDialog,
                              QFormLayout, QHBoxLayout, QHeaderView, QLabel,
                              QLineEdit, QMessageBox, QPushButton, QTableWidget,
-                             QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget)
+                             QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget,
+                             QScrollArea, QFrame, QSpinBox)
 
 from ...database.task_repository import TaskRepository
+from ...database.repositories import ProductRepository
 from ..theme import AppColors
+
+
+def _eval_expression(text: str) -> float:
+    """Tính biểu thức số học đơn giản: '12 + 14', '10k + 5k', v.v."""
+    text = text.strip().lower()
+    if not text:
+        return 0.0
+    # Expand shorthand: 10k -> 10000, 1m -> 1000000
+    text = re.sub(r'(\d+(?:\.\d+)?)k', lambda m: str(float(m.group(1)) * 1000), text)
+    text = re.sub(r'(\d+(?:\.\d+)?)m', lambda m: str(float(m.group(1)) * 1_000_000), text)
+    # Only allow safe characters: digits, spaces, +, -, *, /, (, ), .
+    if re.fullmatch(r'[\d\s\+\-\*\/\(\)\.]+', text):
+        try:
+            return float(eval(text))  # noqa: S307 - safe, pattern-validated
+        except Exception:
+            pass
+    # Fallback: plain number
+    try:
+        return float(text)
+    except ValueError:
+        return 0.0
+
+
+class ProductPickerDialog(QDialog):
+    """Dialog chọn sản phẩm và số lượng để tính tổng tiền"""
+
+    def __init__(self, selected_items=None, parent=None):
+        super().__init__(parent)
+        # selected_items: list of {product_id, name, unit_price, qty}
+        self._selected = {item["product_id"]: item.copy() for item in (selected_items or [])}
+        self.result_items = None
+        self._setup_ui()
+
+    def _setup_ui(self):
+        self.setWindowTitle("Chọn sản phẩm")
+        self.setMinimumWidth(520)
+        self.setMinimumHeight(480)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+        layout.setContentsMargins(16, 16, 16, 16)
+
+        # Search
+        search_row = QHBoxLayout()
+        self._search = QLineEdit()
+        self._search.setPlaceholderText("🔍 Tìm sản phẩm...")
+        self._search.textChanged.connect(self._filter_products)
+        search_row.addWidget(self._search)
+        layout.addLayout(search_row)
+
+        # Product list
+        self._product_table = QTableWidget()
+        self._product_table.setColumnCount(4)
+        self._product_table.setHorizontalHeaderLabels(["Sản phẩm", "Đơn giá", "Số lượng", "Thành tiền"])
+        self._product_table.horizontalHeader().setStretchLastSection(False)
+        self._product_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        self._product_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        self._product_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        self._product_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self._product_table.setColumnWidth(1, 100)
+        self._product_table.setColumnWidth(2, 90)
+        self._product_table.setColumnWidth(3, 110)
+        self._product_table.verticalHeader().setVisible(False)
+        self._product_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
+        self._product_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        layout.addWidget(self._product_table, 1)
+
+        # Total
+        total_row = QHBoxLayout()
+        total_row.addStretch()
+        self._total_label = QLabel("Tổng: 0 đ")
+        self._total_label.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {AppColors.PRIMARY};")
+        total_row.addWidget(self._total_label)
+        layout.addLayout(total_row)
+
+        # Buttons
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+        cancel = QPushButton("Hủy")
+        cancel.setObjectName("secondary")
+        cancel.clicked.connect(self.reject)
+        btn_row.addWidget(cancel)
+        btn_row.addStretch()
+        ok = QPushButton("Xác nhận")
+        ok.setObjectName("primary")
+        ok.clicked.connect(self._confirm)
+        btn_row.addWidget(ok)
+        layout.addLayout(btn_row)
+
+        self._load_products()
+
+    def _load_products(self, keyword=""):
+        try:
+            if keyword:
+                products = ProductRepository.search(keyword)
+            else:
+                products = ProductRepository.get_all()
+        except Exception:
+            products = []
+
+        self._products = products
+        self._product_table.setRowCount(len(products))
+
+        for row, p in enumerate(products):
+            # Name
+            name_item = QTableWidgetItem(p.name)
+            name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self._product_table.setItem(row, 0, name_item)
+
+            # Unit price
+            price_item = QTableWidgetItem(f"{p.unit_price:,.0f}")
+            price_item.setFlags(price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            price_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._product_table.setItem(row, 1, price_item)
+
+            # Qty spinner
+            spin = QSpinBox()
+            spin.setRange(0, 9999)
+            spin.setValue(self._selected.get(p.id, {}).get("qty", 0))
+            spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            spin.valueChanged.connect(lambda val, pid=p.id, price=p.unit_price, r=row: self._on_qty_changed(pid, price, val, r))
+            self._product_table.setCellWidget(row, 2, spin)
+
+            # Subtotal
+            qty = self._selected.get(p.id, {}).get("qty", 0)
+            sub = qty * p.unit_price
+            sub_item = QTableWidgetItem(f"{sub:,.0f}" if sub > 0 else "-")
+            sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            sub_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._product_table.setItem(row, 3, sub_item)
+
+        self._update_total()
+
+    def _filter_products(self, text):
+        self._load_products(text.strip())
+
+    def _on_qty_changed(self, product_id, unit_price, qty, row):
+        if qty > 0:
+            p = next((x for x in self._products if x.id == product_id), None)
+            self._selected[product_id] = {
+                "product_id": product_id,
+                "name": p.name if p else "",
+                "unit_price": unit_price,
+                "qty": qty,
+            }
+        else:
+            self._selected.pop(product_id, None)
+
+        # Update subtotal cell
+        sub = qty * unit_price
+        sub_item = QTableWidgetItem(f"{sub:,.0f}" if sub > 0 else "-")
+        sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        sub_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._product_table.setItem(row, 3, sub_item)
+        self._update_total()
+
+    def _update_total(self):
+        total = sum(v["qty"] * v["unit_price"] for v in self._selected.values())
+        self._total_label.setText(f"Tổng: {total:,.0f} đ")
+
+    def _confirm(self):
+        self.result_items = [v for v in self._selected.values() if v["qty"] > 0]
+        self.accept()
+
+    def get_total(self) -> float:
+        if self.result_items is None:
+            return 0.0
+        return sum(v["qty"] * v["unit_price"] for v in self.result_items)
 
 
 class TaskDialog(QDialog):
@@ -20,7 +192,26 @@ class TaskDialog(QDialog):
         super().__init__(parent)
         self.task = task
         self.result_data = None
+        self._picked_items = []  # list of {product_id, name, unit_price, qty}
+        # Restore picked items from notes if editing
+        if task and task.notes:
+            self._picked_items = self._parse_notes_items(task.notes)
         self._setup_ui()
+
+    def _parse_notes_items(self, notes: str):
+        """Parse stored product list from notes field"""
+        items = []
+        for line in notes.splitlines():
+            # Format: "ProductName x qty @ price"
+            m = re.match(r'^(.+?) x (\d+) @ ([\d.]+)$', line.strip())
+            if m:
+                items.append({
+                    "product_id": -1,
+                    "name": m.group(1),
+                    "qty": int(m.group(2)),
+                    "unit_price": float(m.group(3)),
+                })
+        return items
 
     def keyPressEvent(self, event):
         """Handle Enter key to submit dialog"""
