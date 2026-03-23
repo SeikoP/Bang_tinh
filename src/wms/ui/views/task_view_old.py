@@ -46,7 +46,7 @@ def _eval_expression(text: str) -> float:
 
 
 class ProductPickerDialog(QDialog):
-    """Dialog chọn sản phẩm - nhanh, dễ dùng"""
+    """Dialog chọn sản phẩm"""
 
     def __init__(self, selected_items=None, parent=None):
         super().__init__(parent)
@@ -56,118 +56,62 @@ class ProductPickerDialog(QDialog):
 
     def _setup_ui(self):
         self.setWindowTitle("Chọn sản phẩm")
-        self.setMinimumWidth(550)
-        self.setMinimumHeight(550)
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(500)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-        layout.setContentsMargins(20, 20, 20, 20)
-
-        # Quick add combo đêm
-        combo_row = QHBoxLayout()
-        combo_label = QLabel("Combo đêm:")
-        combo_label.setStyleSheet("font-weight: 600;")
-        combo_row.addWidget(combo_label)
-        
-        self._combo_spin = QSpinBox()
-        self._combo_spin.setRange(0, 99)
-        self._combo_spin.setValue(0)
-        self._combo_spin.setFixedWidth(80)
-        self._combo_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        combo_row.addWidget(self._combo_spin)
-        
-        combo_price_label = QLabel("x 50 = ")
-        combo_price_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY};")
-        combo_row.addWidget(combo_price_label)
-        
-        self._combo_total_label = QLabel("0")
-        self._combo_total_label.setStyleSheet(f"font-weight: 700; color: {AppColors.PRIMARY};")
-        combo_row.addWidget(self._combo_total_label)
-        
-        self._combo_spin.valueChanged.connect(self._on_combo_changed)
-        combo_row.addStretch()
-        layout.addLayout(combo_row)
-
-        # Separator
-        sep = QLabel()
-        sep.setFixedHeight(1)
-        sep.setStyleSheet(f"background: {AppColors.BORDER};")
-        layout.addWidget(sep)
+        layout.setSpacing(12)
+        layout.setContentsMargins(16, 16, 16, 16)
 
         # Search
         self._search = QLineEdit()
-        self._search.setPlaceholderText("🔍 Tìm sản phẩm khác...")
+        self._search.setPlaceholderText("🔍 Tìm sản phẩm...")
         self._search.textChanged.connect(self._filter_products)
         layout.addWidget(self._search)
 
-        # Product list - simpler table
+        # Product list
         self._product_table = QTableWidget()
-        self._product_table.setColumnCount(3)
-        self._product_table.setHorizontalHeaderLabels(["Sản phẩm", "Giá", "Số lượng"])
+        self._product_table.setColumnCount(4)
+        self._product_table.setHorizontalHeaderLabels(["Sản phẩm", "Giá", "SL", "Tổng"])
         header = self._product_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         self._product_table.setColumnWidth(1, 80)
-        self._product_table.setColumnWidth(2, 120)
+        self._product_table.setColumnWidth(2, 80)
+        self._product_table.setColumnWidth(3, 90)
         self._product_table.verticalHeader().setVisible(False)
         self._product_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
-        self._product_table.setAlternatingRowColors(True)
         layout.addWidget(self._product_table, 1)
 
         # Total
         total_row = QHBoxLayout()
         total_row.addStretch()
-        total_label = QLabel("TỔNG:")
-        total_label.setStyleSheet("font-size: 14px; font-weight: 600;")
-        total_row.addWidget(total_label)
-        self._total_label = QLabel("0")
-        self._total_label.setStyleSheet(f"font-size: 20px; font-weight: 800; color: {AppColors.SUCCESS};")
+        self._total_label = QLabel("Tổng: 0")
+        self._total_label.setStyleSheet(f"font-size: 16px; font-weight: 700; color: {AppColors.PRIMARY};")
         total_row.addWidget(self._total_label)
         layout.addLayout(total_row)
 
         # Buttons
         btn_row = QHBoxLayout()
-        btn_row.setSpacing(12)
+        btn_row.setSpacing(10)
         cancel = QPushButton("Hủy")
         cancel.setObjectName("secondary")
-        cancel.setFixedHeight(44)
         cancel.clicked.connect(self.reject)
         btn_row.addWidget(cancel)
         btn_row.addStretch()
         ok = QPushButton("Xác nhận")
         ok.setObjectName("primary")
-        ok.setFixedHeight(44)
         ok.clicked.connect(self._confirm)
         btn_row.addWidget(ok)
         layout.addLayout(btn_row)
 
-        # Load combo value if exists
-        combo_item = next((it for it in self._selected.values() if it["name"] == "Combo đêm"), None)
-        if combo_item:
-            self._combo_spin.setValue(combo_item["qty"])
-
         self._load_products()
-
-    def _on_combo_changed(self, qty):
-        """Handle combo đêm quantity change"""
-        combo_price = 50000  # 50k
-        if qty > 0:
-            self._selected[-1] = {  # Use -1 as special ID for combo
-                "product_id": -1,
-                "name": "Combo đêm",
-                "unit_price": combo_price,
-                "qty": qty,
-            }
-        else:
-            self._selected.pop(-1, None)
-        
-        combo_total = qty * combo_price
-        self._combo_total_label.setText(f"{int(combo_total // 1000):,}")
-        self._update_total()
 
     def _load_products(self, keyword=""):
         try:
+            from ...database.connection import get_connection
             from ...database.repositories import ProductRepository
             products = ProductRepository.get_all()
             if keyword:
@@ -183,46 +127,36 @@ class ProductPickerDialog(QDialog):
             # Name
             name_item = QTableWidgetItem(p.name)
             name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            font = name_item.font()
-            font.setPointSize(10)
-            name_item.setFont(font)
             self._product_table.setItem(row, 0, name_item)
 
             # Unit price
             price_item = QTableWidgetItem(f"{int(p.unit_price // 1000):,}")
             price_item.setFlags(price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             price_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            price_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
             self._product_table.setItem(row, 1, price_item)
 
-            # Qty spinner - bigger, easier to use
-            spin_container = QWidget()
-            spin_layout = QHBoxLayout(spin_container)
-            spin_layout.setContentsMargins(8, 4, 8, 4)
-            
+            # Qty spinner
             spin = QSpinBox()
-            spin.setRange(0, 999)
+            spin.setRange(0, 9999)
             spin.setValue(self._selected.get(p.id, {}).get("qty", 0))
             spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            spin.setFixedHeight(36)
-            spin.setStyleSheet("""
-                QSpinBox {
-                    font-size: 13px;
-                    font-weight: 600;
-                    padding: 4px;
-                }
-            """)
-            spin.valueChanged.connect(lambda val, pid=p.id, pname=p.name, price=p.unit_price: self._on_qty_changed(pid, pname, price, val))
-            spin_layout.addWidget(spin)
-            
-            self._product_table.setCellWidget(row, 2, spin_container)
+            spin.valueChanged.connect(lambda val, pid=p.id, pname=p.name, price=p.unit_price, r=row: self._on_qty_changed(pid, pname, price, val, r))
+            self._product_table.setCellWidget(row, 2, spin)
+
+            # Subtotal
+            qty = self._selected.get(p.id, {}).get("qty", 0)
+            sub = qty * p.unit_price
+            sub_item = QTableWidgetItem(f"{int(sub // 1000):,}" if sub > 0 else "-")
+            sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            sub_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._product_table.setItem(row, 3, sub_item)
 
         self._update_total()
 
     def _filter_products(self, text):
         self._load_products(text.strip())
 
-    def _on_qty_changed(self, product_id, product_name, unit_price, qty):
+    def _on_qty_changed(self, product_id, product_name, unit_price, qty, row):
         if qty > 0:
             self._selected[product_id] = {
                 "product_id": product_id,
@@ -232,12 +166,18 @@ class ProductPickerDialog(QDialog):
             }
         else:
             self._selected.pop(product_id, None)
-        
+
+        # Update subtotal
+        sub = qty * unit_price
+        sub_item = QTableWidgetItem(f"{int(sub // 1000):,}" if sub > 0 else "-")
+        sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        sub_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._product_table.setItem(row, 3, sub_item)
         self._update_total()
 
     def _update_total(self):
         total = sum(v["qty"] * v["unit_price"] for v in self._selected.values())
-        self._total_label.setText(f"{int(total // 1000):,}")
+        self._total_label.setText(f"Tổng: {int(total // 1000):,}")
 
     def _confirm(self):
         self.result_items = [v for v in self._selected.values() if v["qty"] > 0]

@@ -90,20 +90,20 @@ def normalize_input(value_str: str, conversion: int) -> int:
     return parse_to_small_units(value_str, conversion)
 
 
-def format_currency(amount: Union[int, float], symbol: str = "đ") -> str:
+def format_currency(amount: Union[int, float], symbol: str = "") -> str:
     """
-    Format số tiền theo định dạng Việt Nam.
-
-    Example: 1500000 -> "1,500,000 đ"
-
-    Args:
-        amount: Số tiền
-        symbol: Ký hiệu tiền tệ
-
-    Returns:
-        Chuỗi số tiền đã format
+    Format số tiền theo đơn vị nghìn đồng.
+    20000 -> "20", 1500000 -> "1,500"
     """
-    return f"{amount:,.0f} {symbol}"
+    k = amount / 1000
+    if k == int(k):
+        return f"{int(k):,}"
+    return f"{k:,.1f}"
+
+
+def fmt_k(amount: Union[int, float]) -> str:
+    """Shorthand: format tiền sang nghìn đồng, không có ký hiệu."""
+    return format_currency(amount)
 
 
 def format_date(d: Union[date, datetime, str]) -> str:

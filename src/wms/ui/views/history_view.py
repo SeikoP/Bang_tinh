@@ -36,7 +36,7 @@ class HistoryDetailDialog(QDialog):
         info.addWidget(QLabel(f"Ngày: <b>{self.history.session_date}</b>"))
         info.addWidget(QLabel(f"Ca: <b>{self.history.shift_name or 'N/A'}</b>"))
 
-        total = QLabel(f"Tổng: <b>{self.history.total_amount:,.0f} VNĐ</b>")
+        total = QLabel(f"Tổng: <b>{int(self.history.total_amount // 1000):,}</b>")
         total.setStyleSheet(f"""
             color: white;
             font-size: 15px;
@@ -77,7 +77,7 @@ class HistoryDetailDialog(QDialog):
                     cell.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                     table.setItem(row, col, cell)
 
-                amount = QTableWidgetItem(f"{item.amount:,.0f}")
+                amount = QTableWidgetItem(f"{int(item.amount // 1000):,}")
                 amount.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 amount.setForeground(QColor(AppColors.SUCCESS))
                 table.setItem(row, 4, amount)
@@ -174,7 +174,7 @@ class HistoryView(QWidget):
             self._set_cell(
                 row,
                 3,
-                f"{h.total_amount:,.0f}",
+                f"{int(h.total_amount // 1000):,}",
                 center=True,
                 fg=AppColors.SUCCESS,
                 bold=True,

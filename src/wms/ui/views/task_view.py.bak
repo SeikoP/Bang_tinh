@@ -9,7 +9,8 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QDialog,
                              QFormLayout, QHBoxLayout, QHeaderView, QLabel,
                              QLineEdit, QMessageBox, QPushButton, QTableWidget,
-                             QTableWidgetItem, QVBoxLayout, QWidget, QSpinBox)
+                             QTableWidgetItem, QTextEdit, QVBoxLayout, QWidget,
+                             QScrollArea, QFrame, QSpinBox)
 
 from ...database.task_repository import TaskRepository
 from ...database.repositories import ProductRepository
@@ -17,36 +18,28 @@ from ..theme import AppColors
 
 
 def _eval_expression(text: str) -> float:
-    """Tính biểu thức số học: '12 + 14', '10k + 5k', '35 + 50' (nghìn đồng)"""
+    """Tính biểu thức số học đơn giản: '12 + 14', '10k + 5k', v.v."""
     text = text.strip().lower()
     if not text:
         return 0.0
     # Expand shorthand: 10k -> 10000, 1m -> 1000000
     text = re.sub(r'(\d+(?:\.\d+)?)k', lambda m: str(float(m.group(1)) * 1000), text)
     text = re.sub(r'(\d+(?:\.\d+)?)m', lambda m: str(float(m.group(1)) * 1_000_000), text)
-    # Only allow safe characters
+    # Only allow safe characters: digits, spaces, +, -, *, /, (, ), .
     if re.fullmatch(r'[\d\s\+\-\*\/\(\)\.]+', text):
         try:
-            result = float(eval(text))  # noqa: S307
-            # Auto-convert to full amount if result is small (< 1000 = nghìn đồng)
-            if result < 1000:
-                result *= 1000
-            return result
+            return float(eval(text))  # noqa: S307 - safe, pattern-validated
         except Exception:
             pass
     # Fallback: plain number
     try:
-        val = float(text)
-        # Auto-convert small numbers to thousands
-        if val < 1000:
-            val *= 1000
-        return val
+        return float(text)
     except ValueError:
         return 0.0
 
 
 class ProductPickerDialog(QDialog):
-    """Dialog chọn sản phẩm - nhanh, dễ dùng"""
+    """Dialog chọn sản phẩm - đơn giản, nhanh"""
 
     def __init__(self, selected_items=None, parent=None):
         super().__init__(parent)
@@ -56,120 +49,65 @@ class ProductPickerDialog(QDialog):
 
     def _setup_ui(self):
         self.setWindowTitle("Chọn sản phẩm")
-        self.setMinimumWidth(550)
-        self.setMinimumHeight(550)
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(500)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-        layout.setContentsMargins(20, 20, 20, 20)
-
-        # Quick add combo đêm
-        combo_row = QHBoxLayout()
-        combo_label = QLabel("Combo đêm:")
-        combo_label.setStyleSheet("font-weight: 600;")
-        combo_row.addWidget(combo_label)
-        
-        self._combo_spin = QSpinBox()
-        self._combo_spin.setRange(0, 99)
-        self._combo_spin.setValue(0)
-        self._combo_spin.setFixedWidth(80)
-        self._combo_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        combo_row.addWidget(self._combo_spin)
-        
-        combo_price_label = QLabel("x 50 = ")
-        combo_price_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY};")
-        combo_row.addWidget(combo_price_label)
-        
-        self._combo_total_label = QLabel("0")
-        self._combo_total_label.setStyleSheet(f"font-weight: 700; color: {AppColors.PRIMARY};")
-        combo_row.addWidget(self._combo_total_label)
-        
-        self._combo_spin.valueChanged.connect(self._on_combo_changed)
-        combo_row.addStretch()
-        layout.addLayout(combo_row)
-
-        # Separator
-        sep = QLabel()
-        sep.setFixedHeight(1)
-        sep.setStyleSheet(f"background: {AppColors.BORDER};")
-        layout.addWidget(sep)
+        layout.setSpacing(12)
+        layout.setContentsMargins(16, 16, 16, 16)
 
         # Search
         self._search = QLineEdit()
-        self._search.setPlaceholderText("🔍 Tìm sản phẩm khác...")
+        self._search.setPlaceholderText("🔍 Tìm sản phẩm...")
         self._search.textChanged.connect(self._filter_products)
         layout.addWidget(self._search)
 
-        # Product list - simpler table
+        # Product list
         self._product_table = QTableWidget()
-        self._product_table.setColumnCount(3)
-        self._product_table.setHorizontalHeaderLabels(["Sản phẩm", "Giá", "Số lượng"])
+        self._product_table.setColumnCount(4)
+        self._product_table.setHorizontalHeaderLabels(["Sản phẩm", "Giá", "SL", "Tổng"])
         header = self._product_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
         self._product_table.setColumnWidth(1, 80)
-        self._product_table.setColumnWidth(2, 120)
+        self._product_table.setColumnWidth(2, 80)
+        self._product_table.setColumnWidth(3, 90)
         self._product_table.verticalHeader().setVisible(False)
         self._product_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
-        self._product_table.setAlternatingRowColors(True)
         layout.addWidget(self._product_table, 1)
 
         # Total
         total_row = QHBoxLayout()
         total_row.addStretch()
-        total_label = QLabel("TỔNG:")
-        total_label.setStyleSheet("font-size: 14px; font-weight: 600;")
-        total_row.addWidget(total_label)
-        self._total_label = QLabel("0")
-        self._total_label.setStyleSheet(f"font-size: 20px; font-weight: 800; color: {AppColors.SUCCESS};")
+        self._total_label = QLabel("Tổng: 0")
+        self._total_label.setStyleSheet(f"font-size: 16px; font-weight: 700; color: {AppColors.PRIMARY};")
         total_row.addWidget(self._total_label)
         layout.addLayout(total_row)
 
         # Buttons
         btn_row = QHBoxLayout()
-        btn_row.setSpacing(12)
+        btn_row.setSpacing(10)
         cancel = QPushButton("Hủy")
         cancel.setObjectName("secondary")
-        cancel.setFixedHeight(44)
         cancel.clicked.connect(self.reject)
         btn_row.addWidget(cancel)
         btn_row.addStretch()
         ok = QPushButton("Xác nhận")
         ok.setObjectName("primary")
-        ok.setFixedHeight(44)
         ok.clicked.connect(self._confirm)
         btn_row.addWidget(ok)
         layout.addLayout(btn_row)
 
-        # Load combo value if exists
-        combo_item = next((it for it in self._selected.values() if it["name"] == "Combo đêm"), None)
-        if combo_item:
-            self._combo_spin.setValue(combo_item["qty"])
-
         self._load_products()
-
-    def _on_combo_changed(self, qty):
-        """Handle combo đêm quantity change"""
-        combo_price = 50000  # 50k
-        if qty > 0:
-            self._selected[-1] = {  # Use -1 as special ID for combo
-                "product_id": -1,
-                "name": "Combo đêm",
-                "unit_price": combo_price,
-                "qty": qty,
-            }
-        else:
-            self._selected.pop(-1, None)
-        
-        combo_total = qty * combo_price
-        self._combo_total_label.setText(f"{int(combo_total // 1000):,}")
-        self._update_total()
 
     def _load_products(self, keyword=""):
         try:
-            from ...database.repositories import ProductRepository
-            products = ProductRepository.get_all()
+            from ...database.connection import get_connection
+            conn = get_connection()
+            repo = ProductRepository(conn)
+            products = repo.get_all()
             if keyword:
                 keyword = keyword.lower()
                 products = [p for p in products if keyword in p.name.lower()]
@@ -183,46 +121,36 @@ class ProductPickerDialog(QDialog):
             # Name
             name_item = QTableWidgetItem(p.name)
             name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            font = name_item.font()
-            font.setPointSize(10)
-            name_item.setFont(font)
             self._product_table.setItem(row, 0, name_item)
 
             # Unit price
             price_item = QTableWidgetItem(f"{int(p.unit_price // 1000):,}")
             price_item.setFlags(price_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             price_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            price_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
             self._product_table.setItem(row, 1, price_item)
 
-            # Qty spinner - bigger, easier to use
-            spin_container = QWidget()
-            spin_layout = QHBoxLayout(spin_container)
-            spin_layout.setContentsMargins(8, 4, 8, 4)
-            
+            # Qty spinner
             spin = QSpinBox()
-            spin.setRange(0, 999)
+            spin.setRange(0, 9999)
             spin.setValue(self._selected.get(p.id, {}).get("qty", 0))
             spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            spin.setFixedHeight(36)
-            spin.setStyleSheet("""
-                QSpinBox {
-                    font-size: 13px;
-                    font-weight: 600;
-                    padding: 4px;
-                }
-            """)
-            spin.valueChanged.connect(lambda val, pid=p.id, pname=p.name, price=p.unit_price: self._on_qty_changed(pid, pname, price, val))
-            spin_layout.addWidget(spin)
-            
-            self._product_table.setCellWidget(row, 2, spin_container)
+            spin.valueChanged.connect(lambda val, pid=p.id, pname=p.name, price=p.unit_price, r=row: self._on_qty_changed(pid, pname, price, val, r))
+            self._product_table.setCellWidget(row, 2, spin)
+
+            # Subtotal
+            qty = self._selected.get(p.id, {}).get("qty", 0)
+            sub = qty * p.unit_price
+            sub_item = QTableWidgetItem(f"{int(sub // 1000):,}" if sub > 0 else "-")
+            sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            sub_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            self._product_table.setItem(row, 3, sub_item)
 
         self._update_total()
 
     def _filter_products(self, text):
         self._load_products(text.strip())
 
-    def _on_qty_changed(self, product_id, product_name, unit_price, qty):
+    def _on_qty_changed(self, product_id, product_name, unit_price, qty, row):
         if qty > 0:
             self._selected[product_id] = {
                 "product_id": product_id,
@@ -232,12 +160,52 @@ class ProductPickerDialog(QDialog):
             }
         else:
             self._selected.pop(product_id, None)
-        
+
+        # Update subtotal
+        sub = qty * unit_price
+        sub_item = QTableWidgetItem(f"{int(sub // 1000):,}" if sub > 0 else "-")
+        sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        sub_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._product_table.setItem(row, 3, sub_item)
         self._update_total()
 
     def _update_total(self):
         total = sum(v["qty"] * v["unit_price"] for v in self._selected.values())
-        self._total_label.setText(f"{int(total // 1000):,}")
+        self._total_label.setText(f"Tổng: {int(total // 1000):,}")
+
+    def _confirm(self):
+        self.result_items = [v for v in self._selected.values() if v["qty"] > 0]
+        self.accept()
+
+    def get_total(self) -> float:
+        if self.result_items is None:
+            return 0.0
+        return sum(v["qty"] * v["unit_price"] for v in self.result_items)
+    def _filter_products(self, text):
+        self._load_products(text.strip())
+
+    def _on_qty_changed(self, product_id, product_name, unit_price, qty, row):
+        if qty > 0:
+            self._selected[product_id] = {
+                "product_id": product_id,
+                "name": product_name,
+                "unit_price": unit_price,
+                "qty": qty,
+            }
+        else:
+            self._selected.pop(product_id, None)
+
+        # Update subtotal
+        sub = qty * unit_price
+        sub_item = QTableWidgetItem(f"{int(sub // 1000):,}" if sub > 0 else "-")
+        sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+        sub_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._product_table.setItem(row, 3, sub_item)
+        self._update_total()
+
+    def _update_total(self):
+        total = sum(v["qty"] * v["unit_price"] for v in self._selected.values())
+        self._total_label.setText(f"Tổng: {int(total // 1000):,}")
 
     def _confirm(self):
         self.result_items = [v for v in self._selected.values() if v["qty"] > 0]
@@ -249,9 +217,8 @@ class ProductPickerDialog(QDialog):
         return sum(v["qty"] * v["unit_price"] for v in self.result_items)
 
 
-
 class TaskDialog(QDialog):
-    """Dialog thêm/sửa công việc"""
+    """Dialog thêm/sửa công việc - đơn giản, dễ dùng"""
 
     def __init__(self, task=None, parent=None):
         super().__init__(parent)
@@ -274,12 +241,23 @@ class TaskDialog(QDialog):
                     "qty": int(m.group(2)),
                     "unit_price": float(m.group(3)),
                 })
+        return items$', line.strip())
+            if m:
+                items.append({
+                    "product_id": -1,
+                    "name": m.group(1),
+                    "qty": int(m.group(2)),
+                    "unit_price": float(m.group(3)),
+                })
         return items
 
     def keyPressEvent(self, event):
-        """Handle Enter key"""
+        """Handle Enter key to submit dialog"""
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            if not event.modifiers() or event.modifiers() == Qt.KeyboardModifier.KeypadModifier:
+            if (
+                not event.modifiers()
+                or event.modifiers() == Qt.KeyboardModifier.KeypadModifier
+            ):
                 self._save()
                 return
         super().keyPressEvent(event)
@@ -308,7 +286,7 @@ class TaskDialog(QDialog):
                 self.type_combo.setCurrentIndex(index)
         form.addRow("Loại:", self.type_combo)
 
-        # Customer
+        # Customer name with autocomplete
         self.customer_input = QLineEdit()
         self.customer_input.setPlaceholderText("Nhập tên máy (VD: MAY-1) hoặc tên khách")
         machine_count = 46
@@ -332,20 +310,19 @@ class TaskDialog(QDialog):
             self.customer_input.setText(self.task.customer_name)
         form.addRow("Khách hàng:", self.customer_input)
 
-        # Amount - auto-convert nghìn đồng
+        # Amount - supports expressions like "12 + 14", "10k + 5k"
         amount_row = QHBoxLayout()
         self.amount_input = QLineEdit()
-        self.amount_input.setPlaceholderText("35 (nghìn) hoặc 35 + 50")
+        self.amount_input.setPlaceholderText("0  hoặc  12000 + 8000  hoặc  10k + 5k")
         if self.task:
-            # Display in thousands
-            self.amount_input.setText(str(int(self.task.amount // 1000)) if self.task.amount else "")
+            self.amount_input.setText(str(int(self.task.amount)) if self.task.amount else "")
         self.amount_input.editingFinished.connect(self._eval_amount)
         amount_row.addWidget(self.amount_input)
 
-        # Product picker
-        pick_btn = QPushButton("🛒")
-        pick_btn.setFixedWidth(50)
-        pick_btn.setToolTip("Chọn sản phẩm")
+        # Product picker button
+        pick_btn = QPushButton("🛒 Chọn SP")
+        pick_btn.setFixedWidth(100)
+        pick_btn.setToolTip("Chọn sản phẩm từ danh sách để tính tổng tiền")
         pick_btn.clicked.connect(self._open_product_picker)
         amount_row.addWidget(pick_btn)
         form.addRow("Số tiền:", amount_row)
@@ -373,15 +350,14 @@ class TaskDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _eval_amount(self):
-        """Auto-evaluate expression"""
+        """Auto-evaluate expression in amount field"""
         text = self.amount_input.text().strip()
         if not text:
             return
-        # Evaluate if expression
+        # Only evaluate if it looks like an expression (contains operator)
         if any(op in text for op in ('+', '-', '*', '/')):
             result = _eval_expression(text)
-            # Display in thousands
-            self.amount_input.setText(f"{int(result // 1000)}")
+            self.amount_input.setText(f"{int(result)}")
 
     def _open_product_picker(self):
         dialog = ProductPickerDialog(selected_items=self._picked_items, parent=self)
@@ -389,8 +365,7 @@ class TaskDialog(QDialog):
             self._picked_items = dialog.result_items or []
             total = dialog.get_total()
             if total > 0:
-                # Display in thousands
-                self.amount_input.setText(str(int(total // 1000)))
+                self.amount_input.setText(str(int(total)))
             self._refresh_items_label()
 
     def _refresh_items_label(self):
@@ -406,10 +381,10 @@ class TaskDialog(QDialog):
         task_type = self.type_combo.currentText()
         desc = f"{customer} - {task_type}" if customer else task_type
 
-        # Parse amount - auto-convert from thousands
+        # Parse/evaluate amount
         amount = _eval_expression(self.amount_input.text())
 
-        # Encode picked items
+        # Encode picked items into notes
         if self._picked_items:
             notes = "\n".join(
                 f"{it['name']} x {it['qty']} @ {it['unit_price']}"
@@ -428,7 +403,6 @@ class TaskDialog(QDialog):
         self.accept()
 
 
-
 class TaskView(QWidget):
     """View quản lý công việc"""
 
@@ -437,17 +411,19 @@ class TaskView(QWidget):
         self.container = container
         self.logger = container.get("logger") if container else None
 
+        # Initialize repository
         TaskRepository.create_table()
 
+        # Timer for periodic reminder
         self._reminder_timer = QTimer()
         self._reminder_timer.timeout.connect(self._check_pending_tasks)
-        self._reminder_timer.start(300000)  # 5 minutes
+        self._reminder_timer.start(300000)  # Check every 5 minutes
 
         self._data_loaded = False
         self._setup_ui()
 
     def showEvent(self, event):
-        """Lazy-load data"""
+        """Lazy-load data on first show"""
         super().showEvent(event)
         if not self._data_loaded:
             self._data_loaded = True
@@ -460,13 +436,16 @@ class TaskView(QWidget):
 
         # Header
         header = QLabel("Ghi chú / Công việc")
-        header.setStyleSheet(f"font-size: 18px; font-weight: 800; color: {AppColors.TEXT};")
+        header.setStyleSheet(
+            f"font-size: 18px; font-weight: 800; color: {AppColors.TEXT};"
+        )
         layout.addWidget(header)
 
         # Toolbar
         toolbar = QHBoxLayout()
         toolbar.setSpacing(12)
 
+        # Filter by type
         self.type_filter = QComboBox()
         self.type_filter.addItem("Tất cả", "all")
         self.type_filter.addItem("Chưa thanh toán", "unpaid")
@@ -478,15 +457,17 @@ class TaskView(QWidget):
         toolbar.addWidget(QLabel("Lọc:"))
         toolbar.addWidget(self.type_filter)
 
+        # Show completed checkbox
         self.show_completed = QCheckBox("Hiện việc đã xong")
         self.show_completed.stateChanged.connect(self.refresh_list)
         toolbar.addWidget(self.show_completed)
 
         toolbar.addStretch()
 
-        add_btn = QPushButton("➕ Thêm")
+        # Add button
+        add_btn = QPushButton("➕ Thêm công việc")
         add_btn.setObjectName("primary")
-        add_btn.setFixedWidth(120)
+        add_btn.setFixedWidth(180)
         add_btn.clicked.connect(self._add_task)
         toolbar.addWidget(add_btn)
 
@@ -494,7 +475,9 @@ class TaskView(QWidget):
 
         # Stats
         self.stats_label = QLabel()
-        self.stats_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px;")
+        self.stats_label.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px;"
+        )
         layout.addWidget(self.stats_label)
 
         # Table
@@ -504,7 +487,17 @@ class TaskView(QWidget):
 
     def _setup_table(self):
         self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["Loại", "Mô tả", "Khách", "Tiền", "Thời gian", "Ghi chú", "Thao tác"])
+        self.table.setHorizontalHeaderLabels(
+            [
+                "Loại",
+                "Mô tả",
+                "Khách hàng",
+                "Số tiền",
+                "Thời gian",
+                "Ghi chú",
+                "Thao tác",
+            ]
+        )
 
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
@@ -515,34 +508,41 @@ class TaskView(QWidget):
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 130)
-        self.table.setColumnWidth(2, 120)
-        self.table.setColumnWidth(3, 90)
-        self.table.setColumnWidth(4, 110)
-        self.table.setColumnWidth(5, 100)
-        self.table.setColumnWidth(6, 140)
+        self.table.setColumnWidth(0, 140)
+        self.table.setColumnWidth(2, 140)
+        self.table.setColumnWidth(3, 110)
+        self.table.setColumnWidth(4, 120)
+        self.table.setColumnWidth(5, 120)
+        self.table.setColumnWidth(6, 160)
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(56)
+        self.table.verticalHeader().setDefaultSectionSize(60)
 
     def refresh_list(self):
         """Refresh task list"""
         try:
+            # Get filter
             task_type = self.type_filter.currentData()
             include_completed = self.show_completed.isChecked()
 
+            # Get tasks
             if task_type == "all":
                 tasks = TaskRepository.get_all(include_completed)
             else:
                 tasks = TaskRepository.get_by_type(task_type, include_completed)
 
+            # Update stats
             pending_count = TaskRepository.count_pending()
-            self.stats_label.setText(f"Tổng: {len(tasks)} việc | Chưa xong: {pending_count} việc")
+            self.stats_label.setText(
+                f"Tổng: {len(tasks)} việc | Chưa xong: {pending_count} việc"
+            )
 
+            # Check and update pending task notification
             self._check_pending_tasks()
 
+            # Update table
             self.table.setUpdatesEnabled(False)
             self.table.setRowCount(len(tasks))
 
@@ -570,13 +570,15 @@ class TaskView(QWidget):
 
                 # Customer
                 customer_item = QTableWidgetItem(task.customer_name or "-")
-                customer_item.setFlags(customer_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                customer_item.setFlags(
+                    customer_item.flags() & ~Qt.ItemFlag.ItemIsEditable
+                )
                 customer_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 if task.completed:
                     customer_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
                 self.table.setItem(row, 2, customer_item)
 
-                # Amount
+                # Amount: Use true badge widget for visibility
                 amount_text = f"{int(task.amount // 1000):,}" if task.amount > 0 else "-"
                 amount_item = QTableWidgetItem(amount_text)
                 amount_item.setFlags(amount_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
@@ -585,7 +587,9 @@ class TaskView(QWidget):
                 if task.completed:
                     amount_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
                 elif task.amount > 0:
-                    self.table.setCellWidget(row, 3, self._create_badge(amount_text, AppColors.PRIMARY))
+                    self.table.setCellWidget(
+                        row, 3, self._create_badge(amount_text, AppColors.PRIMARY)
+                    )
                     amount_item.setForeground(QColor("transparent"))
                 else:
                     amount_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
@@ -601,13 +605,14 @@ class TaskView(QWidget):
                     time_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
                 self.table.setItem(row, 4, time_item)
 
-                # Notes
+                # Notes - show product summary if available, else raw notes
                 raw_notes = task.notes or ""
                 if raw_notes and " x " in raw_notes and " @ " in raw_notes:
+                    # Count products picked
                     lines = [l for l in raw_notes.splitlines() if " x " in l and " @ " in l]
-                    notes_text = f"🛒 {len(lines)}"
+                    notes_text = f"🛒 {len(lines)} sản phẩm" if lines else "-"
                 else:
-                    notes_text = (raw_notes[:15] + "..." if len(raw_notes) > 15 else raw_notes or "-")
+                    notes_text = (raw_notes[:20] + "..." if len(raw_notes) > 20 else raw_notes or "-")
                 notes_item = QTableWidgetItem(notes_text)
                 notes_item.setFlags(notes_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 notes_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -618,35 +623,39 @@ class TaskView(QWidget):
                 # Actions
                 actions = QWidget()
                 actions_layout = QHBoxLayout(actions)
-                actions_layout.setContentsMargins(4, 6, 4, 6)
-                actions_layout.setSpacing(4)
+                actions_layout.setContentsMargins(4, 8, 4, 8)
+                actions_layout.setSpacing(6)
 
                 if not task.completed:
-                    done_btn = QPushButton("✓")
-                    done_btn.setFixedSize(36, 44)
-                    done_btn.setStyleSheet(f"""
+                    # Complete button
+                    complete_btn = QPushButton("✓")
+                    complete_btn.setFixedSize(40, 44)
+                    complete_btn.setStyleSheet(f"""
                         QPushButton {{
                             background: {AppColors.SUCCESS};
                             color: white;
                             border: none;
                             border-radius: 6px;
-                            font-size: 16px;
+                            font-size: 18px;
                         }}
                         QPushButton:hover {{ background: #059669; }}
                     """)
-                    done_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-                    done_btn.clicked.connect(lambda _, tid=task.id: self._complete_task(tid))
-                    actions_layout.addWidget(done_btn)
+                    complete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                    complete_btn.clicked.connect(
+                        lambda _, tid=task.id: self._complete_task(tid)
+                    )
+                    actions_layout.addWidget(complete_btn)
 
-                edit_btn = QPushButton("✏")
-                edit_btn.setFixedSize(36, 44)
+                # Edit button
+                edit_btn = QPushButton("✏️")
+                edit_btn.setFixedSize(40, 44)
                 edit_btn.setStyleSheet(f"""
                     QPushButton {{
                         background: {AppColors.PRIMARY};
                         color: white;
                         border: none;
                         border-radius: 6px;
-                        font-size: 14px;
+                        font-size: 16px;
                     }}
                     QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
                 """)
@@ -654,15 +663,16 @@ class TaskView(QWidget):
                 edit_btn.clicked.connect(lambda _, tid=task.id: self._edit_task(tid))
                 actions_layout.addWidget(edit_btn)
 
-                del_btn = QPushButton("×")
-                del_btn.setFixedSize(36, 44)
+                # Delete button
+                del_btn = QPushButton("X")
+                del_btn.setFixedSize(40, 44)
                 del_btn.setStyleSheet(f"""
                     QPushButton {{
                         background: {AppColors.ERROR};
                         color: white;
                         border: none;
                         border-radius: 6px;
-                        font-size: 20px;
+                        font-size: 16px;
                     }}
                     QPushButton:hover {{ background: #B91C1C; }}
                 """)
@@ -679,32 +689,18 @@ class TaskView(QWidget):
         finally:
             self.table.setUpdatesEnabled(True)
 
-    def _create_badge(self, text, bg_color):
-        """Create badge widget"""
-        container = QWidget()
-        layout = QHBoxLayout(container)
-        layout.setContentsMargins(4, 6, 4, 6)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        badge = QLabel(text)
-        badge.setStyleSheet(f"""
-            QLabel {{
-                background-color: {bg_color};
-                color: white;
-                border-radius: 10px;
-                padding: 2px 10px;
-                font-weight: bold;
-                font-size: 12px;
-            }}
-        """)
-        layout.addWidget(badge)
-        return container
-
     def _add_task(self):
-        """Add task"""
+        """Add new task"""
         dialog = TaskDialog(parent=self)
         if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
             d = dialog.result_data
-            TaskRepository.add(d["task_type"], d["description"], d["customer_name"], d["amount"], d["notes"])
+            TaskRepository.add(
+                d["task_type"],
+                d["description"],
+                d["customer_name"],
+                d["amount"],
+                d["notes"],
+            )
             self.refresh_list()
 
     def _edit_task(self, task_id: int):
@@ -712,21 +708,31 @@ class TaskView(QWidget):
         task = TaskRepository.get_by_id(task_id)
         if not task:
             return
+
         dialog = TaskDialog(task=task, parent=self)
         if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
             d = dialog.result_data
-            TaskRepository.update(task_id, d["task_type"], d["description"], d["customer_name"], d["amount"], d["notes"])
+            TaskRepository.update(
+                task_id,
+                d["task_type"],
+                d["description"],
+                d["customer_name"],
+                d["amount"],
+                d["notes"],
+            )
             self.refresh_list()
 
     def _complete_task(self, task_id: int):
-        """Complete task"""
+        """Mark task as completed"""
         TaskRepository.mark_completed(task_id)
         self.refresh_list()
 
     def _delete_task(self, task_id: int):
         """Delete task"""
         reply = QMessageBox.question(
-            self, "Xác nhận", "Xóa công việc này?",
+            self,
+            "Xác nhận",
+            "Xóa công việc này?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
         if reply == QMessageBox.StandardButton.Yes:
@@ -734,26 +740,60 @@ class TaskView(QWidget):
             self.refresh_list()
 
     def _check_pending_tasks(self):
-        """Check pending tasks"""
+        """Check and show reminder for pending tasks"""
         try:
             pending_count = TaskRepository.count_pending()
             if pending_count > 0:
+                # Show notification in parent window if available
                 parent = self.parent()
                 if parent:
+                    # Find main window
                     main_window = parent
                     while main_window.parent():
                         main_window = main_window.parent()
-                    if hasattr(main_window, "task_notif_label") and hasattr(main_window, "task_notif_box"):
-                        main_window.task_notif_label.setText(f"Còn {pending_count} việc chưa xong!")
+
+                    # Update task notification
+                    if hasattr(main_window, "task_notif_label") and hasattr(
+                        main_window, "task_notif_box"
+                    ):
+                        main_window.task_notif_label.setText(
+                            f"Còn {pending_count} việc chưa xong!"
+                        )
                         main_window.task_notif_box.show()
+                        if self.logger:
+                            self.logger.info(
+                                f"Task notification shown: {pending_count} pending tasks"
+                            )
             else:
+                # Hide notification if no pending tasks
                 parent = self.parent()
                 if parent:
                     main_window = parent
                     while main_window.parent():
                         main_window = main_window.parent()
+
                     if hasattr(main_window, "task_notif_box"):
                         main_window.task_notif_box.hide()
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error checking pending tasks: {e}", exc_info=True)
+
+    def _create_badge(self, text, bg_color):
+        container = QWidget()
+        l = QHBoxLayout(container)
+        l.setContentsMargins(4, 6, 4, 6)
+        l.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        badge = QLabel(text)
+        badge.setStyleSheet(f"""
+            QLabel {{
+                background-color: {bg_color};
+                color: white;
+                border-radius: 12px;
+                padding: 2px 12px;
+                font-weight: bold;
+                font-size: 13px;
+            }}
+        """)
+        l.addWidget(badge)
+        return container

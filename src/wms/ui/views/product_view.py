@@ -184,7 +184,7 @@ class ProductView(QWidget):
                 self._set_cell(
                     row,
                     2,
-                    f"{item.price:,.0f} đ",
+                    f"{int(item.price // 1000):,}",
                     center=True,
                     fg=AppColors.PRIMARY,
                     bold=True,

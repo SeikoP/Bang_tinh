@@ -101,7 +101,7 @@ class SaveSessionDialog(QDialog):
         layout.setContentsMargins(28, 24, 28, 24)
 
         # Total
-        total_label = QLabel(f"Tổng cộng: {self.total_amount:,.0f} VNĐ")
+        total_label = QLabel(f"Tổng cộng: {int(self.total_amount // 1000):,}")
         total_label.setStyleSheet(f"""
             font-size: 18px;
             font-weight: 700;
@@ -266,7 +266,7 @@ class CalculationView(QWidget):
 
         footer.addStretch()
 
-        self.total_label = QLabel("TỔNG TIỀN: 0 VNĐ")
+        self.total_label = QLabel("TỔNG TIỀN: 0")
         self.total_label.setStyleSheet(f"""
             color: white;
             font-size: 18px;
@@ -505,7 +505,7 @@ class CalculationView(QWidget):
                     self.table,
                     row,
                     4,
-                    f"{p.unit_price:,.0f}",
+                    f"{int(p.unit_price // 1000):,}",
                     right=True,
                     fg=AppColors.TEXT,
                     bg=None,
@@ -517,7 +517,7 @@ class CalculationView(QWidget):
                         self.table,
                         row,
                         5,
-                        f"{s.amount:,.0f}",
+                        f"{int(s.amount // 1000):,}",
                         right=True,
                         fg="white",
                         bold=True,
@@ -534,7 +534,7 @@ class CalculationView(QWidget):
                         bg=None,
                     )
 
-            self.total_label.setText(f"TỔNG TIỀN: {total:,.0f} VNĐ")
+            self.total_label.setText(f"TỔNG TIỀN: {int(total // 1000):,}")
             if self._next_focus:
                 row, col = self._next_focus
                 self._next_focus = None
@@ -610,7 +610,7 @@ class CalculationView(QWidget):
                     self.prod_table,
                     row,
                     4,
-                    f"{p.unit_price:,.0f}",
+                    f"{int(p.unit_price // 1000):,}",
                     center=True,
                     fg=AppColors.SUCCESS,
                     bold=True,
@@ -797,15 +797,11 @@ class CalculationView(QWidget):
             dialog = ProductDialog(parent=self)
             if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
                 d = dialog.result_data
-                # Use repository interface
-                if self.container:
-                    self.product_repo.add(
-                        d["name"], d["large_unit"], d["conversion"], d["unit_price"]
-                    )
-                else:
-                    ProductRepository.add(
-                        d["name"], d["large_unit"], d["conversion"], d["unit_price"]
-                    )
+                conn = get_connection()
+                repo = ProductRepository(conn)
+                repo.add(
+                    d["name"], d["large_unit"], d["conversion"], d["unit_price"]
+                )
 
                 self.refresh_product_list()
                 self.refresh_table()
@@ -819,34 +815,22 @@ class CalculationView(QWidget):
 
     def _edit_product(self, pid):
         try:
-            # Use repository interface
-            if self.container:
-                product = self.product_repo.get_by_id(pid)
-            else:
-                product = ProductRepository.get_by_id(pid)
+            conn = get_connection()
+            repo = ProductRepository(conn)
+            product = repo.get_by_id(pid)
 
             if not product:
                 return
             dialog = ProductDialog(product=product, parent=self)
             if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
                 d = dialog.result_data
-                # Use repository interface
-                if self.container:
-                    self.product_repo.update(
-                        pid,
-                        d["name"],
-                        d["large_unit"],
-                        d["conversion"],
-                        d["unit_price"],
-                    )
-                else:
-                    ProductRepository.update(
-                        pid,
-                        d["name"],
-                        d["large_unit"],
-                        d["conversion"],
-                        d["unit_price"],
-                    )
+                repo.update(
+                    pid,
+                    d["name"],
+                    d["large_unit"],
+                    d["conversion"],
+                    d["unit_price"],
+                )
 
                 self.refresh_product_list()
                 self.refresh_table()
@@ -944,7 +928,7 @@ class CalculationView(QWidget):
         layout.addSpacing(10)
 
         revenue_val = summary["total_amount"]
-        revenue_lbl = QLabel(f"{revenue_val:,.0f} đ" if revenue_val > 0 else "0 đ")
+        revenue_lbl = QLabel(f"{int(revenue_val // 1000):,} đ" if revenue_val > 0 else "0 đ")
         revenue_lbl.setStyleSheet(
             f"font-size: 22px; font-weight: 800; color: {CLR_ACCENT};"
             " background: transparent; border: none;"
@@ -988,7 +972,7 @@ class CalculationView(QWidget):
                 )
                 row_html.addWidget(lbl_actual)
                 row_html.addStretch()
-                val_actual = QLabel(f"{html_total:,.0f} đ")
+                val_actual = QLabel(f"{int(html_total // 1000):,} đ")
                 val_actual.setStyleSheet(
                     f"font-size: 13px; font-weight: 700; color: {CLR_ACCENT};"
                     " background: transparent; border: none;"
@@ -1047,7 +1031,7 @@ class CalculationView(QWidget):
                 name_lbl.setWordWrap(True)
                 row.addWidget(name_lbl, 1)
 
-                amt_lbl = QLabel(f"{item['amount']:,.0f}")
+                amt_lbl = QLabel(f"{int(item['amount'] // 1000):,}")
                 amt_lbl.setStyleSheet(
                     f"font-size: 11px; font-weight: 700; color: {AppColors.TEXT};"
                     " background: transparent; border: none;"
