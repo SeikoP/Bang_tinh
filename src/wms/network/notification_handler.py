@@ -347,6 +347,10 @@ class NotificationHandler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length).decode("utf-8")
             payload = json.loads(post_data)
             updates = payload.get("updates", [])
+            action = payload.get("action", "update")  # "handover", "close_shift", or "update"
+
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.info(f"POST /api/session - action: {action}, updates: {len(updates)}")
 
             container = getattr(self.server, "container", None)
             if not container:
@@ -359,14 +363,39 @@ class NotificationHandler(BaseHTTPRequestHandler):
             # Get current state to verify handover quantities
             current_sessions = {s.product.id: s for s in repo.get_all()}
 
-            for update in updates:
-                pid = update.get("product_id")
-                closing = update.get("closing_qty")
+            if action == "handover":
+                # Giao ca: closing_qty becomes new handover_qty, reset closing to 0
+                for update in updates:
+                    pid = update.get("product_id")
+                    closing = update.get("closing_qty")
 
-                if pid in current_sessions:
-                    current = current_sessions[pid]
-                    # Update closing quantity, keep handover same
-                    repo.update_qty(pid, current.handover_qty, closing)
+                    if pid in current_sessions:
+                        # New handover = current closing (what's left for next shift)
+                        repo.update_qty(pid, closing, 0)
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.info(f"Handover: Product {pid} - new handover={closing}, closing=0")
+
+            elif action == "close_shift":
+                # Chốt ca: just update closing_qty, calculate used
+                for update in updates:
+                    pid = update.get("product_id")
+                    closing = update.get("closing_qty")
+
+                    if pid in current_sessions:
+                        current = current_sessions[pid]
+                        repo.update_qty(pid, current.handover_qty, closing)
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.info(f"Close shift: Product {pid} - handover={current.handover_qty}, closing={closing}")
+
+            else:
+                # Default update: just update closing quantity
+                for update in updates:
+                    pid = update.get("product_id")
+                    closing = update.get("closing_qty")
+
+                    if pid in current_sessions:
+                        current = current_sessions[pid]
+                        repo.update_qty(pid, current.handover_qty, closing)
 
             # Emit signal to refresh UI
             if hasattr(self.server, "signal"):
@@ -375,7 +404,7 @@ class NotificationHandler(BaseHTTPRequestHandler):
                     {
                         "has_command": True,
                         "command": "REFRESH_SESSION",
-                        "content": "Remote Update",
+                        "content": f"Remote Update: {action}",
                     }
                 )
                 self.server.signal.emit(msg)
@@ -383,7 +412,7 @@ class NotificationHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
             self.end_headers()
-            self.wfile.write(json.dumps({"success": True}).encode("utf-8"))
+            self.wfile.write(json.dumps({"success": True, "action": action}).encode("utf-8"))
 
         except Exception as e:
             if hasattr(self.server, "logger") and self.server.logger:
