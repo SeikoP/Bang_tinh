@@ -1156,12 +1156,9 @@ def main():
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
 
-    from ..core.config import ROOT as BASE_DIR
-
-    ASSETS = BASE_DIR / "assets"
-
     # Load custom fonts from assets
     from PyQt6.QtGui import QFontDatabase
+    from ..core.paths import ASSETS
 
     fonts_dir = ASSETS / "fonts"
 
@@ -1169,19 +1166,24 @@ def main():
     roboto_dir = fonts_dir / "Roboto"
     if roboto_dir.exists():
         for font_file in roboto_dir.glob("*.ttf"):
-            QFontDatabase.addApplicationFont(str(font_file))
+            font_id = QFontDatabase.addApplicationFont(str(font_file))
+            if font_id == -1:
+                print(f"Failed to load font: {font_file}")
 
     # Load Cabin fonts
     cabin_dir = fonts_dir / "Cabin-master" / "fonts" / "TTF"
     if cabin_dir.exists():
         for font_file in cabin_dir.glob("*.ttf"):
-            QFontDatabase.addApplicationFont(str(font_file))
+            font_id = QFontDatabase.addApplicationFont(str(font_file))
+            if font_id == -1:
+                print(f"Failed to load font: {font_file}")
 
     # Set default application font to Roboto
     app.setFont(QFont("Roboto", 11))
     app.setApplicationVersion(APP_VERSION)
 
-    icon_path = BASE_DIR / "assets" / "icon.png"
+    # Load app icon
+    icon_path = ASSETS / "icons" / "icon.png"
     if icon_path.exists():
         icon = QIcon(str(icon_path))
         if not icon.isNull():

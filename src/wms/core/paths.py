@@ -48,7 +48,12 @@ BUILD = ROOT / "build"
 # Assets (bundled resources)
 # In dev mode: ROOT/src/wms/assets
 # In frozen mode: BUNDLE/assets  (spec copies src/wms/assets → assets)
-ASSETS = BUNDLE / "src" / "wms" / "assets" if not getattr(sys, "frozen", False) else BUNDLE / "assets"
+if getattr(sys, "frozen", False):
+    # PyInstaller bundle: assets are extracted to BUNDLE/assets
+    ASSETS = BUNDLE / "assets"
+else:
+    # Development: assets are in src/wms/assets
+    ASSETS = ROOT / "src" / "wms" / "assets"
 
 
 def ensure_data_dirs():

@@ -6,31 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-# Path resolution for PyInstaller bundles
-if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
-    # Running in a PyInstaller bundle
-    # BUNDLE_ROOT is the temporary directory where assets are extracted
-    # APP_ROOT is the directory where the EXE is actually located
-    BUNDLE_ROOT = Path(sys._MEIPASS).resolve()
-    APP_ROOT = Path(sys.executable).parent.resolve()
-else:
-    # Running in normal Python environment
-    # src/wms/core/config.py -> parents[3] = project root
-    BUNDLE_ROOT = Path(__file__).resolve().parents[3]
-    APP_ROOT = BUNDLE_ROOT
-
-# Use APP_ROOT for persistent data
-ROOT = APP_ROOT
-DATABASE = ROOT / "storage.db"
-LOGS = ROOT / "data" / "logs"
-EXPORTS = ROOT / "data" / "exports"
-BACKUPS = ROOT / "data" / "backups"
-
-# Use BUNDLE_ROOT for read-only assets
-if getattr(sys, 'frozen', False):
-    ASSETS = BUNDLE_ROOT / "assets"
-else:
-    ASSETS = Path(__file__).resolve().parents[1] / "assets"
+# Import centralized paths
+from .paths import ROOT, DATABASE, LOGS, EXPORTS, BACKUPS, ASSETS
 
 
 @dataclass
