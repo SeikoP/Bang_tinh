@@ -59,17 +59,130 @@ _BTN_DEL_STYLE = """
 
 
 class DragDropTableWidget(QTableWidget):
-    """Custom QTableWidget with drag & drop support"""
+    """Custom QTableWidget with enhanced drag & drop support"""
 
     def __init__(self, parent=None, on_drop_callback=None):
         super().__init__(parent)
         self.on_drop_callback = on_drop_callback
+        self.setDragEnabled(True)
+        self.setAcceptDrops(True)
+        self.setDragDropMode(QTableWidget.DragDropMode.InternalMove)
+        self.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self.setDefaultDropAction(Qt.DropAction.MoveAction)
+        
+        # Visual feedback
+        self.setStyleSheet("""
+            QTableWidget {
+                selection-background-color: #dbeafe;
+                selection-color: #1e40af;
+            }
+            QTableWidget::item:selected {
+                background-color: #dbeafe;
+                color: #1e40af;
+                border: 2px solid #3b82f6;
+            }
+        """)
+        
+        self._drag_start_row = -1
+
+    def dragEnterEvent(self, event):
+        """Accept drag events"""
+        if event.source() == self:
+            event.accept()
+            print("[DEBUG] Drag enter accepted")
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event):
+        """Provide visual feedback during drag"""
+        if event.source() == self:
+            event.accept()
+            # Highlight drop target row
+            drop_row = self.indexAt(event.position().toPoint()).row()
+            if drop_row >= 0:
+                self.selectRow(drop_row)
+        else:
+            event.ignore()
+
+    def startDrag(self, supportedActions):
+        """Store starting row when drag begins"""
+        self._drag_start_row = self.currentRow()
+        print(f"[DEBUG] Start drag from row {self._drag_start_row}")
+        super().startDrag(supportedActions)
 
     def dropEvent(self, event):
-        """Handle drop event to save new order"""
-        super().dropEvent(event)
+        """Handle drop event with manual row reordering"""
+        print("[DEBUG] Drop event triggered")
+        
+        if event.source() != self:
+            event.ignore()
+            return
+        
+        # Get source and destination rows
+        source_row = self._drag_start_row
+        drop_index = self.indexAt(event.position().toPoint())
+        dest_row = drop_index.row() if drop_index.isValid() else self.rowCount() - 1
+        
+        print(f"[DEBUG] Moving row {source_row} to {dest_row}")
+        
+        if source_row < 0 or dest_row < 0 or source_row == dest_row:
+            event.ignore()
+            return
+        
+        # Accept the event
+        event.accept()
+        
+        # Manually move the row
+        self._move_row(source_row, dest_row)
+        
+        # Callback to save new order
         if self.on_drop_callback:
             self.on_drop_callback()
+        
+        # Select the moved row
+        self.selectRow(dest_row)
+    
+    def _move_row(self, source_row, dest_row):
+        """Manually move a row from source to destination"""
+        # Store all data from source row
+        row_data = []
+        for col in range(self.columnCount()):
+            item = self.item(source_row, col)
+            widget = self.cellWidget(source_row, col)
+            
+            if item:
+                # Clone the item with all properties
+                new_item = QTableWidgetItem(item.text())
+                new_item.setData(Qt.ItemDataRole.UserRole, item.data(Qt.ItemDataRole.UserRole))
+                new_item.setTextAlignment(item.textAlignment())
+                new_item.setForeground(item.foreground())
+                new_item.setFont(item.font())
+                new_item.setFlags(item.flags())
+                row_data.append(('item', new_item))
+            elif widget:
+                # Store widget reference
+                row_data.append(('widget', widget))
+            else:
+                row_data.append(('empty', None))
+        
+        # Remove source row
+        self.removeRow(source_row)
+        
+        # Adjust destination if needed
+        if dest_row > source_row:
+            dest_row -= 1
+        
+        # Insert new row at destination
+        self.insertRow(dest_row)
+        
+        # Restore data
+        for col, (data_type, data) in enumerate(row_data):
+            if data_type == 'item':
+                self.setItem(dest_row, col, data)
+            elif data_type == 'widget':
+                # Widgets will be recreated by refresh
+                pass
 
 
 class SaveSessionDialog(QDialog):
@@ -380,15 +493,8 @@ class CalculationView(QWidget):
         self.prod_table.setColumnWidth(5, 200)
 
         self.prod_table.setAlternatingRowColors(True)
-        self.prod_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.prod_table.verticalHeader().setVisible(False)
         self.prod_table.verticalHeader().setDefaultSectionSize(64)
-
-        # Enable drag & drop
-        self.prod_table.setDragEnabled(True)
-        self.prod_table.setAcceptDrops(True)
-        self.prod_table.setDragDropMode(QTableWidget.DragDropMode.InternalMove)
-        self.prod_table.setDefaultDropAction(Qt.DropAction.MoveAction)
 
     def refresh_table(self, force=False):
         # Prevent duplicate refresh operations
@@ -565,10 +671,7 @@ class CalculationView(QWidget):
         try:
             query = self.search_input.text().lower().strip()
             # Use repository interface
-            if self.container:
-                products = self.product_repo.get_all()
-            else:
-                products = ProductRepository.get_all()
+            products = ProductRepository.get_all()
 
             if query:
                 products = [p for p in products if query in p.name.lower()]
@@ -673,10 +776,7 @@ class CalculationView(QWidget):
     def _update_qty(self, w, pid, conv, is_h):
         new = self.calc_service.parse_to_small_units(w.text(), conv)
         # Use repository interface
-        if self.container:
-            sessions = self.session_repo.get_all()
-        else:
-            sessions = SessionRepository.get_all()
+        sessions = SessionRepository.get_all()
 
         curr = next((s for s in sessions if s.product.id == pid), None)
         if not curr:
@@ -722,10 +822,7 @@ class CalculationView(QWidget):
             c = h
 
         # Use repository interface
-        if self.container:
-            self.session_repo.update_qty(pid, h, c)
-        else:
-            SessionRepository.update_qty(pid, h, c)
+        SessionRepository.update_qty(pid, h, c)
 
         self.refresh_table()
         self._show_report(getattr(self, "_last_report_data", {}))
@@ -797,9 +894,7 @@ class CalculationView(QWidget):
             dialog = ProductDialog(parent=self)
             if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
                 d = dialog.result_data
-                conn = get_connection()
-                repo = ProductRepository(conn)
-                repo.add(
+                ProductRepository.add(
                     d["name"], d["large_unit"], d["conversion"], d["unit_price"]
                 )
 
@@ -815,16 +910,14 @@ class CalculationView(QWidget):
 
     def _edit_product(self, pid):
         try:
-            conn = get_connection()
-            repo = ProductRepository(conn)
-            product = repo.get_by_id(pid)
+            product = ProductRepository.get_by_id(pid)
 
             if not product:
                 return
             dialog = ProductDialog(product=product, parent=self)
             if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
                 d = dialog.result_data
-                repo.update(
+                ProductRepository.update(
                     pid,
                     d["name"],
                     d["large_unit"],
@@ -851,11 +944,7 @@ class CalculationView(QWidget):
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             )
             if reply == QMessageBox.StandardButton.Yes:
-                # Use repository interface
-                if self.container:
-                    self.product_repo.delete(pid)
-                else:
-                    ProductRepository.delete(pid)
+                ProductRepository.delete(pid)
 
                 self.refresh_product_list()
                 self.refresh_table()
@@ -1106,46 +1195,73 @@ class CalculationView(QWidget):
         return f"{int(h[0:2], 16)}, {int(h[2:4], 16)}, {int(h[4:6], 16)}"
 
     def _save_session(self):
-        # Prevent duplicate save operations
+        """Save session with handover confirmation"""
         if self._is_saving:
             return
 
         self._is_saving = True
         try:
-            # Disable save button during operation
             save_btn = self.sender()
             if save_btn:
                 save_btn.setEnabled(False)
                 save_btn.setText("⏳ Đang lưu...")
 
-            # Use repository interface
-            if self.container:
-                total = self.session_repo.get_total_amount()
-            else:
-                total = SessionRepository.get_total_amount()
+            total = SessionRepository.get_total_amount()
 
+            # Ask: Chốt ca or Giao ca?
+            action_dialog = QMessageBox(self)
+            action_dialog.setWindowTitle("Lưu phiên làm việc")
+            action_dialog.setText("Chọn hành động:")
+            action_dialog.setIcon(QMessageBox.Icon.Question)
+            
+            chot_btn = action_dialog.addButton("✅ Chốt ca", QMessageBox.ButtonRole.AcceptRole)
+            giao_btn = action_dialog.addButton("🔄 Giao ca", QMessageBox.ButtonRole.ActionRole)
+            cancel_btn = action_dialog.addButton("Hủy", QMessageBox.ButtonRole.RejectRole)
+            
+            action_dialog.exec()
+            clicked = action_dialog.clickedButton()
+            
+            if clicked == cancel_btn:
+                return
+            
+            is_handover = (clicked == giao_btn)
+            
+            # Show save dialog
             dialog = SaveSessionDialog(total, self)
             if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
-                # Use repository interface
-                if self.container:
-                    self.history_repo.save_current_session(
-                        shift_name=dialog.result_data["shift_name"],
-                        notes=dialog.result_data["notes"],
+                
+                if is_handover:
+                    # Giao ca: Confirm before copying closing to handover
+                    confirm = QMessageBox.question(
+                        self,
+                        "Xác nhận giao ca",
+                        "Giao ca sẽ sao chép số chốt ca hiện tại sang giao ca mới.\n\nTiếp tục?",
+                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
                     )
-                    self.session_repo.reset_all()
+                    if confirm != QMessageBox.StandardButton.Yes:
+                        return
+                
+                # Save to history
+                HistoryRepository.save_current_session(
+                    shift_name=dialog.result_data["shift_name"],
+                    notes=dialog.result_data["notes"],
+                )
+                
+                if is_handover:
+                    # Giao ca: Copy closing to handover, reset closing
+                    SessionRepository.handover_shift()
                 else:
-                    HistoryRepository.save_current_session(
-                        shift_name=dialog.result_data["shift_name"],
-                        notes=dialog.result_data["notes"],
-                    )
+                    # Chốt ca: Reset all
                     SessionRepository.reset_all()
 
                 self.refresh_table()
-                self._last_report_data = {}  # Clear report data on shift reset
-                self._show_report({})  # Refresh sidebar with empty data
+                self._last_report_data = {}
+                self._show_report({})
                 if self.on_refresh_stock:
                     self.on_refresh_stock()
-                QMessageBox.information(self, "Thành công", "Đã lưu phiên làm việc!")
+                
+                msg = "Đã giao ca thành công!" if is_handover else "Đã chốt ca thành công!"
+                QMessageBox.information(self, "Thành công", msg)
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Error saving session: {str(e)}", exc_info=True)
@@ -1153,8 +1269,6 @@ class CalculationView(QWidget):
                 self.error_handler.handle(e, self)
         finally:
             self._is_saving = False
-            # Re-enable save button
-            save_btn = self.sender()
             if save_btn:
                 save_btn.setEnabled(True)
                 save_btn.setText("Lưu toàn bộ phiên")
@@ -1266,12 +1380,8 @@ class CalculationView(QWidget):
     def _save_product_order(self):
         """Save product order after drag & drop"""
         try:
-            # Get all products
-            if self.container:
-                self.product_repo.get_all()
-            else:
-                ProductRepository.get_all()
-
+            print(f"[DEBUG] Saving product order, table has {self.prod_table.rowCount()} rows")
+            
             # Update display_order in database based on current table order
             with get_connection() as conn:
                 cursor = conn.cursor()
@@ -1279,16 +1389,27 @@ class CalculationView(QWidget):
                     name_item = self.prod_table.item(idx, 1)
                     if name_item:
                         product_id = name_item.data(Qt.ItemDataRole.UserRole)
+                        product_name = name_item.text()
                         if product_id:
+                            print(f"[DEBUG] Row {idx}: {product_name} (ID: {product_id})")
                             cursor.execute(
                                 "UPDATE products SET display_order = ? WHERE id = ?",
                                 (idx, product_id),
                             )
                 conn.commit()
-
-            # Refresh all tables to reflect new order
-            self.refresh_product_list()  # Refresh product list table
-            self.refresh_table()  # Refresh calculation table
+            
+            print("[DEBUG] Product order saved, refreshing both tables")
+            
+            # Refresh product list table
+            self.refresh_product_list()
+            
+            # Refresh calculation table to reflect new order
+            self.refresh_table()
+            
+        except Exception as e:
+            print(f"[DEBUG] Error saving product order: {str(e)}")
+            if self.logger:
+                self.logger.error(f"Error saving product order: {str(e)}", exc_info=True)
             if self.on_refresh_stock:
                 self.on_refresh_stock()  # Refresh stock view
 

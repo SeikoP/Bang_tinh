@@ -324,6 +324,12 @@ class CalculatorToolView(QWidget):
         self._build_money_counter(money_page)
         self.sub_tabs.addTab(money_page, "Đếm tiền")
 
+        # ===== TAB 3: Demo tính tiền =====
+        demo_page = QWidget()
+        demo_page.setStyleSheet("background: transparent;")
+        self._build_demo_calculator(demo_page)
+        self.sub_tabs.addTab(demo_page, "Demo tính tiền")
+
     # ================================================================
     # MONEY COUNTER
     # ================================================================
@@ -590,7 +596,7 @@ class CalculatorToolView(QWidget):
         bank_layout.setContentsMargins(24, 16, 24, 16)
         bank_layout.setSpacing(8)
         
-        bank_header = QLabel("💰 TỔNG TIỀN NGÂN HÀNG")
+        bank_header = QLabel("TỔNG TIỀN NGÂN HÀNG")
         bank_header.setStyleSheet(f"""
             color: {AppColors.TEXT_SECONDARY};
             font-weight: 700;
@@ -610,6 +616,398 @@ class CalculatorToolView(QWidget):
         
         page_layout.addWidget(bank_card)
         page_layout.addStretch()
+
+    def _build_demo_calculator(self, parent_widget):
+        """Build demo calculator to check if money is negative."""
+        page_layout = QVBoxLayout(parent_widget)
+        page_layout.setContentsMargins(0, 12, 0, 0)
+        page_layout.setSpacing(16)
+
+        # Main card
+        card = QFrame()
+        card.setStyleSheet(f"""
+            QFrame#demo_card {{
+                background-color: white;
+                border-radius: 16px;
+                border: 1px solid {AppColors.BORDER};
+            }}
+        """)
+        card.setObjectName("demo_card")
+
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(24, 20, 24, 20)
+        card_layout.setSpacing(16)
+
+        # Header
+        header_row = QHBoxLayout()
+        header_label = QLabel("💰 DEMO TÍNH TIỀN")
+        header_label.setStyleSheet(
+            f"color: {AppColors.TEXT}; font-weight: 800; "
+            f"font-size: 16px; letter-spacing: 0.5px;"
+        )
+        header_row.addWidget(header_label)
+        header_row.addStretch()
+        
+        # Quick load buttons - smaller and more compact
+        btn_style_template = """
+            QPushButton {{
+                background: white; 
+                border-radius: 6px; 
+                border: 1.5px solid {color};
+                font-size: 10px; 
+                font-weight: 700; 
+                padding: 6px 10px;
+                min-width: 90px;
+            }}
+            QPushButton:hover {{ background: #f0fdf4; }}
+            QPushButton:pressed {{ background: #ecfdf5; }}
+        """
+        
+        load_calc_btn = QPushButton("📊 Tính toán")
+        load_calc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        load_calc_btn.setFixedHeight(28)
+        load_calc_btn.setStyleSheet(btn_style_template.replace("{color}", AppColors.PRIMARY))
+        load_calc_btn.clicked.connect(self._load_from_calculation)
+        header_row.addWidget(load_calc_btn)
+        
+        load_money_btn = QPushButton("💵 Đếm tiền")
+        load_money_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        load_money_btn.setFixedHeight(28)
+        load_money_btn.setStyleSheet(btn_style_template.replace("{color}", AppColors.SUCCESS))
+        load_money_btn.clicked.connect(self._load_from_money_counter)
+        header_row.addWidget(load_money_btn)
+        
+        reset_demo_btn = QPushButton("🔄 Đặt lại")
+        reset_demo_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        reset_demo_btn.setFixedHeight(28)
+        reset_demo_btn.setStyleSheet(btn_style_template.replace("{color}", AppColors.BORDER))
+        reset_demo_btn.clicked.connect(self._reset_demo)
+        header_row.addWidget(reset_demo_btn)
+        
+        card_layout.addLayout(header_row)
+
+        # Input section - 3 columns layout for better space usage
+        input_container = QFrame()
+        input_container.setStyleSheet(f"""
+            QFrame {{
+                background: #f8fafc;
+                border-radius: 10px;
+                padding: 16px;
+            }}
+        """)
+        input_grid = QGridLayout(input_container)
+        input_grid.setHorizontalSpacing(12)
+        input_grid.setVerticalSpacing(12)
+        input_grid.setContentsMargins(12, 12, 12, 12)
+
+        # Store input fields
+        self._demo_inputs = {}
+
+        # Define input fields with icons
+        fields = [
+            ("tong_hop_ca", "📈 Tổng hợp ca", "0"),
+            ("tien_may", "🖥️ Tiền máy", "0"),
+            ("tien_ca_truoc", "⏮️ Tiền ca trước", "0"),
+            ("dem_tien", "💵 Đếm tiền", "0"),
+            ("phu_phi", "💸 Phụ phí", "0"),
+            ("tien_hien_tai", "💰 Tiền hiện tại", "0"),
+        ]
+
+        for idx, (key, label_text, default) in enumerate(fields):
+            row = idx // 3
+            col = (idx % 3) * 2
+
+            # Label with icon - more compact
+            lbl = QLabel(label_text)
+            lbl.setStyleSheet(
+                f"color: {AppColors.TEXT}; font-size: 11px; font-weight: 600;"
+            )
+            input_grid.addWidget(lbl, row, col)
+
+            # Input - smaller
+            inp = QLineEdit()
+            inp.setText(default)
+            inp.setAlignment(Qt.AlignmentFlag.AlignRight)
+            inp.setFixedHeight(32)
+            inp.setStyleSheet(f"""
+                QLineEdit {{
+                    border: 1px solid {AppColors.BORDER};
+                    border-radius: 6px;
+                    background: white;
+                    color: {AppColors.TEXT};
+                    font-size: 12px;
+                    font-weight: 700;
+                    padding: 0 8px;
+                }}
+                QLineEdit:focus {{
+                    border: 2px solid {AppColors.PRIMARY};
+                    background: white;
+                }}
+            """)
+            inp.textChanged.connect(self._update_demo_result)
+            input_grid.addWidget(inp, row, col + 1)
+            self._demo_inputs[key] = inp
+
+        card_layout.addWidget(input_container)
+
+        # Formula display - more compact with word wrap
+        formula_label = QLabel("📐 Công thức: Tiền hiện tại - [(Tiền máy + Tổng hợp ca + Tiền ca trước) - (Đếm tiền + Phụ phí)]")
+        formula_label.setWordWrap(True)
+        formula_label.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; "
+            f"padding: 10px 12px; background: #fffbeb; border-radius: 6px; "
+            f"border-left: 3px solid #f59e0b; line-height: 1.4;"
+        )
+        card_layout.addWidget(formula_label)
+
+        # Result section - more compact
+        result_frame = QFrame()
+        result_frame.setStyleSheet(f"""
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f0fdf4, stop:1 #dcfce7);
+                border-radius: 10px;
+                border: 2px solid {AppColors.SUCCESS};
+                padding: 12px;
+            }}
+        """)
+        result_layout = QVBoxLayout(result_frame)
+        result_layout.setSpacing(4)
+
+        result_title = QLabel("KẾT QUẢ TÍNH TOÁN")
+        result_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        result_title.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; "
+            f"font-size: 9px; letter-spacing: 1.5px;"
+        )
+        result_layout.addWidget(result_title)
+
+        self._demo_result_label = QLabel("0")
+        self._demo_result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._demo_result_label.setStyleSheet(
+            f"color: {AppColors.SUCCESS}; font-weight: 900; "
+            f"font-size: 28px; letter-spacing: -1px;"
+        )
+        result_layout.addWidget(self._demo_result_label)
+
+        self._demo_status_label = QLabel("Kết quả tính toán")
+        self._demo_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._demo_status_label.setStyleSheet(
+            f"color: {AppColors.SUCCESS}; font-size: 11px; font-weight: 700;"
+        )
+        result_layout.addWidget(self._demo_status_label)
+
+        card_layout.addWidget(result_frame)
+        self._demo_result_frame = result_frame
+
+        # Comparison section - more compact
+        compare_frame = QFrame()
+        compare_frame.setStyleSheet(f"""
+            QFrame {{
+                background: #f8fafc;
+                border-radius: 10px;
+                padding: 12px;
+            }}
+        """)
+        compare_layout = QVBoxLayout(compare_frame)
+        compare_layout.setContentsMargins(12, 10, 12, 10)
+        compare_layout.setSpacing(8)
+
+        # Input row
+        input_row = QHBoxLayout()
+        compare_label = QLabel("🎯 Tiền ban đầu (để so sánh):")
+        compare_label.setStyleSheet(
+            f"color: {AppColors.TEXT}; font-size: 11px; font-weight: 600;"
+        )
+        input_row.addWidget(compare_label)
+
+        self._tien_ban_dau_input = QLineEdit()
+        self._tien_ban_dau_input.setText("0")
+        self._tien_ban_dau_input.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self._tien_ban_dau_input.setFixedHeight(32)
+        self._tien_ban_dau_input.setFixedWidth(150)
+        self._tien_ban_dau_input.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 6px;
+                background: white;
+                color: {AppColors.TEXT};
+                font-size: 12px;
+                font-weight: 700;
+                padding: 0 8px;
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {AppColors.PRIMARY};
+                background: white;
+            }}
+        """)
+        self._tien_ban_dau_input.textChanged.connect(self._update_comparison)
+        input_row.addWidget(self._tien_ban_dau_input)
+        input_row.addStretch()
+
+        compare_layout.addLayout(input_row)
+
+        # Comparison result
+        self._comparison_result_label = QLabel("")
+        self._comparison_result_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self._comparison_result_label.setWordWrap(True)
+        self._comparison_result_label.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-weight: 600; padding: 8px;"
+        )
+        compare_layout.addWidget(self._comparison_result_label)
+
+        card_layout.addWidget(compare_frame)
+
+        page_layout.addWidget(card)
+        page_layout.addStretch()
+
+    def _parse_money_input(self, text: str) -> float:
+        """Parse money input, removing commas and handling empty strings."""
+        text = text.strip().replace(",", "").replace(".", "").replace("₫", "").replace(" ", "")
+        try:
+            return float(text) if text else 0.0
+        except:
+            return 0.0
+
+    def _update_demo_result(self):
+        """Calculate and update demo result."""
+        # Get all input values (values are in thousands, multiply by 1000)
+        tong_hop_ca = self._parse_money_input(self._demo_inputs["tong_hop_ca"].text()) * 1000
+        tien_may = self._parse_money_input(self._demo_inputs["tien_may"].text()) * 1000
+        tien_ca_truoc = self._parse_money_input(self._demo_inputs["tien_ca_truoc"].text()) * 1000
+        dem_tien = self._parse_money_input(self._demo_inputs["dem_tien"].text()) * 1000
+        phu_phi = self._parse_money_input(self._demo_inputs["phu_phi"].text()) * 1000
+        tien_hien_tai = self._parse_money_input(self._demo_inputs["tien_hien_tai"].text()) * 1000
+
+        # Calculate: current_money - [(machine + total_shift + previous_shift) - (counted + fees)]
+        calculated_amount = (tien_may + tong_hop_ca + tien_ca_truoc) - (dem_tien + phu_phi)
+        final_result = tien_hien_tai - calculated_amount
+        
+        # Store result for comparison
+        self._calculated_result = final_result
+        
+        # Display in thousands
+        self._demo_result_label.setText(f"{final_result / 1000:,.0f}")
+
+        # Always show neutral style for result (comparison will show status)
+        self._demo_result_frame.setStyleSheet(f"""
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f0fdf4, stop:1 #dcfce7);
+                border-radius: 10px;
+                border: 2px solid {AppColors.SUCCESS};
+                padding: 16px;
+            }}
+        """)
+        self._demo_result_label.setStyleSheet(
+            f"color: {AppColors.SUCCESS}; font-weight: 900; "
+            f"font-size: 32px; letter-spacing: -1px;"
+        )
+        self._demo_status_label.setText("Kết quả tính toán")
+        self._demo_status_label.setStyleSheet(
+            f"color: {AppColors.SUCCESS}; font-size: 13px; font-weight: 700;"
+        )
+        
+        # Update comparison
+        self._update_comparison()
+
+    def _update_comparison(self):
+        """Compare calculated result with initial money."""
+        if not hasattr(self, '_calculated_result'):
+            return
+            
+        tien_ban_dau = self._parse_money_input(self._tien_ban_dau_input.text()) * 1000
+        difference = self._calculated_result - tien_ban_dau
+        
+        if difference < 0:
+            # Negative - red warning
+            self._comparison_result_label.setText(
+                f"⚠️ BỊ ÂM TIỀN: {difference / 1000:,.0f} (Thiếu)"
+            )
+            self._comparison_result_label.setStyleSheet(
+                f"color: {AppColors.ERROR}; font-size: 12px; font-weight: 700; "
+                f"padding: 10px; background: #fef2f2; border-radius: 6px; "
+                f"border: 2px solid {AppColors.ERROR};"
+            )
+        elif difference == 0:
+            # Zero - neutral
+            self._comparison_result_label.setText("✓ Hòa vốn")
+            self._comparison_result_label.setStyleSheet(
+                f"color: {AppColors.TEXT}; font-size: 12px; font-weight: 700; "
+                f"padding: 10px; background: #f8fafc; border-radius: 6px; "
+                f"border: 2px solid {AppColors.BORDER};"
+            )
+        else:
+            # Positive - green success
+            self._comparison_result_label.setText(
+                f"✓ Không âm tiền: +{difference / 1000:,.0f} (Thừa)"
+            )
+            self._comparison_result_label.setStyleSheet(
+                f"color: {AppColors.SUCCESS}; font-size: 12px; font-weight: 700; "
+                f"padding: 10px; background: #f0fdf4; border-radius: 6px; "
+                f"border: 2px solid {AppColors.SUCCESS};"
+            )
+
+    def _load_from_calculation(self):
+        """Load total from calculation view."""
+        try:
+            # Try to get calculation view from parent
+            parent = self.parent()
+            if not parent:
+                print("[DEBUG] No parent found")
+                return
+                
+            main_window = parent
+            while main_window.parent():
+                main_window = main_window.parent()
+            
+            print(f"[DEBUG] Main window: {main_window}")
+            
+            if hasattr(main_window, 'calc_view'):
+                calc_view = main_window.calc_view
+                print(f"[DEBUG] Found calc_view")
+                
+                # Get current session total from SessionRepository
+                try:
+                    from ...database import SessionRepository
+                    total_amount = SessionRepository.get_total_amount()
+                    print(f"[DEBUG] Total amount from SessionRepository: {total_amount}")
+                    
+                    if total_amount > 0:
+                        # Convert to thousands and fill in the input
+                        amount_in_thousands = int(total_amount / 1000)
+                        self._demo_inputs["tong_hop_ca"].setText(str(amount_in_thousands))
+                        print(f"[DEBUG] Set tong_hop_ca to {amount_in_thousands} (thousands)")
+                    else:
+                        print("[DEBUG] Total amount is 0")
+                except Exception as e:
+                    print(f"[DEBUG] Error getting total from SessionRepository: {e}")
+            else:
+                print("[DEBUG] calc_view not found in main_window")
+        except Exception as e:
+            print(f"[DEBUG] Error in _load_from_calculation: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _load_from_money_counter(self):
+        """Load total from money counter tab into demo calculator."""
+        text = self._money_total_label.text().replace(" ₫", "").replace(",", "").replace(".", "")
+        if text and text != "0":
+            # Convert to thousands
+            try:
+                amount = int(text)
+                amount_in_thousands = amount // 1000
+                self._demo_inputs["dem_tien"].setText(str(amount_in_thousands))
+            except:
+                self._demo_inputs["dem_tien"].setText("0")
+
+    def _reset_demo(self):
+        """Reset all demo calculator inputs."""
+        for inp in self._demo_inputs.values():
+            inp.setText("0")
+        self._tien_ban_dau_input.setText("0")
+        self._comparison_result_label.setText("")
+
     def _focus_next_money_input(self, current_idx: int):
         """Move focus to the next denomination input field."""
         next_idx = current_idx + 1

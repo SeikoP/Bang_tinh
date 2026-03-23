@@ -249,6 +249,22 @@ class SessionRepository(ISessionRepository):
                 f"Failed to calculate total amount: {str(e)}", "get_total_amount"
             )
 
+    @staticmethod
+    def handover_shift() -> bool:
+        """Giao ca: Copy closing_qty to handover_qty, reset closing_qty to 0"""
+        try:
+            with get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    UPDATE session_data 
+                    SET handover_qty = closing_qty, 
+                        closing_qty = 0
+                    WHERE closing_qty > 0
+                """)
+                return True
+        except Exception as e:
+            raise DatabaseError(f"Failed to handover shift: {str(e)}", "handover_shift")
+
 
 class HistoryRepository(IHistoryRepository):
     """Repository cho quản lý lịch sử phiên"""
