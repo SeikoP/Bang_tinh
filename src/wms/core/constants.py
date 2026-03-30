@@ -65,6 +65,7 @@ BANK_PACKAGES = set(BANK_PACKAGE_MAP.keys())
 TEST_PACKAGES = {
     "com.test.bankapp",
     "com.example.notification",
+    "com.banknotifier",  # Self-test notifications from Bank Notifier app
     "android",  # For adb test notifications
 }
 

@@ -20,6 +20,7 @@ class Container:
                                            ProductRepository,
                                            QuickPriceRepository,
                                            SessionRepository)
+        from ..database.task_repository import TaskRepository
         from ..services.calculator import CalculatorService
         from ..services.exporter import ExportService
         from ..services.notification_service import NotificationService
@@ -42,6 +43,7 @@ class Container:
         self._singletons["session_repo"] = SessionRepository()
         self._singletons["history_repo"] = HistoryRepository()
         self._singletons["quick_price_repo"] = QuickPriceRepository()
+        self._singletons["task_repo"] = TaskRepository()
 
         # Services (singletons with dependencies)
         self._singletons["calculator"] = CalculatorService(

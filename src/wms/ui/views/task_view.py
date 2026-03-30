@@ -8,8 +8,9 @@ from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QDialog,
                              QFormLayout, QHBoxLayout, QHeaderView, QLabel,
-                             QLineEdit, QMessageBox, QPushButton, QTableWidget,
-                             QTableWidgetItem, QVBoxLayout, QWidget, QSpinBox)
+                             QLineEdit, QMessageBox, QPushButton, QScrollArea,
+                             QTableWidget, QTableWidgetItem, QVBoxLayout,
+                             QWidget, QSpinBox)
 
 from ...database.task_repository import TaskRepository
 from ...database.repositories import ProductRepository
@@ -56,90 +57,156 @@ class ProductPickerDialog(QDialog):
 
     def _setup_ui(self):
         self.setWindowTitle("Chọn sản phẩm")
-        self.setMinimumWidth(600)
-        self.setMinimumHeight(650)
+        self.setMinimumWidth(580)
+        self.setMinimumHeight(600)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 16)
 
-        # Quick add combo đêm
-        combo_row = QHBoxLayout()
-        combo_label = QLabel("Combo đêm:")
-        combo_label.setStyleSheet("font-weight: 600;")
-        combo_row.addWidget(combo_label)
-        
+        # === Combo đêm - prominent card ===
+        combo_card = QFrame()
+        combo_card.setStyleSheet(f"""
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 rgba(16, 185, 129, 0.06), stop:1 rgba(59, 130, 246, 0.06));
+                border-radius: 10px;
+                border: 1px solid {AppColors.BORDER};
+            }}
+        """)
+        combo_layout = QHBoxLayout(combo_card)
+        combo_layout.setContentsMargins(14, 10, 14, 10)
+        combo_layout.setSpacing(10)
+
+        combo_label = QLabel("Combo đêm")
+        combo_label.setStyleSheet(f"font-weight: 700; font-size: 13px; color: {AppColors.TEXT};")
+        combo_layout.addWidget(combo_label)
+
+        # Minus button
+        minus_btn = QPushButton("−")
+        minus_btn.setFixedSize(32, 32)
+        minus_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        minus_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: white; color: {AppColors.TEXT};
+                border: 1px solid {AppColors.BORDER}; border-radius: 6px;
+                font-size: 16px; font-weight: 700;
+            }}
+            QPushButton:hover {{ background: #f1f5f9; }}
+        """)
+        minus_btn.clicked.connect(lambda: self._combo_spin.setValue(max(0, self._combo_spin.value() - 1)))
+        combo_layout.addWidget(minus_btn)
+
         self._combo_spin = QSpinBox()
         self._combo_spin.setRange(0, 99)
         self._combo_spin.setValue(0)
-        self._combo_spin.setFixedWidth(80)
+        self._combo_spin.setFixedSize(60, 32)
         self._combo_spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        combo_row.addWidget(self._combo_spin)
-        
-        combo_price_label = QLabel("x 40 = ")
-        combo_price_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY};")
-        combo_row.addWidget(combo_price_label)
-        
-        self._combo_total_label = QLabel("0")
-        self._combo_total_label.setWordWrap(True)
-        self._combo_total_label.setStyleSheet(f"font-weight: 700; color: {AppColors.PRIMARY};")
-        combo_row.addWidget(self._combo_total_label)
-        
+        self._combo_spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
+        self._combo_spin.setStyleSheet(f"""
+            QSpinBox {{
+                font-size: 14px; font-weight: 700; color: {AppColors.TEXT};
+                border: 1.5px solid {AppColors.BORDER}; border-radius: 6px;
+                background: white; padding: 0 4px;
+            }}
+            QSpinBox:focus {{ border-color: {AppColors.PRIMARY}; }}
+        """)
         self._combo_spin.valueChanged.connect(self._on_combo_changed)
-        combo_row.addStretch()
-        layout.addLayout(combo_row)
+        combo_layout.addWidget(self._combo_spin)
 
-        # Separator
-        sep = QLabel()
-        sep.setFixedHeight(1)
-        sep.setStyleSheet(f"background: {AppColors.BORDER};")
-        layout.addWidget(sep)
+        # Plus button
+        plus_btn = QPushButton("+")
+        plus_btn.setFixedSize(32, 32)
+        plus_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        plus_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {AppColors.PRIMARY}; color: white;
+                border: none; border-radius: 6px;
+                font-size: 16px; font-weight: 700;
+            }}
+            QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
+        """)
+        plus_btn.clicked.connect(lambda: self._combo_spin.setValue(self._combo_spin.value() + 1))
+        combo_layout.addWidget(plus_btn)
 
-        # Search
+        combo_layout.addStretch()
+
+        combo_price_label = QLabel("x 40k =")
+        combo_price_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px;")
+        combo_layout.addWidget(combo_price_label)
+
+        self._combo_total_label = QLabel("0")
+        self._combo_total_label.setStyleSheet(f"font-weight: 800; font-size: 14px; color: {AppColors.PRIMARY};")
+        combo_layout.addWidget(self._combo_total_label)
+
+        layout.addWidget(combo_card)
+
+        # === Search ===
         self._search = QLineEdit()
-        self._search.setPlaceholderText("Tìm sản phẩm khác...")
+        self._search.setMinimumHeight(36)
+        self._search.setPlaceholderText("Tìm sản phẩm...")
+        self._search.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {AppColors.BORDER}; border-radius: 8px;
+                padding: 0 12px; font-size: 13px; background: white;
+            }}
+            QLineEdit:focus {{ border: 2px solid {AppColors.PRIMARY}; }}
+        """)
         self._search.textChanged.connect(self._filter_products)
         layout.addWidget(self._search)
 
-        # Product list - simpler table
+        # === Product table with 4 columns ===
         self._product_table = QTableWidget()
-        self._product_table.setColumnCount(3)
-        self._product_table.setHorizontalHeaderLabels(["Sản phẩm", "Giá", "Số lượng"])
+        self._product_table.setColumnCount(4)
+        self._product_table.setHorizontalHeaderLabels(["Sản phẩm", "Giá", "Số lượng", "Tạm tính"])
         header = self._product_table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        self._product_table.setColumnWidth(1, 80)
-        self._product_table.setColumnWidth(2, 120)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self._product_table.setColumnWidth(1, 70)
+        self._product_table.setColumnWidth(2, 110)
+        self._product_table.setColumnWidth(3, 90)
         self._product_table.verticalHeader().setVisible(False)
+        self._product_table.verticalHeader().setDefaultSectionSize(44)
         self._product_table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
         self._product_table.setAlternatingRowColors(True)
         layout.addWidget(self._product_table, 1)
 
-        # Total
-        total_row = QHBoxLayout()
-        total_row.addStretch()
-        total_label = QLabel("TỔNG:")
-        total_label.setStyleSheet("font-size: 14px; font-weight: 600;")
-        total_row.addWidget(total_label)
-        self._total_label = QLabel("0")
-        self._total_label.setWordWrap(True)
-        self._total_label.setStyleSheet(f"font-size: 18px; font-weight: 800; color: {AppColors.SUCCESS};")
-        total_row.addWidget(self._total_label)
-        layout.addLayout(total_row)
+        # === Total bar ===
+        total_bar = QFrame()
+        total_bar.setStyleSheet(f"""
+            QFrame {{
+                background: {AppColors.SUCCESS}; border-radius: 10px;
+            }}
+        """)
+        total_bar_layout = QHBoxLayout(total_bar)
+        total_bar_layout.setContentsMargins(16, 10, 16, 10)
 
-        # Buttons
+        total_label = QLabel("TỔNG CỘNG:")
+        total_label.setStyleSheet("color: white; font-size: 13px; font-weight: 700;")
+        total_bar_layout.addWidget(total_label)
+
+        total_bar_layout.addStretch()
+
+        self._total_label = QLabel("0")
+        self._total_label.setStyleSheet("color: white; font-size: 20px; font-weight: 900;")
+        total_bar_layout.addWidget(self._total_label)
+
+        layout.addWidget(total_bar)
+
+        # === Buttons ===
         btn_row = QHBoxLayout()
-        btn_row.setSpacing(12)
+        btn_row.setSpacing(10)
         cancel = QPushButton("Hủy")
         cancel.setObjectName("secondary")
-        cancel.setFixedHeight(44)
+        cancel.setMinimumHeight(40)
         cancel.clicked.connect(self.reject)
         btn_row.addWidget(cancel)
         btn_row.addStretch()
-        ok = QPushButton("Xác nhận")
+        ok = QPushButton("Xác nhận chọn")
         ok.setObjectName("primary")
-        ok.setFixedHeight(44)
+        ok.setMinimumHeight(40)
         ok.clicked.connect(self._confirm)
         btn_row.addWidget(ok)
         layout.addLayout(btn_row)
@@ -182,12 +249,19 @@ class ProductPickerDialog(QDialog):
         self._product_table.setRowCount(len(products))
 
         for row, p in enumerate(products):
+            qty = self._selected.get(p.id, {}).get("qty", 0)
+            has_qty = qty > 0
+
             # Name
             name_item = QTableWidgetItem(p.name)
             name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             font = name_item.font()
             font.setPointSize(10)
+            if has_qty:
+                font.setBold(True)
             name_item.setFont(font)
+            if has_qty:
+                name_item.setForeground(QColor(AppColors.PRIMARY))
             self._product_table.setItem(row, 0, name_item)
 
             # Unit price
@@ -197,27 +271,69 @@ class ProductPickerDialog(QDialog):
             price_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
             self._product_table.setItem(row, 1, price_item)
 
-            # Qty spinner - bigger, easier to use
+            # Qty spinner with +/- buttons
             spin_container = QWidget()
             spin_layout = QHBoxLayout(spin_container)
-            spin_layout.setContentsMargins(8, 4, 8, 4)
-            
+            spin_layout.setContentsMargins(4, 2, 4, 2)
+            spin_layout.setSpacing(2)
+
+            dec_btn = QPushButton("−")
+            dec_btn.setFixedSize(26, 28)
+            dec_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            dec_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: #f1f5f9; color: {AppColors.TEXT}; border: none;
+                    border-radius: 4px; font-size: 14px; font-weight: 700;
+                }}
+                QPushButton:hover {{ background: #e2e8f0; }}
+            """)
+            spin_layout.addWidget(dec_btn)
+
             spin = QSpinBox()
             spin.setRange(0, 999)
-            spin.setValue(self._selected.get(p.id, {}).get("qty", 0))
+            spin.setValue(qty)
             spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            spin.setFixedHeight(36)
-            spin.setStyleSheet("""
-                QSpinBox {
-                    font-size: 13px;
-                    font-weight: 600;
-                    padding: 4px;
-                }
+            spin.setFixedHeight(28)
+            spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
+            spin.setStyleSheet(f"""
+                QSpinBox {{
+                    font-size: 13px; font-weight: 700;
+                    border: 1px solid {AppColors.BORDER}; border-radius: 4px;
+                    background: white; padding: 0 2px;
+                }}
+                QSpinBox:focus {{ border-color: {AppColors.PRIMARY}; }}
             """)
             spin.valueChanged.connect(lambda val, pid=p.id, pname=p.name, price=p.unit_price: self._on_qty_changed(pid, pname, price, val))
             spin_layout.addWidget(spin)
-            
+
+            inc_btn = QPushButton("+")
+            inc_btn.setFixedSize(26, 28)
+            inc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            inc_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: {AppColors.PRIMARY}; color: white; border: none;
+                    border-radius: 4px; font-size: 14px; font-weight: 700;
+                }}
+                QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
+            """)
+            spin_layout.addWidget(inc_btn)
+
+            dec_btn.clicked.connect(lambda _, s=spin: s.setValue(max(0, s.value() - 1)))
+            inc_btn.clicked.connect(lambda _, s=spin: s.setValue(s.value() + 1))
+
             self._product_table.setCellWidget(row, 2, spin_container)
+
+            # Subtotal
+            subtotal = qty * p.unit_price
+            sub_item = QTableWidgetItem(f"{int(subtotal // 1000):,}" if subtotal > 0 else "")
+            sub_item.setFlags(sub_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            sub_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            if has_qty:
+                sub_item.setForeground(QColor(AppColors.SUCCESS))
+                font = sub_item.font()
+                font.setBold(True)
+                sub_item.setFont(font)
+            self._product_table.setItem(row, 3, sub_item)
 
         self._update_total()
 
@@ -234,7 +350,28 @@ class ProductPickerDialog(QDialog):
             }
         else:
             self._selected.pop(product_id, None)
-        
+
+        # Update subtotal cell and row highlight
+        for row in range(self._product_table.rowCount()):
+            name_item = self._product_table.item(row, 0)
+            if name_item and name_item.text() == product_name:
+                has_qty = qty > 0
+                # Update name highlight
+                font = name_item.font()
+                font.setBold(has_qty)
+                name_item.setFont(font)
+                name_item.setForeground(QColor(AppColors.PRIMARY) if has_qty else QColor(AppColors.TEXT))
+                # Update subtotal
+                sub_item = self._product_table.item(row, 3)
+                if sub_item:
+                    subtotal = qty * unit_price
+                    sub_item.setText(f"{int(subtotal // 1000):,}" if subtotal > 0 else "")
+                    sub_font = sub_item.font()
+                    sub_font.setBold(has_qty)
+                    sub_item.setFont(sub_font)
+                    sub_item.setForeground(QColor(AppColors.SUCCESS) if has_qty else QColor(AppColors.TEXT_SECONDARY))
+                break
+
         self._update_total()
 
     def _update_total(self):
@@ -288,18 +425,23 @@ class TaskDialog(QDialog):
 
     def _setup_ui(self):
         self.setWindowTitle("Sửa công việc" if self.task else "Thêm công việc")
-        self.setMinimumWidth(520)
-        self.setMinimumHeight(450)
+        self.setMinimumWidth(480)
+        self.setMinimumHeight(380)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(16)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(12)
+        layout.setContentsMargins(20, 16, 20, 16)
 
-        form = QFormLayout()
-        form.setSpacing(12)
+        # --- Type + Customer row ---
+        row1 = QHBoxLayout()
+        row1.setSpacing(12)
 
-        # Task type
+        type_group = QVBoxLayout()
+        type_lbl = QLabel("Loại")
+        type_lbl.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-weight: 600;")
+        type_group.addWidget(type_lbl)
         self.type_combo = QComboBox()
+        self.type_combo.setMinimumHeight(36)
         self.type_combo.addItem("Chưa thanh toán", "unpaid")
         self.type_combo.addItem("Chưa thu tiền", "uncollected")
         self.type_combo.addItem("Chưa giao đồ", "undelivered")
@@ -309,11 +451,16 @@ class TaskDialog(QDialog):
             index = self.type_combo.findData(self.task.task_type)
             if index >= 0:
                 self.type_combo.setCurrentIndex(index)
-        form.addRow("Loại:", self.type_combo)
+        type_group.addWidget(self.type_combo)
+        row1.addLayout(type_group, 2)
 
-        # Customer
+        cust_group = QVBoxLayout()
+        cust_lbl = QLabel("Khách hàng / Máy")
+        cust_lbl.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-weight: 600;")
+        cust_group.addWidget(cust_lbl)
         self.customer_input = QLineEdit()
-        self.customer_input.setPlaceholderText("Nhập tên máy (VD: MAY-1) hoặc tên khách")
+        self.customer_input.setMinimumHeight(36)
+        self.customer_input.setPlaceholderText("MAY-1, tên khách...")
         machine_count = 46
         if self.parent():
             try:
@@ -333,44 +480,96 @@ class TaskDialog(QDialog):
         self.customer_input.setCompleter(completer)
         if self.task and self.task.customer_name:
             self.customer_input.setText(self.task.customer_name)
-        form.addRow("Khách hàng:", self.customer_input)
+        cust_group.addWidget(self.customer_input)
+        row1.addLayout(cust_group, 3)
+        layout.addLayout(row1)
 
-        # Amount - auto-convert nghìn đồng
+        # --- Amount + Product picker row ---
+        amt_group = QVBoxLayout()
+        amt_lbl = QLabel("Số tiền (nghìn)")
+        amt_lbl.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-weight: 600;")
+        amt_group.addWidget(amt_lbl)
+
         amount_row = QHBoxLayout()
+        amount_row.setSpacing(8)
         self.amount_input = QLineEdit()
-        self.amount_input.setPlaceholderText("35 (nghìn) hoặc 35 + 50")
+        self.amount_input.setMinimumHeight(36)
+        self.amount_input.setPlaceholderText("35 hoặc 35 + 50")
         if self.task:
-            # Display in thousands
             self.amount_input.setText(str(int(self.task.amount // 1000)) if self.task.amount else "")
         self.amount_input.editingFinished.connect(self._eval_amount)
         amount_row.addWidget(self.amount_input)
 
-        # Product picker
         pick_btn = QPushButton("Chọn SP")
-        pick_btn.setFixedWidth(80)
-        pick_btn.setToolTip("Chọn sản phẩm")
+        pick_btn.setMinimumHeight(36)
+        pick_btn.setFixedWidth(90)
+        pick_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        pick_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {AppColors.PRIMARY};
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
+        """)
         pick_btn.clicked.connect(self._open_product_picker)
         amount_row.addWidget(pick_btn)
-        form.addRow("Số tiền:", amount_row)
+        amt_group.addLayout(amount_row)
+        layout.addLayout(amt_group)
 
-        # Picked products summary
-        self._items_label = QLabel()
-        self._items_label.setWordWrap(True)
-        self._items_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+        # --- Picked products summary (scrollable chips) ---
+        items_group = QVBoxLayout()
+        items_group.setSpacing(4)
+        items_header = QLabel("Sản phẩm đã chọn")
+        items_header.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-weight: 600;")
+        items_group.addWidget(items_header)
+
+        self._items_scroll = QScrollArea()
+        self._items_scroll.setWidgetResizable(True)
+        self._items_scroll.setMaximumHeight(140)
+        self._items_scroll.setStyleSheet(f"""
+            QScrollArea {{
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 6px;
+                background: #f8fafc;
+            }}
+            QScrollBar:vertical {{
+                width: 6px; background: transparent;
+            }}
+            QScrollBar::handle:vertical {{
+                background: {AppColors.BORDER}; border-radius: 3px; min-height: 20px;
+            }}
+        """)
+        self._items_container = QWidget()
+        self._items_flow = QVBoxLayout(self._items_container)
+        self._items_flow.setContentsMargins(8, 6, 8, 6)
+        self._items_flow.setSpacing(4)
+        self._items_scroll.setWidget(self._items_container)
+
+        self._empty_label = QLabel("— chưa chọn sản phẩm —")
+        self._empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._empty_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; padding: 12px 0;")
+
+        items_group.addWidget(self._items_scroll)
         self._refresh_items_label()
-        form.addRow("Sản phẩm:", self._items_label)
+        layout.addLayout(items_group)
 
-        layout.addLayout(form)
+        layout.addStretch()
 
-        # Buttons
+        # --- Buttons ---
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(12)
         cancel_btn = QPushButton("Hủy")
         cancel_btn.setObjectName("secondary")
+        cancel_btn.setMinimumHeight(40)
         cancel_btn.clicked.connect(self.reject)
         btn_layout.addWidget(cancel_btn)
         save_btn = QPushButton("Lưu")
         save_btn.setObjectName("primary")
+        save_btn.setMinimumHeight(40)
         save_btn.clicked.connect(self._save)
         btn_layout.addWidget(save_btn)
         layout.addLayout(btn_layout)
@@ -397,12 +596,72 @@ class TaskDialog(QDialog):
             self._refresh_items_label()
 
     def _refresh_items_label(self):
+        # Clear existing chips
+        while self._items_flow.count():
+            child = self._items_flow.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
         if not self._picked_items:
-            self._items_label.setText("— chưa chọn —")
+            self._items_flow.addWidget(self._empty_label)
+            self._empty_label.show()
             return
-        lines = [f"• {it['name']} x{it['qty']} = {int(it['qty'] * it['unit_price'] // 1000):,}"
-                 for it in self._picked_items]
-        self._items_label.setText("\n".join(lines))
+
+        self._empty_label.hide()
+        for idx, it in enumerate(self._picked_items):
+            chip = QWidget()
+            chip.setStyleSheet(f"""
+                QWidget {{
+                    background: white;
+                    border: 1px solid {AppColors.BORDER};
+                    border-radius: 4px;
+                }}
+            """)
+            chip_layout = QHBoxLayout(chip)
+            chip_layout.setContentsMargins(8, 4, 4, 4)
+            chip_layout.setSpacing(6)
+
+            name_lbl = QLabel(it["name"])
+            name_lbl.setStyleSheet(f"border: none; color: {AppColors.TEXT}; font-size: 12px; font-weight: 600;")
+            chip_layout.addWidget(name_lbl)
+
+            qty_lbl = QLabel(f"x{it['qty']}")
+            qty_lbl.setStyleSheet(f"border: none; color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+            chip_layout.addWidget(qty_lbl)
+
+            chip_layout.addStretch()
+
+            sub_val = int(it["qty"] * it["unit_price"] // 1000)
+            sub_lbl = QLabel(f"{sub_val:,}")
+            sub_lbl.setStyleSheet(f"border: none; color: {AppColors.SUCCESS}; font-size: 12px; font-weight: 700;")
+            chip_layout.addWidget(sub_lbl)
+
+            remove_btn = QPushButton("✕")
+            remove_btn.setFixedSize(22, 22)
+            remove_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            remove_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: transparent; color: {AppColors.TEXT_SECONDARY};
+                    border: none; border-radius: 11px; font-size: 12px; font-weight: 700;
+                }}
+                QPushButton:hover {{ background: {AppColors.DANGER}; color: white; }}
+            """)
+            remove_btn.clicked.connect(lambda _, i=idx: self._remove_item(i))
+            chip_layout.addWidget(remove_btn)
+
+            self._items_flow.addWidget(chip)
+
+        self._items_flow.addStretch()
+
+    def _remove_item(self, index):
+        if 0 <= index < len(self._picked_items):
+            self._picked_items.pop(index)
+            total = sum(it["qty"] * it["unit_price"] for it in self._picked_items)
+            if total > 0:
+                self.amount_input.setText(str(int(total // 1000)))
+            else:
+                self.amount_input.clear()
+            self._refresh_items_label()
 
     def _save(self):
         customer = self.customer_input.text().strip()
@@ -518,17 +777,17 @@ class TaskView(QWidget):
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
 
-        self.table.setColumnWidth(0, 130)
-        self.table.setColumnWidth(2, 120)
-        self.table.setColumnWidth(3, 90)
-        self.table.setColumnWidth(4, 110)
-        self.table.setColumnWidth(5, 100)
-        self.table.setColumnWidth(6, 140)
+        self.table.setColumnWidth(0, 110)
+        self.table.setColumnWidth(2, 100)
+        self.table.setColumnWidth(3, 80)
+        self.table.setColumnWidth(4, 95)
+        self.table.setColumnWidth(5, 80)
+        self.table.setColumnWidth(6, 160)
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(56)
+        self.table.verticalHeader().setDefaultSectionSize(44)
         
         # Connect cell click to show product details
         self.table.cellClicked.connect(self._on_cell_clicked)
@@ -611,7 +870,7 @@ class TaskView(QWidget):
                 raw_notes = task.notes or ""
                 if raw_notes and " x " in raw_notes and " @ " in raw_notes:
                     lines = [l for l in raw_notes.splitlines() if " x " in l and " @ " in l]
-                    notes_text = f"🛒 {len(lines)}"
+                    notes_text = f"{len(lines)} SP"
                 else:
                     notes_text = (raw_notes[:15] + "..." if len(raw_notes) > 15 else raw_notes or "-")
                 notes_item = QTableWidgetItem(notes_text)
@@ -624,59 +883,44 @@ class TaskView(QWidget):
                 # Actions
                 actions = QWidget()
                 actions_layout = QHBoxLayout(actions)
-                actions_layout.setContentsMargins(4, 6, 4, 6)
-                actions_layout.setSpacing(4)
+                actions_layout.setContentsMargins(2, 4, 2, 4)
+                actions_layout.setSpacing(3)
+
+                btn_style = """
+                    QPushButton {{
+                        background: {bg};
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        font-size: 11px;
+                        font-weight: 700;
+                        padding: 0 6px;
+                    }}
+                    QPushButton:hover {{ background: {hover}; }}
+                """
 
                 if not task.completed:
-                    done_btn = QPushButton("✓")
-                    done_btn.setFixedSize(36, 44)
-                    done_btn.setStyleSheet(f"""
-                        QPushButton {{
-                            background: {AppColors.SUCCESS};
-                            color: white;
-                            border: none;
-                            border-radius: 6px;
-                            font-size: 16px;
-                        }}
-                        QPushButton:hover {{ background: #059669; }}
-                    """)
+                    done_btn = QPushButton("Xong")
+                    done_btn.setFixedHeight(32)
+                    done_btn.setStyleSheet(btn_style.format(bg=AppColors.SUCCESS, hover="#059669"))
                     done_btn.setCursor(Qt.CursorShape.PointingHandCursor)
                     done_btn.clicked.connect(lambda _, tid=task.id: self._complete_task(tid))
                     actions_layout.addWidget(done_btn)
 
                 edit_btn = QPushButton("Sửa")
-                edit_btn.setFixedSize(36, 44)
-                edit_btn.setStyleSheet(f"""
-                    QPushButton {{
-                        background: {AppColors.PRIMARY};
-                        color: white;
-                        border: none;
-                        border-radius: 6px;
-                        font-size: 14px;
-                    }}
-                    QPushButton:hover {{ background: {AppColors.PRIMARY_HOVER}; }}
-                """)
+                edit_btn.setFixedHeight(32)
+                edit_btn.setStyleSheet(btn_style.format(bg=AppColors.PRIMARY, hover=AppColors.PRIMARY_HOVER))
                 edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 edit_btn.clicked.connect(lambda _, tid=task.id: self._edit_task(tid))
                 actions_layout.addWidget(edit_btn)
 
                 del_btn = QPushButton("Xóa")
-                del_btn.setFixedSize(36, 44)
-                del_btn.setStyleSheet(f"""
-                    QPushButton {{
-                        background: {AppColors.ERROR};
-                        color: white;
-                        border: none;
-                        border-radius: 6px;
-                        font-size: 20px;
-                    }}
-                    QPushButton:hover {{ background: #B91C1C; }}
-                """)
+                del_btn.setFixedHeight(32)
+                del_btn.setStyleSheet(btn_style.format(bg=AppColors.ERROR, hover="#B91C1C"))
                 del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 del_btn.clicked.connect(lambda _, tid=task.id: self._delete_task(tid))
                 actions_layout.addWidget(del_btn)
 
-                actions_layout.addStretch()
                 self.table.setCellWidget(row, 6, actions)
 
         except Exception as e:

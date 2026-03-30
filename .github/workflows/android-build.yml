@@ -1,83 +1,82 @@
-name: Build Android APK (WMS Notifier)
+name: Sync Android Submodule
+
+# Android app builds in its own repo: SeikoP/bank-notif
+# This workflow only syncs the submodule pointer when bank-notif has new releases
 
 on:
-  push:
-    branches: [ main, master ]
-    tags:
-      - 'android-v*'
-  pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'bank-notif commit/tag to pin (leave empty for latest main)'
+        required: false
+        type: string
+  schedule:
+    # Check for submodule updates daily at 6 AM UTC
+    - cron: '0 6 * * *'
 
 concurrency:
-  group: android-build-${{ github.ref }}
+  group: android-sync-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
-
-
 jobs:
-  build:
+  sync-submodule:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        submodules: recursive
+        submodules: true
         fetch-depth: 0
-      
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: 'gradle'
-        
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-      working-directory: android_notifier
-      
-    - name: Build APK
-      run: ./gradlew clean assembleDebug --stacktrace --info --no-daemon
-      working-directory: android_notifier
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Upload build reports (always)
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: android-gradle-reports
-        path: |
-          android_notifier/app/build/reports
-          android_notifier/build/reports
-        if-no-files-found: ignore
-      
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: WMS-Notifier-APK
-        path: android_notifier/app/build/outputs/apk/debug/app-debug.apk
-    
-    - name: Create Rolling Release
-      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: android-latest
-        name: Latest Android Build (WMS Notifier)
-        files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
-        draft: false
-        prerelease: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Configure Git
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Create Versioned Release
-      if: startsWith(github.ref, 'refs/tags/android-v')
-      uses: softprops/action-gh-release@v2
-      with:
-        files: android_notifier/app/build/outputs/apk/debug/app-debug.apk
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Get current submodule SHA
+      id: before
+      run: |
+        CURRENT=$(git -C android_notifier rev-parse HEAD)
+        echo "sha=${CURRENT}" >> "$GITHUB_OUTPUT"
+        echo "📌 Current submodule: ${CURRENT::7}"
+
+    - name: Update submodule
+      run: |
+        REF="${{ github.event.inputs.ref }}"
+        if [ -n "$REF" ]; then
+          echo "📎 Pinning to specific ref: $REF"
+          cd android_notifier
+          git fetch origin
+          git checkout "$REF"
+          cd ..
+        else
+          echo "🔄 Updating to latest main..."
+          git submodule update --remote --merge android_notifier
+        fi
+
+    - name: Check for changes
+      id: check
+      run: |
+        AFTER=$(git -C android_notifier rev-parse HEAD)
+        echo "sha=${AFTER}" >> "$GITHUB_OUTPUT"
+        if [ "${{ steps.before.outputs.sha }}" = "$AFTER" ]; then
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+          echo "✅ Submodule already up to date"
+        else
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "📦 Updated: ${{ steps.before.outputs.sha }}..${AFTER}"
+        fi
+
+    - name: Commit and push
+      if: steps.check.outputs.changed == 'true'
+      run: |
+        SHORT_OLD="${{ steps.before.outputs.sha }}"
+        SHORT_NEW="${{ steps.check.outputs.sha }}"
+        git add android_notifier
+        git commit -m "chore: update android_notifier submodule (${SHORT_OLD::7}→${SHORT_NEW::7})"
+        git push

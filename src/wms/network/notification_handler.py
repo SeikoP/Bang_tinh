@@ -56,9 +56,7 @@ class NotificationHandler(BaseHTTPRequestHandler):
             return True
 
     def handle_request(self):
-        # NOTE: Rate limiting is now checked in do_GET/do_POST to cover all endpoints
-
-
+        """Handle incoming notification request"""
         try:
             msg = None
             # Log incoming request
@@ -155,11 +153,7 @@ class NotificationHandler(BaseHTTPRequestHandler):
                                     f"Not JSON/form, using raw body: {msg}"
                                 )
 
-            # Luôn phản hồi success để Android biết đã nhận
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-
+            # Process message BEFORE sending response to ensure it's handled
             if msg:
                 # Try to parse as JSON to get package info
                 package_name = None
@@ -196,6 +190,10 @@ class NotificationHandler(BaseHTTPRequestHandler):
                             self.server.logger.debug(
                                 f"Filtered out notification from: {package_name}"
                             )
+                        # Send response for filtered notification
+                        self.send_response(200)
+                        self.send_header("Content-Type", "application/json")
+                        self.end_headers()
                         self.wfile.write(b'{"status":"success","message":"filtered"}')
                         return
 
@@ -204,15 +202,26 @@ class NotificationHandler(BaseHTTPRequestHandler):
                             f"Accepted notification from: {package_name}"
                         )
 
-                self.wfile.write(b'{"status":"success","message":"received"}')
-                # Đẩy lên giao diện
+                # Đẩy lên giao diện TRƯỚC KHI gửi response
                 if hasattr(self.server, "logger") and self.server.logger:
                     self.server.logger.info(
                         f"Processing notification: {content[:100]}..."
                     )
                 if getattr(self.server, "signal", None):
                     self.server.signal.emit(str(content))
+                    if hasattr(self.server, "logger") and self.server.logger:
+                        self.server.logger.info("Signal emitted successfully")
+                
+                # Gửi response SAU KHI đã xử lý
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status":"success","message":"received"}')
             else:
+                # No content found
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
                 self.wfile.write(b'{"status":"success","message":"no content found"}')
                 if hasattr(self.server, "logger") and self.server.logger:
                     self.server.logger.warning("No content found in request")
@@ -237,6 +246,8 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
         if self.path.startswith("/api/session"):
             self.handle_get_session()
+        elif self.path.startswith("/api/notes"):
+            self.handle_get_notes()
         else:
             self.handle_request()  # Default notification handling
 
@@ -249,6 +260,8 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
         if self.path.startswith("/api/session"):
             self.handle_post_session()
+        elif self.path.startswith("/api/notes"):
+            self.handle_post_notes()
         else:
             self.handle_request()
 
@@ -364,6 +377,27 @@ class NotificationHandler(BaseHTTPRequestHandler):
             current_sessions = {s.product.id: s for s in repo.get_all()}
 
             if action == "handover":
+                # Save current session history BEFORE applying handover
+                notes = payload.get("notes", "")
+                history_repo = container.get("history_repo")
+                if history_repo:
+                    try:
+                        # Apply closing_qty from Android first so history reflects final state
+                        for update in updates:
+                            pid = update.get("product_id")
+                            closing = update.get("closing_qty")
+                            if pid in current_sessions:
+                                current = current_sessions[pid]
+                                repo.update_qty(pid, current.handover_qty, closing)
+
+                        shift_name = f"Giao ca (Android)"
+                        history_repo.save_current_session(shift_name, notes)
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.info(f"Handover: Saved history as '{shift_name}'")
+                    except Exception as hist_err:
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.warning(f"Failed to save history before handover: {hist_err}")
+
                 # Giao ca: closing_qty becomes new handover_qty, reset closing to 0
                 for update in updates:
                     pid = update.get("product_id")
@@ -400,11 +434,13 @@ class NotificationHandler(BaseHTTPRequestHandler):
             # Emit signal to refresh UI
             if hasattr(self.server, "signal"):
                 # Use special command format for system actions
+                notes = payload.get("notes", "")
                 msg = json.dumps(
                     {
                         "has_command": True,
                         "command": "REFRESH_SESSION",
                         "content": f"Remote Update: {action}",
+                        "notes": notes,
                     }
                 )
                 self.server.signal.emit(msg)
@@ -423,6 +459,132 @@ class NotificationHandler(BaseHTTPRequestHandler):
             self.wfile.write(
                 json.dumps({"success": False, "error": str(e)}).encode("utf-8")
             )
+
+    def handle_get_notes(self):
+        """API: Get notes/tasks"""
+        try:
+            if not self._check_auth():
+                self.send_response(401)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": "Unauthorized"}).encode("utf-8"))
+                return
+
+            container = getattr(self.server, "container", None)
+            if not container:
+                raise Exception("Container not found")
+
+            task_repo = container.get("task_repo")
+            if not task_repo:
+                raise Exception("Task repository not found")
+
+            tasks = task_repo.get_all()
+            data = []
+            for t in tasks:
+                data.append({
+                    "id": t.id,
+                    "task_type": t.task_type,
+                    "description": t.description,
+                    "customer_name": t.customer_name,
+                    "amount": float(t.amount),
+                    "created_at": t.created_at,
+                    "completed": t.completed,
+                    "notes": t.notes,
+                })
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, "notes": data}).encode("utf-8"))
+
+        except Exception as e:
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.error(f"API Error (GET notes): {e}", exc_info=True)
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+
+    def handle_post_notes(self):
+        """API: Add or update a note/task"""
+        if not self._check_auth():
+            self.send_response(401)
+            self.end_headers()
+            return
+
+        try:
+            content_length = int(self.headers.get("Content-Length", 0))
+            if content_length == 0:
+                raise Exception("Empty body")
+
+            post_data = self.rfile.read(content_length).decode("utf-8")
+            payload = json.loads(post_data)
+
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.info(f"POST /api/notes - payload: {str(payload)[:200]}")
+
+            container = getattr(self.server, "container", None)
+            if not container:
+                raise Exception("Container not found")
+
+            task_repo = container.get("task_repo")
+            if not task_repo:
+                raise Exception("Task repository not found")
+
+            action = payload.get("action", "add")
+
+            if action == "add":
+                task_id = task_repo.add(
+                    task_type=payload.get("task_type", "note"),
+                    description=payload.get("description", ""),
+                    customer_name=payload.get("customer_name", ""),
+                    amount=float(payload.get("amount", 0)),
+                    notes=payload.get("notes", ""),
+                )
+                result = {"success": True, "action": "add", "id": task_id}
+            elif action == "update":
+                task_id = payload.get("id")
+                if not task_id:
+                    raise Exception("Missing task id")
+                task_repo.update(
+                    task_id=task_id,
+                    task_type=payload.get("task_type", "note"),
+                    description=payload.get("description", ""),
+                    customer_name=payload.get("customer_name", ""),
+                    amount=float(payload.get("amount", 0)),
+                    notes=payload.get("notes", ""),
+                )
+                result = {"success": True, "action": "update", "id": task_id}
+            elif action == "complete":
+                task_id = payload.get("id")
+                if not task_id:
+                    raise Exception("Missing task id")
+                task_repo.mark_completed(task_id)
+                result = {"success": True, "action": "complete", "id": task_id}
+            else:
+                raise Exception(f"Unknown action: {action}")
+
+            # Emit signal to refresh UI
+            if hasattr(self.server, "signal"):
+                msg = json.dumps({
+                    "has_command": True,
+                    "command": "REFRESH_TASKS",
+                    "content": f"Remote Note: {action}",
+                })
+                self.server.signal.emit(msg)
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(result).encode("utf-8"))
+
+        except Exception as e:
+            if hasattr(self.server, "logger") and self.server.logger:
+                self.server.logger.error(f"API Error (POST notes): {e}")
+            self.send_response(500)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
 
     def log_message(self, format, *args):
         # Silent logging - use server logger instead
