@@ -221,6 +221,339 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     self.send_error(500, f"Error updating session: {str(e)}")
                     return
 
+            # ─────────────────────────────────────────────────────────
+            # CONFIG API  (used by Android to auto-refresh tunnel URL)
+            # ─────────────────────────────────────────────────────────
+            if self.command == "GET" and parsed_url.path == "/api/config":
+                try:
+                    from pathlib import Path as _Path
+                    _tunnel_state = _Path(__file__).parents[2] / "config" / "tunnel_state.json"
+                    _tunnel_url = ""
+                    if _tunnel_state.exists():
+                        try:
+                            import json as _j
+                            _tunnel_url = _j.loads(
+                                _tunnel_state.read_text(encoding="utf-8")
+                            ).get("tunnel_url", "")
+                        except Exception:
+                            pass
+                    try:
+                        from ..network.network_monitor import get_all_ips_flat
+                        _ips = get_all_ips_flat()
+                    except Exception:
+                        _ips = []
+                    _port = 5005
+                    try:
+                        _port = self.server.server_address[1]
+                    except Exception:
+                        pass
+                    body = json.dumps({
+                        "success": True,
+                        "tunnel_url": _tunnel_url,
+                        "ips": _ips,
+                        "port": _port,
+                    }, ensure_ascii=False).encode("utf-8")
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.end_headers()
+                    self.wfile.write(body)
+                except Exception as e:
+                    self.send_error(500, str(e))
+                return
+
+            # ─────────────────────────────────────────────────────────
+            # NOTES / PAYMENT API
+            # ─────────────────────────────────────────────────────────
+            from ..database.task_repository import TaskRepository
+            from ..database.task_models import Task
+            import re as _re
+
+            def _task_to_dict(task: Task) -> dict:
+                return {
+                    "id": task.id,
+                    "task_type": task.task_type,
+                    "description": task.description,
+                    "customer_name": task.customer_name,
+                    "amount": task.amount,
+                    "created_at": task.created_at.isoformat(),
+                    "completed": task.completed,
+                    "completed_at": task.completed_at.isoformat() if task.completed_at else None,
+                    "notes": task.notes,
+                    "payment_status": task.payment_status,
+                    "transfer_content": task.transfer_content,
+                    "vietqr_url": task.vietqr_url,
+                    "note_code": task.note_code,
+                }
+
+            def _load_bank_settings() -> dict:
+                from pathlib import Path
+                cfg_path = Path(__file__).parents[2] / "config" / "bank_settings.json"
+                if cfg_path.exists():
+                    try:
+                        import json as _json
+                        return _json.loads(cfg_path.read_text(encoding="utf-8"))
+                    except Exception:
+                        pass
+                return {}
+
+            def _send_json(handler, data: dict, status: int = 200):
+                body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+                handler.send_response(status)
+                handler.send_header("Content-Type", "application/json; charset=utf-8")
+                handler.send_header("Content-Length", str(len(body)))
+                handler.end_headers()
+                handler.wfile.write(body)
+
+            def _read_body(handler) -> bytes:
+                content_length = handler.headers.get("Content-Length")
+                transfer_encoding = handler.headers.get("Transfer-Encoding", "").lower()
+                if content_length and int(content_length) > 0:
+                    length = int(content_length)
+                    if length > 102400:
+                        raise ValueError("Payload too large")
+                    return handler.rfile.read(length)
+                if "chunked" in transfer_encoding:
+                    chunks = []
+                    total = 0
+                    while True:
+                        size_line = handler.rfile.readline().decode("utf-8", errors="replace").strip()
+                        if not size_line:
+                            break
+                        chunk_size = int(size_line.split(";")[0], 16)
+                        if chunk_size == 0:
+                            break
+                        if total + chunk_size > 102400:
+                            raise ValueError("Payload too large")
+                        chunks.append(handler.rfile.read(chunk_size))
+                        total += chunk_size
+                        handler.rfile.read(2)
+                    return b"".join(chunks)
+                return b""
+
+            # GET /api/notes
+            if self.command == "GET" and parsed_url.path == "/api/notes":
+                try:
+                    include_completed = parsed_url.query and "completed=1" in parsed_url.query
+                    tasks = TaskRepository.get_all(include_completed=include_completed)
+                    _send_json(self, {"success": True, "notes": [_task_to_dict(t) for t in tasks]})
+                except Exception as e:
+                    self.send_error(500, str(e))
+                return
+
+            # GET /api/notes/pending-payments
+            if self.command == "GET" and parsed_url.path == "/api/notes/pending-payments":
+                try:
+                    tasks = TaskRepository.find_pending_payments()
+                    _send_json(self, {"success": True, "notes": [_task_to_dict(t) for t in tasks]})
+                except Exception as e:
+                    self.send_error(500, str(e))
+                return
+
+            # POST /api/notes  (action: add | update | delete | complete)
+            if self.command == "POST" and parsed_url.path == "/api/notes":
+                try:
+                    raw = _read_body(self)
+                    data = json.loads(raw.decode("utf-8")) if raw else {}
+                    action = data.get("action", "add")
+
+                    if action == "add":
+                        new_id = TaskRepository.add(
+                            task_type=data.get("task_type", "other"),
+                            description=data.get("description", ""),
+                            customer_name=data.get("customer_name", ""),
+                            amount=float(data.get("amount", 0)),
+                            notes=data.get("notes", ""),
+                        )
+                        TaskRepository.log_event(new_id, "created", "Created via Android")
+                        _send_json(self, {"success": True, "id": new_id})
+
+                    elif action == "update":
+                        tid = int(data["id"])
+                        TaskRepository.update(
+                            task_id=tid,
+                            task_type=data.get("task_type", "other"),
+                            description=data.get("description", ""),
+                            customer_name=data.get("customer_name", ""),
+                            amount=float(data.get("amount", 0)),
+                            notes=data.get("notes", ""),
+                        )
+                        _send_json(self, {"success": True})
+
+                    elif action == "delete":
+                        TaskRepository.delete(int(data["id"]))
+                        _send_json(self, {"success": True})
+
+                    elif action == "complete":
+                        TaskRepository.mark_completed(int(data["id"]))
+                        _send_json(self, {"success": True})
+
+                    else:
+                        _send_json(self, {"success": False, "error": "Unknown action"}, 400)
+
+                    # Ping desktop UI to refresh task view
+                    if (hasattr(self.server, "message_handler") and self.server.message_handler
+                            and action in ("add", "update", "complete")):
+                        try:
+                            self.server.message_handler(
+                                json.dumps({"command": "NOTES_UPDATED"})
+                            )
+                        except Exception:
+                            pass
+                except Exception as e:
+                    self.send_error(500, str(e))
+                return
+
+            # POST /api/qr-invoice
+            if self.command == "POST" and parsed_url.path == "/api/qr-invoice":
+                try:
+                    raw = _read_body(self)
+                    data = json.loads(raw.decode("utf-8"))
+                    note_id = int(data["note_id"])
+                    final_amount = float(data.get("final_amount", 0))
+                    items = data.get("items", [])
+
+                    bank = _load_bank_settings()
+                    bin_code = bank.get("bin", "")
+                    account = bank.get("account", "")
+                    holder = bank.get("holder", "")
+
+                    transfer_content = f"GC{note_id}"
+                    vietqr_url = ""
+                    if bin_code and account:
+                        from urllib.parse import quote
+                        vietqr_url = (
+                            f"https://img.vietqr.io/image/{bin_code}-{account}-compact.png"
+                            f"?amount={int(final_amount)}&addInfo={quote(transfer_content)}"
+                            f"&accountName={quote(holder)}"
+                        )
+
+                    if items:
+                        TaskRepository.save_invoice_items(note_id, items)
+
+                    TaskRepository.update_payment(note_id, "pending", vietqr_url, transfer_content)
+                    TaskRepository.log_event(note_id, "qr_created", f"VietQR link generated, amount={int(final_amount)}")
+
+                    _send_json(self, {
+                        "success": True,
+                        "note_id": note_id,
+                        "transfer_content": transfer_content,
+                        "vietqr_url": vietqr_url,
+                    })
+
+                    if hasattr(self.server, "message_handler") and self.server.message_handler:
+                        try:
+                            self.server.message_handler(json.dumps({"command": "NOTES_UPDATED"}))
+                        except Exception:
+                            pass
+                except Exception as e:
+                    self.send_error(500, str(e))
+                return
+
+            # POST /api/notes/match  (Android calls after each bank notification)
+            if self.command == "POST" and parsed_url.path == "/api/notes/match":
+                try:
+                    raw = _read_body(self)
+                    data = json.loads(raw.decode("utf-8")) if raw else {}
+                    content = data.get("content", "")
+                    pkg = data.get("package", "")
+
+                    from ..services.bank_parser import BankStatementParser
+                    parsed = BankStatementParser.parse(content)
+                    amount_str = parsed.get("amount", "") or ""
+                    transfer_content = parsed.get("transfer_content", "") or ""
+
+                    matched_task = None
+                    matched_by = ""
+
+                    # 1. Match by GCxx code
+                    gc_match = _re.search(r"\bGC(\d+)\b", content + " " + transfer_content, _re.IGNORECASE)
+                    if gc_match:
+                        note_code = f"GC{gc_match.group(1)}"
+                        matched_task = TaskRepository.find_pending_by_code(note_code)
+                        if matched_task:
+                            matched_by = "code"
+
+                    # 2. Fallback: match by amount
+                    if not matched_task and amount_str:
+                        try:
+                            amt_val = float(_re.sub(r"[^\d]", "", amount_str))
+                            if amt_val > 0:
+                                matched_task = TaskRepository.find_pending_by_amount(amt_val)
+                                if matched_task:
+                                    matched_by = "amount"
+                        except ValueError:
+                            pass
+
+                    if matched_task:
+                        TaskRepository.complete_payment(matched_task.id, source=f"Android/{pkg}")
+                        TaskRepository.log_event(
+                            matched_task.id, "payment_matched",
+                            f"Matched by {matched_by}: {amount_str}", pkg
+                        )
+                        # Notify desktop UI
+                        if hasattr(self.server, "message_handler") and self.server.message_handler:
+                            try:
+                                self.server.message_handler(json.dumps({
+                                    "command": "TASK_MATCHED",
+                                    "note_id": matched_task.id,
+                                    "note_code": matched_task.note_code,
+                                    "amount": amount_str,
+                                }))
+                            except Exception:
+                                pass
+                        _send_json(self, {
+                            "matched": True,
+                            "note_id": matched_task.id,
+                            "note_code": matched_task.note_code,
+                            "amount": amount_str,
+                        })
+                    else:
+                        _send_json(self, {"matched": False})
+                except Exception as e:
+                    self.send_error(500, str(e))
+                return
+
+            # Routes with dynamic {id} — GET /api/notes/{id}/invoice or POST /api/notes/{id}/complete
+            note_id_match = _re.match(r"^/api/notes/(\d+)/(invoice|complete)$", parsed_url.path)
+            if note_id_match:
+                note_id = int(note_id_match.group(1))
+                sub = note_id_match.group(2)
+
+                if self.command == "GET" and sub == "invoice":
+                    try:
+                        task = TaskRepository.get_by_id(note_id)
+                        if not task:
+                            _send_json(self, {"success": False, "error": "Not found"}, 404)
+                            return
+                        items = TaskRepository.get_invoice_items(note_id)
+                        _send_json(self, {
+                            "success": True,
+                            "note": _task_to_dict(task),
+                            "items": [
+                                {"id": it.id, "product_name": it.product_name, "unit": it.unit,
+                                 "qty": it.qty, "unit_price": it.unit_price, "line_total": it.line_total}
+                                for it in items
+                            ],
+                        })
+                    except Exception as e:
+                        self.send_error(500, str(e))
+                    return
+
+                if self.command == "POST" and sub == "complete":
+                    try:
+                        TaskRepository.complete_payment(note_id, source="Android/manual")
+                        TaskRepository.log_event(note_id, "payment_completed", "Completed via Android")
+                        _send_json(self, {"success": True})
+                        if hasattr(self.server, "message_handler") and self.server.message_handler:
+                            try:
+                                self.server.message_handler(json.dumps({"command": "NOTES_UPDATED"}))
+                            except Exception:
+                                pass
+                    except Exception as e:
+                        self.send_error(500, str(e))
+                    return
+
             # --- NOTIFICATION API (Legacy) ---
             msg = None
 

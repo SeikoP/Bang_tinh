@@ -144,6 +144,11 @@ class SettingsView(QWidget):
             self._create_section("Thông tin ứng dụng", self._about_content())
         )
 
+        # Bank account section
+        layout.addWidget(
+            self._create_section("Tài khoản ngân hàng (VietQR)", self._bank_content())
+        )
+
         layout.addStretch()
 
         scroll.setWidget(content_widget)
@@ -717,6 +722,7 @@ class SettingsView(QWidget):
         self.tunnel_status.setText(f"✅ {provider_name} đang chạy — URL đã thêm vào QR code")
         self.tunnel_status.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 11px;")
         self.tunnel_input.setText(url)
+        self._write_tunnel_state(url)
         self._refresh_ip()
 
     def _on_tunnel_error(self, msg: str):
@@ -740,6 +746,7 @@ class SettingsView(QWidget):
         label = "🚀 Bật ngrok" if provider == "ngrok" else "🚀 Bật Cloudflare Tunnel"
         self.tunnel_toggle_btn.setText(label)
         self.tunnel_toggle_btn.setEnabled(True)
+        self._write_tunnel_state("")
 
     def _refresh_ip(self):
         """Async refresh IP & QR"""
@@ -839,6 +846,104 @@ class SettingsView(QWidget):
             self._info_row("Phiên bản", APP_VERSION, color=AppColors.PRIMARY)
         )
         return content
+
+    # ── Bank Account Section ──────────────────────────────────────────────
+    _BANK_CFG_PATH = Path(__file__).parents[3] / "config" / "bank_settings.json"
+    _TUNNEL_STATE_PATH = Path(__file__).parents[3] / "config" / "tunnel_state.json"
+
+    def _write_tunnel_state(self, url: str):
+        """Persist current tunnel URL so notification_service can expose it via /api/config."""
+        try:
+            self._TUNNEL_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+            self._TUNNEL_STATE_PATH.write_text(
+                json.dumps({"tunnel_url": url}, ensure_ascii=False),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
+
+    def _bank_content(self) -> QWidget:
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        layout.setSpacing(10)
+
+        desc = QLabel(
+            "Thông tin này dùng để tạo mã QR VietQR cho các đơn hàng chưa thanh toán.\n"
+            "Nhập BIN ngân hàng (6 số), số tài khoản và tên chủ tài khoản."
+        )
+        desc.setWordWrap(True)
+        desc.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+        layout.addWidget(desc)
+
+        # Load current values
+        saved = {}
+        if self._BANK_CFG_PATH.exists():
+            try:
+                saved = json.loads(self._BANK_CFG_PATH.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+
+        form_layout = QVBoxLayout()
+        form_layout.setSpacing(8)
+
+        def _field(label, key, placeholder=""):
+            row = QHBoxLayout()
+            lbl = QLabel(label)
+            lbl.setFixedWidth(140)
+            lbl.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px;")
+            inp = QLineEdit(saved.get(key, ""))
+            inp.setPlaceholderText(placeholder)
+            inp.setStyleSheet(
+                f"padding: 6px 10px; border: 1px solid {AppColors.BORDER}; "
+                f"border-radius: 6px; font-size: 12px;"
+            )
+            row.addWidget(lbl)
+            row.addWidget(inp, 1)
+            return row, inp
+
+        bin_row, self._bank_bin = _field("BIN ngân hàng:", "bin", "Ví dụ: 970415 (VietinBank)")
+        acc_row, self._bank_account = _field("Số tài khoản:", "account", "Ví dụ: 1234567890")
+        holder_row, self._bank_holder = _field("Tên chủ tài khoản:", "holder", "NGUYEN VAN A")
+
+        form_layout.addLayout(bin_row)
+        form_layout.addLayout(acc_row)
+        form_layout.addLayout(holder_row)
+        layout.addLayout(form_layout)
+
+        # BIN reference hint
+        hint = QLabel(
+            "Tra BIN: VietinBank=970415 | Vietcombank=970436 | MB=970422 | "
+            "Techcombank=970407 | ACB=970416 | BIDV=970418 | Agribank=970405"
+        )
+        hint.setWordWrap(True)
+        hint.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; font-style: italic;")
+        layout.addWidget(hint)
+
+        # Save button
+        save_btn = QPushButton("💾 Lưu cấu hình NH")
+        save_btn.setFixedHeight(36)
+        save_btn.setObjectName("primary")
+        save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_btn.clicked.connect(self._save_bank_settings)
+        layout.addWidget(save_btn)
+
+        return content
+
+    def _save_bank_settings(self):
+        data = {
+            "bin": self._bank_bin.text().strip(),
+            "account": self._bank_account.text().strip(),
+            "holder": self._bank_holder.text().strip().upper(),
+        }
+        if not data["bin"] or not data["account"]:
+            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập BIN và số tài khoản.")
+            return
+        try:
+            self._BANK_CFG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            self._BANK_CFG_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+            QMessageBox.information(self, "Đã lưu", "Cấu hình tài khoản ngân hàng đã được lưu.")
+        except Exception as e:
+            QMessageBox.critical(self, "Lỗi", f"Không lưu được: {e}")
 
     def _info_row(self, label: str, value: str, color: str | None = None) -> QHBoxLayout:
         row = QHBoxLayout()
