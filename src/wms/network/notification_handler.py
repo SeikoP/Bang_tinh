@@ -361,6 +361,8 @@ class NotificationHandler(BaseHTTPRequestHandler):
             payload = json.loads(post_data)
             updates = payload.get("updates", [])
             action = payload.get("action", "update")  # "handover", "close_shift", or "update"
+            notes = payload.get("notes", "")
+            shift_name = (payload.get("shift_name") or "").strip()
 
             if hasattr(self.server, "logger") and self.server.logger:
                 self.server.logger.info(f"POST /api/session - action: {action}, updates: {len(updates)}")
@@ -373,27 +375,36 @@ class NotificationHandler(BaseHTTPRequestHandler):
             if not repo:
                 raise Exception("Session repository not found")
 
+            history_repo = container.get("history_repo")
+
             # Get current state to verify handover quantities
             current_sessions = {s.product.id: s for s in repo.get_all()}
 
+            def apply_updates(update_list):
+                for update in update_list:
+                    pid = update.get("product_id")
+                    if pid not in current_sessions:
+                        continue
+
+                    current = current_sessions[pid]
+                    handover = update.get("handover_qty", current.handover_qty)
+                    closing = update.get("closing_qty", current.closing_qty)
+                    repo.update_qty(pid, handover, closing)
+                    current.handover_qty = handover
+                    current.closing_qty = closing
+
             if action == "handover":
                 # Save current session history BEFORE applying handover
-                notes = payload.get("notes", "")
-                history_repo = container.get("history_repo")
                 if history_repo:
                     try:
-                        # Apply closing_qty from Android first so history reflects final state
-                        for update in updates:
-                            pid = update.get("product_id")
-                            closing = update.get("closing_qty")
-                            if pid in current_sessions:
-                                current = current_sessions[pid]
-                                repo.update_qty(pid, current.handover_qty, closing)
-
-                        shift_name = f"Giao ca (Android)"
-                        history_repo.save_current_session(shift_name, notes)
+                        apply_updates(updates)
+                        history_repo.save_current_session(
+                            shift_name or "Giao ca (Android)", notes
+                        )
                         if hasattr(self.server, "logger") and self.server.logger:
-                            self.server.logger.info(f"Handover: Saved history as '{shift_name}'")
+                            self.server.logger.info(
+                                f"Handover: Saved history as '{shift_name or 'Giao ca (Android)'}'"
+                            )
                     except Exception as hist_err:
                         if hasattr(self.server, "logger") and self.server.logger:
                             self.server.logger.warning(f"Failed to save history before handover: {hist_err}")
@@ -401,40 +412,38 @@ class NotificationHandler(BaseHTTPRequestHandler):
                 # Giao ca: closing_qty becomes new handover_qty, reset closing to 0
                 for update in updates:
                     pid = update.get("product_id")
-                    closing = update.get("closing_qty")
+                    if pid not in current_sessions:
+                        continue
 
-                    if pid in current_sessions:
-                        # New handover = current closing (what's left for next shift)
-                        repo.update_qty(pid, closing, 0)
-                        if hasattr(self.server, "logger") and self.server.logger:
-                            self.server.logger.info(f"Handover: Product {pid} - new handover={closing}, closing=0")
+                    current = current_sessions[pid]
+                    closing = update.get("closing_qty", current.closing_qty)
+
+                    # New handover = current closing (what's left for next shift)
+                    repo.update_qty(pid, closing, 0)
+                    if hasattr(self.server, "logger") and self.server.logger:
+                        self.server.logger.info(f"Handover: Product {pid} - new handover={closing}, closing=0")
 
             elif action == "close_shift":
-                # Chốt ca: just update closing_qty, calculate used
-                for update in updates:
-                    pid = update.get("product_id")
-                    closing = update.get("closing_qty")
-
-                    if pid in current_sessions:
-                        current = current_sessions[pid]
-                        repo.update_qty(pid, current.handover_qty, closing)
+                apply_updates(updates)
+                if history_repo:
+                    try:
+                        history_repo.save_current_session(
+                            shift_name or "Chốt ca (Android)", notes
+                        )
                         if hasattr(self.server, "logger") and self.server.logger:
-                            self.server.logger.info(f"Close shift: Product {pid} - handover={current.handover_qty}, closing={closing}")
+                            self.server.logger.info(
+                                f"Close shift: Saved history as '{shift_name or 'Chốt ca (Android)'}'"
+                            )
+                    except Exception as hist_err:
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.warning(f"Failed to save history for close shift: {hist_err}")
 
             else:
-                # Default update: just update closing quantity
-                for update in updates:
-                    pid = update.get("product_id")
-                    closing = update.get("closing_qty")
-
-                    if pid in current_sessions:
-                        current = current_sessions[pid]
-                        repo.update_qty(pid, current.handover_qty, closing)
+                apply_updates(updates)
 
             # Emit signal to refresh UI
             if hasattr(self.server, "signal"):
                 # Use special command format for system actions
-                notes = payload.get("notes", "")
                 msg = json.dumps(
                     {
                         "has_command": True,
@@ -561,6 +570,12 @@ class NotificationHandler(BaseHTTPRequestHandler):
                     raise Exception("Missing task id")
                 task_repo.mark_completed(task_id)
                 result = {"success": True, "action": "complete", "id": task_id}
+            elif action == "delete":
+                task_id = payload.get("id")
+                if not task_id:
+                    raise Exception("Missing task id")
+                task_repo.delete(task_id)
+                result = {"success": True, "action": "delete", "id": task_id}
             else:
                 raise Exception(f"Unknown action: {action}")
 
