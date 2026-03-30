@@ -7,10 +7,10 @@ import re
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QDialog,
-                             QFormLayout, QHBoxLayout, QHeaderView, QLabel,
-                             QLineEdit, QMessageBox, QPushButton, QScrollArea,
-                             QTableWidget, QTableWidgetItem, QVBoxLayout,
-                             QWidget, QSpinBox)
+                             QFormLayout, QFrame, QHBoxLayout, QHeaderView,
+                             QLabel, QLineEdit, QMessageBox, QPushButton,
+                             QScrollArea, QTableWidget, QTableWidgetItem,
+                             QVBoxLayout, QWidget, QSpinBox)
 
 from ...database.task_repository import TaskRepository
 from ...database.repositories import ProductRepository
@@ -644,7 +644,7 @@ class TaskDialog(QDialog):
                     background: transparent; color: {AppColors.TEXT_SECONDARY};
                     border: none; border-radius: 11px; font-size: 12px; font-weight: 700;
                 }}
-                QPushButton:hover {{ background: {AppColors.DANGER}; color: white; }}
+                QPushButton:hover {{ background: {AppColors.ERROR}; color: white; }}
             """)
             remove_btn.clicked.connect(lambda _, i=idx: self._remove_item(i))
             chip_layout.addWidget(remove_btn)
