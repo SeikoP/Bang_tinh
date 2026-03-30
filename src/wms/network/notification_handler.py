@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import parse_qs, urlparse
 
 from ..core.constants import ALL_BANK_PACKAGES
+from ..database.connection import get_connection
 
 
 class NotificationHandler(BaseHTTPRequestHandler):
@@ -381,17 +382,30 @@ class NotificationHandler(BaseHTTPRequestHandler):
             current_sessions = {s.product.id: s for s in repo.get_all()}
 
             def apply_updates(update_list):
-                for update in update_list:
-                    pid = update.get("product_id")
-                    if pid not in current_sessions:
-                        continue
+                with get_connection() as conn:
+                    cursor = conn.cursor()
+                    for update in update_list:
+                        pid = update.get("product_id")
+                        if pid not in current_sessions:
+                            continue
 
-                    current = current_sessions[pid]
-                    handover = update.get("handover_qty", current.handover_qty)
-                    closing = update.get("closing_qty", current.closing_qty)
-                    repo.update_qty(pid, handover, closing)
-                    current.handover_qty = handover
-                    current.closing_qty = closing
+                        current = current_sessions[pid]
+                        handover = update.get("handover_qty", current.handover_qty)
+                        closing = update.get("closing_qty", current.closing_qty)
+                        # Validate
+                        if handover < 0:
+                            handover = 0
+                        if closing < 0:
+                            closing = 0
+                        if closing > handover:
+                            closing = handover
+                        cursor.execute(
+                            """INSERT OR REPLACE INTO session_data (product_id, handover_qty, closing_qty)
+                               VALUES (?, ?, ?)""",
+                            (pid, handover, closing),
+                        )
+                        current.handover_qty = handover
+                        current.closing_qty = closing
 
             if action == "handover":
                 # Save current session history BEFORE applying handover
@@ -410,18 +424,24 @@ class NotificationHandler(BaseHTTPRequestHandler):
                             self.server.logger.warning(f"Failed to save history before handover: {hist_err}")
 
                 # Giao ca: closing_qty becomes new handover_qty, reset closing to 0
-                for update in updates:
-                    pid = update.get("product_id")
-                    if pid not in current_sessions:
-                        continue
+                with get_connection() as conn:
+                    cursor = conn.cursor()
+                    for update in updates:
+                        pid = update.get("product_id")
+                        if pid not in current_sessions:
+                            continue
 
-                    current = current_sessions[pid]
-                    closing = update.get("closing_qty", current.closing_qty)
+                        current = current_sessions[pid]
+                        closing = update.get("closing_qty", current.closing_qty)
 
-                    # New handover = current closing (what's left for next shift)
-                    repo.update_qty(pid, closing, 0)
-                    if hasattr(self.server, "logger") and self.server.logger:
-                        self.server.logger.info(f"Handover: Product {pid} - new handover={closing}, closing=0")
+                        # New handover = current closing (what's left for next shift)
+                        cursor.execute(
+                            """INSERT OR REPLACE INTO session_data (product_id, handover_qty, closing_qty)
+                               VALUES (?, ?, ?)""",
+                            (pid, closing, 0),
+                        )
+                        if hasattr(self.server, "logger") and self.server.logger:
+                            self.server.logger.info(f"Handover: Product {pid} - new handover={closing}, closing=0")
 
             elif action == "close_shift":
                 apply_updates(updates)
