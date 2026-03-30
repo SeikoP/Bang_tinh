@@ -61,6 +61,36 @@ BANK_PACKAGE_MAP = {
 # Set of all bank package names (for fast lookup/filtering)
 BANK_PACKAGES = set(BANK_PACKAGE_MAP.keys())
 
+# SMS / Messaging apps — bank transaction alerts often arrive as SMS,
+# not from the bank app itself.  Adding these ensures SMS-based alerts
+# are forwarded to the PC (content filtering happens in bank_parser).
+SMS_PACKAGES = {
+    "com.android.mms",                      # AOSP / Generic Android
+    "com.android.messaging",               # AOSP Messaging (many OEMs)
+    "com.google.android.apps.messaging",   # Google Messages
+    "com.samsung.android.messaging",       # Samsung Messages
+    "com.miui.messaging",                  # Xiaomi MIUI
+    "com.miui.sms",                        # Xiaomi (older MIUI)
+    "com.vivo.messaging",                  # Vivo
+    "com.oppo.mms",                        # OPPO
+    "com.coloros.mms",                     # ColorOS (OPPO/Realme)
+    "com.realme.messaging",                # Realme
+    "com.asus.message",                    # Asus
+}
+
+# Extra fintech / e-wallet packages not covered in BANK_PACKAGE_MAP
+FINTECH_PACKAGES = {
+    "vn.com.vng.zalopay",                  # ZaloPay
+    "com.shopee.vn",                       # ShopeePay (Vietnam)
+    "com.teko.grabpay.vn",                 # GrabPay Vietnam
+    "com.grab.passenger",                  # Grab (general)
+    "com.foxpay.app",                      # FoxPay
+    "vn.payoo.customer",                   # Payoo
+    "com.viettel.money",                   # Viettel Money
+    "com.viettelpay",                      # Viettel Pay
+    "com.momo.vnpt",                       # VNPT Money
+}
+
 # Test package names (for development/testing)
 TEST_PACKAGES = {
     "com.test.bankapp",
@@ -70,7 +100,7 @@ TEST_PACKAGES = {
 }
 
 # Combined set for notification filtering
-ALL_BANK_PACKAGES = BANK_PACKAGES | TEST_PACKAGES
+ALL_BANK_PACKAGES = BANK_PACKAGES | SMS_PACKAGES | FINTECH_PACKAGES | TEST_PACKAGES
 
 # ── App Info ──
 APP_NAME = "WMS"

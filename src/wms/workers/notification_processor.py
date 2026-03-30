@@ -74,18 +74,20 @@ class NotificationProcessor(QObject):
                 pass
 
             # --- REGULAR NOTIFICATION ---
-            # Parse message using advanced parser
-            parsed = BankStatementParser.parse(message)
-
-            # Extract package name if JSON
+            # Extract content text and package from JSON wrapper (if any)
             package_name = None
+            content_text = message
             try:
                 data = json.loads(message)
                 if isinstance(data, dict):
                     package_name = data.get("package")
-                    data.get("content", message)
-            except:
+                    # Extract actual notification text — this is what the bank sent
+                    content_text = data.get("content", message)
+            except (json.JSONDecodeError, ValueError):
                 pass
+
+            # Parse ONLY the notification text, not the full JSON wrapper
+            parsed = BankStatementParser.parse(content_text)
 
             # Determine source (Package Map -> Parser detection -> Default)
             source = (

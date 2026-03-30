@@ -30,7 +30,7 @@ SolidCompression=yes
 SetupIconFile=..\..\src\wms\assets\icons\icon.ico
 WizardStyle=modern
 ArchitecturesInstallIn64BitMode=x64compatible
-PrivilegesRequired=lowest
+PrivilegesRequired=admin
 UninstallDisplayIcon={app}\{#MyAppExeName}
 DisableProgramGroupPage=yes
 
@@ -63,8 +63,19 @@ Name: "{group}\Gỡ cài đặt {#MyAppName}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\assets\icons\icon.ico"; Tasks: desktopicon
 
 [Run]
+; Add Windows Firewall rules so the notification server can receive connections
+; TCP 5005 — HTTP notification server (Android → Desktop)
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""WMS - Notification Server (TCP 5005)"" dir=in action=allow protocol=TCP localport=5005 profile=any"; Flags: runhidden; StatusMsg: "Mở cổng tường lửa 5005 (TCP)..."
+; UDP 5006 — Auto-discovery broadcast
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall add rule name=""WMS - Discovery Server (UDP 5006)"" dir=in action=allow protocol=UDP localport=5006 profile=any"; Flags: runhidden; StatusMsg: "Mở cổng tường lửa 5006 (UDP)..."
+
 ; Option to launch application after installation
 Filename: "{app}\{#MyAppExeName}"; Description: "Khởi chạy {#MyAppName}"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+; Remove firewall rules on uninstall
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""WMS - Notification Server (TCP 5005)"""; Flags: runhidden
+Filename: "{sys}\netsh.exe"; Parameters: "advfirewall firewall delete rule name=""WMS - Discovery Server (UDP 5006)"""; Flags: runhidden
 
 [UninstallDelete]
 ; Clean up logs on uninstall

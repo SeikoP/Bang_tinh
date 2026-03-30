@@ -239,13 +239,40 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
             # 2. If not in URL, try to get from request body
             if not msg:
                 content_length = self.headers.get("Content-Length")
+                transfer_encoding = self.headers.get("Transfer-Encoding", "").lower()
+
+                post_data = None
                 if content_length and int(content_length) > 0:
                     # Validate content length (prevent DoS)
                     if int(content_length) > 10240:  # 10KB max
                         self.send_error(413, "Payload Too Large")
                         return
+                    post_data = self.rfile.read(int(content_length)).decode("utf-8", errors="replace")
+                elif "chunked" in transfer_encoding:
+                    # Chunked transfer — used by Cloudflare / reverse proxies
+                    chunks: list = []
+                    total = 0
+                    try:
+                        while True:
+                            size_line = self.rfile.readline().decode("utf-8", errors="replace").strip()
+                            if not size_line:
+                                break
+                            chunk_size = int(size_line.split(";")[0], 16)
+                            if chunk_size == 0:
+                                break
+                            if total + chunk_size > 10240:  # 10KB DoS guard
+                                self.send_error(413, "Payload Too Large")
+                                return
+                            chunk = self.rfile.read(chunk_size)
+                            chunks.append(chunk)
+                            total += chunk_size
+                            self.rfile.read(2)  # consume CRLF
+                    except Exception:
+                        pass
+                    if chunks:
+                        post_data = b"".join(chunks).decode("utf-8", errors="replace")
 
-                    post_data = self.rfile.read(int(content_length)).decode("utf-8")
+                if post_data is not None:
 
                     # Validate Content-Type if present
                     content_type = self.headers.get("Content-Type", "")

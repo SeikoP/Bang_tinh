@@ -554,13 +554,16 @@ class MainWindow(QMainWindow):
 
         # Get notification service from container
         notification_service = self.container.get("notification")
+        http_port = config.notification_port if config else 5005
         if notification_service:
             notification_service.register_handler(self._process_notification)
-            notification_service.start_server()
-            self.logger.info("Notification server started successfully")
+            try:
+                notification_service.start_server()
+                self.logger.info("Notification server started successfully")
+            except Exception as e:
+                self._on_port_bind_failed(http_port, str(e))
         else:
             # Fallback to direct implementation
-            http_port = config.notification_port if config else 5005
             if config:
                 self.notif_thread = NotificationServer(
                     host=config.notification_host,
@@ -573,6 +576,7 @@ class MainWindow(QMainWindow):
                     logger=self.logger, container=self.container
                 )
             self.notif_thread.msg_received.connect(self._process_notification)
+            self.notif_thread.bind_failed.connect(self._on_port_bind_failed)
             self.notif_thread.start()
 
         # Start UDP discovery server (fallback: Android finds PC without knowing IP)
@@ -628,6 +632,33 @@ class MainWindow(QMainWindow):
         self._heartbeat.start()
 
     # ── Network event handlers ──────────────────────────────────
+
+    def _on_port_bind_failed(self, port: int, error: str):
+        """Notification server failed to bind — almost always Windows Firewall or port in use."""
+        self.logger.error(f"Port {port} bind failed: {error}")
+
+        from PyQt6.QtWidgets import QMessageBox
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Không thể mở cổng kết nối")
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setText(
+            f"<b>Không thể lắng nghe trên cổng {port}.</b><br><br>"
+            "App Android sẽ không thể gửi thông báo về máy này.<br><br>"
+            "<b>Cách khắc phục (chạy lệnh sau với quyền Admin):</b><br>"
+            f"<code>netsh advfirewall firewall add rule name=\"WMS\" "
+            f"dir=in action=allow protocol=TCP localport={port} profile=any</code><br><br>"
+            f"<i>Chi tiết lỗi: {error}</i>"
+        )
+        msg.setTextFormat(Qt.TextFormat.RichText)
+        copy_btn = msg.addButton("Sao chép lệnh", QMessageBox.ButtonRole.ActionRole)
+        msg.addButton("Bỏ qua", QMessageBox.ButtonRole.RejectRole)
+        msg.exec()
+        if msg.clickedButton() == copy_btn:
+            from PyQt6.QtWidgets import QApplication
+            QApplication.clipboard().setText(
+                f'netsh advfirewall firewall add rule name="WMS" '
+                f'dir=in action=allow protocol=TCP localport={port} profile=any'
+            )
 
     def _on_device_discovered(self, ip: str):
         """When UDP discovery finds an Android device, track it for heartbeat."""

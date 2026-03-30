@@ -115,14 +115,39 @@ class NotificationHandler(BaseHTTPRequestHandler):
             # 2. Nếu URL không có, thử lấy từ Body
             if not msg:
                 content_length = self.headers.get("Content-Length")
+                transfer_encoding = self.headers.get("Transfer-Encoding", "").lower()
                 content_type = self.headers.get("Content-Type", "")
                 if hasattr(self.server, "logger") and self.server.logger:
                     self.server.logger.info(
-                        f"Content-Length: {content_length}, Content-Type: {content_type}"
+                        f"Content-Length: {content_length}, "
+                        f"Transfer-Encoding: {transfer_encoding}, "
+                        f"Content-Type: {content_type}"
                     )
 
+                post_data = None
                 if content_length and int(content_length) > 0:
-                    post_data = self.rfile.read(int(content_length)).decode("utf-8")
+                    # Standard HTTP/1.1 with Content-Length
+                    raw = self.rfile.read(int(content_length))
+                    post_data = raw.decode("utf-8", errors="replace")
+                elif "chunked" in transfer_encoding:
+                    # HTTP chunked encoding — used by Cloudflare / reverse proxies
+                    chunks: list[bytes] = []
+                    try:
+                        while True:
+                            size_line = self.rfile.readline().decode("utf-8", errors="replace").strip()
+                            if not size_line:
+                                break
+                            chunk_size = int(size_line.split(";")[0], 16)
+                            if chunk_size == 0:
+                                break
+                            chunk = self.rfile.read(chunk_size)
+                            chunks.append(chunk)
+                            self.rfile.read(2)  # consume trailing CRLF
+                    except Exception:
+                        pass
+                    if chunks:
+                        post_data = b"".join(chunks).decode("utf-8", errors="replace")
+                if post_data is not None:
                     if hasattr(self.server, "logger") and self.server.logger:
                         self.server.logger.info(f"Received body: {post_data}")
 

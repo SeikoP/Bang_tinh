@@ -13,6 +13,7 @@ class NotificationServer(QThread):
     """Luồng chạy server lắng nghe thông báo"""
 
     msg_received = pyqtSignal(str)
+    bind_failed = pyqtSignal(int, str)  # port, error message
 
     def __init__(self, host="0.0.0.0", port=5005, logger=None, container=None):
         super().__init__()
@@ -53,6 +54,7 @@ class NotificationServer(QThread):
         except OSError as e:
             if self.logger:
                 self.logger.error(f"Could not bind server to {self.host}:{self.port}: {e}")
+            self.bind_failed.emit(self.port, str(e))
         except Exception as e:
             if self.logger:
                 self.logger.error(f"Notification Server error: {e}")
