@@ -81,6 +81,9 @@ class MainWindow(QMainWindow):
         self._notification_processor.error_occurred.connect(
             self._handle_notification_error
         )
+        self._notification_processor.task_matched.connect(
+            self._handle_task_matched
+        )
 
         # Initialize TTS service
         from ..services.tts_service import TTSService
@@ -769,6 +772,9 @@ class MainWindow(QMainWindow):
             if cmd == "REFRESH_SESSION":
                 self._refresh_calc()
 
+            if cmd == "REFRESH_TASKS":
+                self._refresh_tasks()
+
             return
 
         # Update UI with processed data for normal notifications
@@ -836,6 +842,25 @@ class MainWindow(QMainWindow):
         """Handle notification processing errors"""
         if self.logger:
             self.logger.error(f"Notification processing error: {error_msg}")
+
+    def _handle_task_matched(self, note_id: int, note_code: str, amount: str):
+        """Called when a bank payment is auto-matched to a task"""
+        import html as _html
+        banner_msg = (
+            f"<span style='font-size:13px; color:#4ade80;'>"
+            f"✅ Thanh toán khớp: <b>{_html.escape(note_code)}</b> "
+            f"— {_html.escape(amount)}"
+            f"</span>"
+        )
+        try:
+            self.notif_banner.show_message(banner_msg)
+        except Exception:
+            pass
+        self._refresh_tasks()
+
+    def _refresh_tasks(self):
+        if hasattr(self, "task_view"):
+            self.task_view.refresh_list()
 
     def _on_tts_error(self, error_msg: str):
         """Handle TTS errors"""
@@ -1171,6 +1196,7 @@ class MainWindow(QMainWindow):
             try:
                 self._notification_processor.notification_processed.disconnect()
                 self._notification_processor.error_occurred.disconnect()
+                self._notification_processor.task_matched.disconnect()
             except:
                 pass
 

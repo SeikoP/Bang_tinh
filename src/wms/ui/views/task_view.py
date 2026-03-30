@@ -2,10 +2,14 @@
 Task View - Quản lý ghi chú công việc
 """
 
+import json
 import re
+import urllib.request
+import urllib.parse
+from pathlib import Path
 
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QColor
+from PyQt6.QtCore import Qt, QTimer, QByteArray
+from PyQt6.QtGui import QColor, QPixmap
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QDialog,
                              QFormLayout, QFrame, QHBoxLayout, QHeaderView,
                              QLabel, QLineEdit, QMessageBox, QPushButton,
@@ -691,6 +695,205 @@ class TaskDialog(QDialog):
 
 
 
+class PaymentLinkDialog(QDialog):
+    """Dialog hiển thị QR VietQR và quản lý thanh toán"""
+
+    def __init__(self, task, parent=None):
+        super().__init__(parent)
+        self.task = task
+        self.setWindowTitle(f"Thanh Toán - {task.note_code}")
+        self.setMinimumWidth(420)
+        self.setModal(True)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(12)
+        layout.setContentsMargins(20, 20, 20, 20)
+
+        # Title row
+        title = QLabel(f"<b>{task.note_code}</b> — {task.description}")
+        title.setStyleSheet("font-size: 14px;")
+        layout.addWidget(title)
+
+        # Customer + Amount
+        info = QLabel(
+            f"Khách: <b>{task.customer_name or '—'}</b>  |  "
+            f"Số tiền: <b>{int(task.amount):,} đ</b>"
+        )
+        info.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px;")
+        layout.addWidget(info)
+
+        # Transfer content row
+        content_row = QHBoxLayout()
+        tc_label = QLabel("Nội dung CK:")
+        tc_label.setStyleSheet("font-size: 12px;")
+        self._tc_value = QLineEdit(task.transfer_content or task.note_code)
+        self._tc_value.setReadOnly(True)
+        self._tc_value.setStyleSheet(
+            "font-weight: bold; font-size: 13px; background:#1e293b; color:#38bdf8; border-radius:5px;"
+        )
+        copy_btn = QPushButton("Copy")
+        copy_btn.setFixedWidth(60)
+        copy_btn.setFixedHeight(32)
+        copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        copy_btn.clicked.connect(self._copy_content)
+        content_row.addWidget(tc_label)
+        content_row.addWidget(self._tc_value, 1)
+        content_row.addWidget(copy_btn)
+        layout.addLayout(content_row)
+
+        # QR image placeholder
+        self._qr_label = QLabel("⏳ Đang tải QR...")
+        self._qr_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._qr_label.setFixedHeight(220)
+        self._qr_label.setStyleSheet(
+            "border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #94a3b8;"
+        )
+        layout.addWidget(self._qr_label)
+
+        # Payment status badge
+        self._status_label = QLabel()
+        self._status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._status_label.setStyleSheet("font-size: 13px; font-weight: bold; padding: 4px;")
+        self._refresh_status()
+        layout.addWidget(self._status_label)
+
+        # URL row
+        self._url_edit = QLineEdit(task.vietqr_url or "")
+        self._url_edit.setReadOnly(True)
+        self._url_edit.setPlaceholderText("Chưa tạo link QR (cấu hình tài khoản ngân hàng trong Cài đặt)")
+        self._url_edit.setStyleSheet("font-size: 10px; color:#64748b;")
+        layout.addWidget(self._url_edit)
+
+        # Button row
+        btn_row = QHBoxLayout()
+
+        self._gen_btn = QPushButton("🔗 Tạo / Làm mới QR")
+        self._gen_btn.setFixedHeight(36)
+        self._gen_btn.setObjectName("primary")
+        self._gen_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._gen_btn.clicked.connect(self._generate_qr)
+        btn_row.addWidget(self._gen_btn)
+
+        self._paid_btn = QPushButton("✅ Đánh dấu ĐÃ TT")
+        self._paid_btn.setFixedHeight(36)
+        self._paid_btn.setStyleSheet(
+            "background: #059669; color: white; border: none; border-radius: 6px; font-weight: bold;"
+            "QPushButton:hover { background: #047857; }"
+        )
+        self._paid_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._paid_btn.clicked.connect(self._mark_paid)
+        btn_row.addWidget(self._paid_btn)
+
+        close_btn = QPushButton("Đóng")
+        close_btn.setFixedHeight(36)
+        close_btn.setFixedWidth(80)
+        close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_btn.clicked.connect(self.accept)
+        btn_row.addWidget(close_btn)
+
+        layout.addLayout(btn_row)
+
+        # Disable paid button if already completed
+        if task.payment_status in ("completed", "matched"):
+            self._paid_btn.setEnabled(False)
+
+        # Auto-load QR image if URL present
+        if task.vietqr_url:
+            QTimer.singleShot(100, self._load_qr_image)
+
+    def _refresh_status(self):
+        status_map = {
+            "none": ("Chưa tạo QR", "#64748b"),
+            "pending": ("⏳ Chờ thanh toán", "#d97706"),
+            "matched": ("🔵 Đã khớp / Đang xử lý", "#2563eb"),
+            "completed": ("✅ Đã thanh toán", "#059669"),
+            "failed": ("❌ Lỗi / Thất bại", "#dc2626"),
+        }
+        text, color = status_map.get(self.task.payment_status, ("—", "#64748b"))
+        self._status_label.setText(text)
+        self._status_label.setStyleSheet(
+            f"font-size: 13px; font-weight: bold; padding: 4px; color: {color};"
+        )
+
+    def _copy_content(self):
+        from PyQt6.QtWidgets import QApplication
+        QApplication.clipboard().setText(self._tc_value.text())
+        self._tc_value.selectAll()
+
+    def _generate_qr(self):
+        """Build VietQR URL from bank settings and update task"""
+        cfg_path = Path(__file__).parents[3] / "config" / "bank_settings.json"
+        if not cfg_path.exists():
+            QMessageBox.warning(self, "Thiếu cấu hình",
+                "Chưa cấu hình tài khoản ngân hàng.\nVui lòng vào Cài đặt → Tài khoản NH để nhập thông tin.")
+            return
+
+        try:
+            bank = json.loads(cfg_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            QMessageBox.warning(self, "Lỗi", f"Không đọc được cấu hình ngân hàng: {e}")
+            return
+
+        bin_code = bank.get("bin", "")
+        account = bank.get("account", "")
+        holder = bank.get("holder", "")
+
+        if not bin_code or not account:
+            QMessageBox.warning(self, "Thiếu thông tin",
+                "Cần nhập BIN ngân hàng và số tài khoản trong Cài đặt.")
+            return
+
+        tc = self.task.note_code
+        amount = int(self.task.amount)
+        url = (
+            f"https://img.vietqr.io/image/{bin_code}-{account}-compact.png"
+            f"?amount={amount}&addInfo={urllib.parse.quote(tc)}"
+            f"&accountName={urllib.parse.quote(holder)}"
+        )
+
+        TaskRepository.update_payment(self.task.id, "pending", url, tc)
+        TaskRepository.log_event(self.task.id, "qr_created", f"VietQR URL generated, amount={amount}")
+
+        self.task.payment_status = "pending"
+        self.task.vietqr_url = url
+        self.task.transfer_content = tc
+        self._url_edit.setText(url)
+        self._tc_value.setText(tc)
+        self._refresh_status()
+        self._load_qr_image()
+
+    def _load_qr_image(self):
+        """Download and display QR image"""
+        url = self.task.vietqr_url
+        if not url:
+            return
+        try:
+            with urllib.request.urlopen(url, timeout=8) as resp:
+                data = resp.read()
+            pixmap = QPixmap()
+            pixmap.loadFromData(QByteArray(data))
+            if not pixmap.isNull():
+                pixmap = pixmap.scaled(
+                    200, 200,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+                self._qr_label.setPixmap(pixmap)
+                self._qr_label.setText("")
+            else:
+                self._qr_label.setText("⚠️ Không tải được ảnh QR")
+        except Exception as e:
+            self._qr_label.setText(f"⚠️ Lỗi tải QR: {e}")
+
+    def _mark_paid(self):
+        TaskRepository.complete_payment(self.task.id, source="Manual/Desktop")
+        TaskRepository.log_event(self.task.id, "payment_completed", "Marked paid manually on desktop")
+        self.task.payment_status = "completed"
+        self._refresh_status()
+        self._paid_btn.setEnabled(False)
+        QMessageBox.information(self, "OK", f"{self.task.note_code} đã được đánh dấu là ĐÃ THANH TOÁN.")
+
+
 class TaskView(QWidget):
     """View quản lý công việc"""
 
@@ -765,8 +968,8 @@ class TaskView(QWidget):
         layout.addWidget(self.table, 1)
 
     def _setup_table(self):
-        self.table.setColumnCount(7)
-        self.table.setHorizontalHeaderLabels(["Loại", "Mô tả", "Khách", "Tiền", "Thời gian", "Ghi chú", "Thao tác"])
+        self.table.setColumnCount(8)
+        self.table.setHorizontalHeaderLabels(["Loại", "Mô tả", "Khách", "Tiền", "Thời gian", "Thanh toán", "Ghi chú", "Thao tác"])
 
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
@@ -776,13 +979,15 @@ class TaskView(QWidget):
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
 
         self.table.setColumnWidth(0, 110)
         self.table.setColumnWidth(2, 100)
         self.table.setColumnWidth(3, 80)
         self.table.setColumnWidth(4, 95)
-        self.table.setColumnWidth(5, 80)
-        self.table.setColumnWidth(6, 160)
+        self.table.setColumnWidth(5, 105)
+        self.table.setColumnWidth(6, 80)
+        self.table.setColumnWidth(7, 160)
 
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
@@ -866,7 +1071,27 @@ class TaskView(QWidget):
                     time_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
                 self.table.setItem(row, 4, time_item)
 
-                # Notes
+                # Notes (now col 5 = payment, col 6 = notes, col 7 = actions)
+                # ── Payment status col (5) ──
+                payment_display = task.payment_status_display
+                if payment_display or task.task_type == "unpaid":
+                    pay_badge_text = payment_display or "💳 Chưa TT"
+                    pay_color_map = {
+                        "none":      "#475569",
+                        "pending":   "#d97706",
+                        "matched":   "#2563eb",
+                        "completed": "#059669",
+                        "failed":    "#dc2626",
+                    }
+                    pay_color = pay_color_map.get(task.payment_status, "#475569")
+                    self.table.setCellWidget(row, 5, self._create_badge(pay_badge_text, pay_color))
+                else:
+                    empty_pay = QTableWidgetItem("-")
+                    empty_pay.setFlags(empty_pay.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                    empty_pay.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+                    self.table.setItem(row, 5, empty_pay)
+
+                # ── Notes col (6) ──
                 raw_notes = task.notes or ""
                 if raw_notes and " x " in raw_notes and " @ " in raw_notes:
                     lines = [l for l in raw_notes.splitlines() if " x " in l and " @ " in l]
@@ -878,9 +1103,9 @@ class TaskView(QWidget):
                 notes_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 if task.completed:
                     notes_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
-                self.table.setItem(row, 5, notes_item)
+                self.table.setItem(row, 6, notes_item)
 
-                # Actions
+                # ── Actions col (7) ──
                 actions = QWidget()
                 actions_layout = QHBoxLayout(actions)
                 actions_layout.setContentsMargins(2, 4, 2, 4)
@@ -907,6 +1132,15 @@ class TaskView(QWidget):
                     done_btn.clicked.connect(lambda _, tid=task.id: self._complete_task(tid))
                     actions_layout.addWidget(done_btn)
 
+                    # Payment QR button for unpaid tasks
+                    if task.task_type == "unpaid":
+                        qr_btn = QPushButton("💳 QR")
+                        qr_btn.setFixedHeight(32)
+                        qr_btn.setStyleSheet(btn_style.format(bg="#7c3aed", hover="#6d28d9"))
+                        qr_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                        qr_btn.clicked.connect(lambda _, t=task: self._open_payment_dialog(t))
+                        actions_layout.addWidget(qr_btn)
+
                 edit_btn = QPushButton("Sửa")
                 edit_btn.setFixedHeight(32)
                 edit_btn.setStyleSheet(btn_style.format(bg=AppColors.PRIMARY, hover=AppColors.PRIMARY_HOVER))
@@ -921,7 +1155,7 @@ class TaskView(QWidget):
                 del_btn.clicked.connect(lambda _, tid=task.id: self._delete_task(tid))
                 actions_layout.addWidget(del_btn)
 
-                self.table.setCellWidget(row, 6, actions)
+                self.table.setCellWidget(row, 7, actions)
 
         except Exception as e:
             if self.logger:
@@ -1121,6 +1355,16 @@ class TaskView(QWidget):
         if reply == QMessageBox.StandardButton.Yes:
             TaskRepository.delete(task_id)
             self.refresh_list()
+
+    def _open_payment_dialog(self, task):
+        """Open payment QR dialog for a task"""
+        dlg = PaymentLinkDialog(task, parent=self)
+        dlg.exec()
+        self.refresh_list()
+
+    def notify_payment_matched(self, note_id: int, note_code: str, amount: str):
+        """Called when a payment is auto-matched (from main_window signal)"""
+        self.refresh_list()
 
     def _check_pending_tasks(self):
         """Check pending tasks"""

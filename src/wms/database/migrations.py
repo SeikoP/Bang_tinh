@@ -273,6 +273,69 @@ class Migration005AddDisplayOrder(Migration):
         pass
 
 
+class Migration006AddPaymentSystem(Migration):
+    """Add payment system: payment columns on tasks + invoice_items + note_events tables"""
+
+    @property
+    def version(self) -> int:
+        return 6
+
+    @property
+    def description(self) -> str:
+        return "Add payment_status/transfer_content/vietqr_url to tasks; create invoice_items and note_events"
+
+    def up(self, conn: sqlite3.Connection) -> None:
+        cursor = conn.cursor()
+
+        # Extend tasks table
+        for col_sql in [
+            "ALTER TABLE tasks ADD COLUMN payment_status TEXT DEFAULT 'none'",
+            "ALTER TABLE tasks ADD COLUMN transfer_content TEXT DEFAULT ''",
+            "ALTER TABLE tasks ADD COLUMN vietqr_url TEXT DEFAULT ''",
+        ]:
+            try:
+                cursor.execute(col_sql)
+            except sqlite3.OperationalError:
+                pass  # column already exists
+
+        # Invoice items (products chosen per note)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS invoice_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                note_id INTEGER NOT NULL,
+                product_id INTEGER DEFAULT 0,
+                product_name TEXT NOT NULL,
+                unit TEXT DEFAULT '',
+                qty INTEGER DEFAULT 1,
+                unit_price REAL DEFAULT 0,
+                line_total REAL DEFAULT 0,
+                item_note TEXT DEFAULT '',
+                FOREIGN KEY (note_id) REFERENCES tasks(id) ON DELETE CASCADE
+            )
+        """)
+
+        # Per-note event log
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS note_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                note_id INTEGER NOT NULL,
+                event_type TEXT NOT NULL,
+                message TEXT DEFAULT '',
+                metadata TEXT DEFAULT '',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (note_id) REFERENCES tasks(id) ON DELETE CASCADE
+            )
+        """)
+
+        conn.commit()
+
+    def down(self, conn: sqlite3.Connection) -> None:
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS note_events")
+        cursor.execute("DROP TABLE IF EXISTS invoice_items")
+        conn.commit()
+
+
 class MigrationManager:
     """Manages database migrations"""
 
@@ -287,6 +350,7 @@ class MigrationManager:
                 Migration003AddAuditColumns(),
                 Migration004AddSenderName(),
                 Migration005AddDisplayOrder(),
+                Migration006AddPaymentSystem(),
             ]
         else:
             self.migrations = migrations

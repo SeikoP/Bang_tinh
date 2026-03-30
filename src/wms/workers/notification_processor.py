@@ -19,6 +19,7 @@ class NotificationProcessor(QObject):
     # Signals
     notification_processed = pyqtSignal(dict)  # Emit processed notification data
     error_occurred = pyqtSignal(str)  # Emit error message
+    task_matched = pyqtSignal(int, str, str)  # note_id, note_code, amount
 
     def __init__(self, logger=None):
         super().__init__()
@@ -67,6 +68,40 @@ class NotificationProcessor(QObject):
                             "has_command": True,
                             "command": "REFRESH_SESSION",
                             "has_amount": False,
+                            "datetime": now,
+                        }
+                        self.notification_processed.emit(processed_data)
+                        return
+
+                    if data.get("command") == "NOTES_UPDATED":
+                        processed_data = {
+                            "timestamp": now.strftime("%H:%M:%S"),
+                            "source": "Remote",
+                            "amount": "",
+                            "sender_name": "App Di Động",
+                            "content": "Danh sách công việc đã thay đổi",
+                            "has_command": True,
+                            "command": "REFRESH_TASKS",
+                            "has_amount": False,
+                            "datetime": now,
+                        }
+                        self.notification_processed.emit(processed_data)
+                        return
+
+                    if data.get("command") == "TASK_MATCHED":
+                        note_id = int(data.get("note_id", 0))
+                        note_code = str(data.get("note_code", ""))
+                        amount_str = str(data.get("amount", ""))
+                        self.task_matched.emit(note_id, note_code, amount_str)
+                        processed_data = {
+                            "timestamp": now.strftime("%H:%M:%S"),
+                            "source": "Remote",
+                            "amount": amount_str,
+                            "sender_name": "Hệ thống",
+                            "content": f"✅ Đặt hàng {note_code} đã được thanh toán ({amount_str})",
+                            "has_command": True,
+                            "command": "REFRESH_TASKS",
+                            "has_amount": bool(amount_str),
                             "datetime": now,
                         }
                         self.notification_processed.emit(processed_data)
@@ -137,6 +172,52 @@ class NotificationProcessor(QObject):
                 "is_bank": is_bank,
                 "datetime": parsed["datetime"],
             }
+
+            # Auto-match: try to complete a pending payment from local notification pipeline
+            if is_bank and amount:
+                import re as _re
+                try:
+                    transfer_content = parsed.get("transfer_content", "") or ""
+                    search_text = (content_text or "") + " " + transfer_content
+                    gc_match = _re.search(r"\bGC(\d+)\b", search_text, _re.IGNORECASE)
+
+                    from ..database.task_repository import TaskRepository
+                    matched_task = None
+                    matched_by = ""
+
+                    if gc_match:
+                        note_code = f"GC{gc_match.group(1)}"
+                        matched_task = TaskRepository.find_pending_by_code(note_code)
+                        if matched_task:
+                            matched_by = "code"
+
+                    if not matched_task:
+                        try:
+                            amt_val = float(_re.sub(r"[^\d]", "", amount))
+                            if amt_val > 0:
+                                matched_task = TaskRepository.find_pending_by_amount(amt_val)
+                                if matched_task:
+                                    matched_by = "amount"
+                        except (ValueError, TypeError):
+                            pass
+
+                    if matched_task:
+                        TaskRepository.complete_payment(matched_task.id, source=source)
+                        TaskRepository.log_event(
+                            matched_task.id, "auto_matched",
+                            f"Matched by {matched_by}: {amount} from {source}"
+                        )
+                        processed_data["matched_note_id"] = matched_task.id
+                        processed_data["matched_note_code"] = matched_task.note_code
+                        if self.logger:
+                            self.logger.info(
+                                f"[NOTIF PIPELINE] Step 4 - AUTO MATCHED: "
+                                f"{matched_task.note_code} by {matched_by}, amount={amount}"
+                            )
+                        self.task_matched.emit(matched_task.id, matched_task.note_code, amount)
+                except Exception as _match_err:
+                    if self.logger:
+                        self.logger.warning(f"[NOTIF PIPELINE] auto-match error: {_match_err}")
 
             # Emit processed notification
             self.notification_processed.emit(processed_data)

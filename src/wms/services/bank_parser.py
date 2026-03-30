@@ -102,6 +102,13 @@ class BankStatementParser:
     _NAME_NONALPHA_RE = re.compile(r"[^a-zA-Z\s]")
     _WHITESPACE_RE = re.compile(r"\s+")
 
+    # Transfer content / note code patterns
+    _TRANSFER_CONTENT_RE = [
+        re.compile(r"(?:ND|Noi\s*dung|ND:)\s*([^\n]{2,60})", re.IGNORECASE),
+        re.compile(r"\bGC\d+\b", re.IGNORECASE),
+    ]
+    _NOTE_CODE_RE = re.compile(r"\bGC(\d+)\b", re.IGNORECASE)
+
     @classmethod
     def parse(cls, raw_message: str) -> Dict[str, Any]:
         """
@@ -117,6 +124,7 @@ class BankStatementParser:
         amount = cls._extract_amount(normalized)
         dt = cls._extract_datetime(normalized)
         source = cls.detect_source(raw_message)
+        transfer_content = cls._extract_transfer_content(normalized)
 
         # 3. Clean message for UI display
         cleaned = cls._clean_message(normalized)
@@ -128,7 +136,30 @@ class BankStatementParser:
             "source": source,
             "content": cleaned,
             "raw_content": raw_message,
+            "transfer_content": transfer_content,
         }
+
+    @classmethod
+    def _extract_transfer_content(cls, message: str) -> str:
+        """
+        Extract transfer content / note code (e.g. 'GC42') from normalized message.
+        Returns the raw noi dung field or the GCxx code, or empty string.
+        """
+        # First look for an explicit GCxx code anywhere
+        gc_match = cls._NOTE_CODE_RE.search(message)
+        if gc_match:
+            return f"GC{gc_match.group(1)}"
+
+        # Fallback: grab the first Noi dung / ND value (first 40 chars only)
+        for pattern in cls._TRANSFER_CONTENT_RE:
+            m = pattern.search(message)
+            if m:
+                try:
+                    return m.group(1).strip()[:40]
+                except IndexError:
+                    # the GC\d+ pattern has no capture group — handled above
+                    pass
+        return ""
 
     @classmethod
     def _clean_message(cls, normalized_msg: str) -> str:

@@ -6,7 +6,25 @@ from datetime import datetime
 from typing import List, Optional
 
 from .connection import get_connection
-from .task_models import Task
+from .task_models import Task, InvoiceItem, NoteEvent
+
+
+def _row_to_task(row) -> Task:
+    """Convert a DB row to a Task object (handles old 9-col and new 12-col rows)."""
+    return Task(
+        id=row[0],
+        task_type=row[1],
+        description=row[2],
+        customer_name=row[3] or "",
+        amount=row[4] or 0,
+        created_at=datetime.fromisoformat(row[5]),
+        completed=bool(row[6]),
+        completed_at=datetime.fromisoformat(row[7]) if row[7] else None,
+        notes=row[8] or "",
+        payment_status=row[9] if len(row) > 9 and row[9] else "none",
+        transfer_content=row[10] if len(row) > 10 and row[10] else "",
+        vietqr_url=row[11] if len(row) > 11 and row[11] else "",
+    )
 
 
 class TaskRepository:
@@ -77,22 +95,7 @@ class TaskRepository:
             cursor.execute(query)
             rows = cursor.fetchall()
 
-            tasks = []
-            for row in rows:
-                tasks.append(
-                    Task(
-                        id=row[0],
-                        task_type=row[1],
-                        description=row[2],
-                        customer_name=row[3] or "",
-                        amount=row[4] or 0,
-                        created_at=datetime.fromisoformat(row[5]),
-                        completed=bool(row[6]),
-                        completed_at=datetime.fromisoformat(row[7]) if row[7] else None,
-                        notes=row[8] or "",
-                    )
-                )
-
+            tasks = [_row_to_task(row) for row in rows]
             return tasks
 
     @staticmethod
@@ -109,23 +112,7 @@ class TaskRepository:
                 cursor.execute(query, (task_type,))
 
             rows = cursor.fetchall()
-
-            tasks = []
-            for row in rows:
-                tasks.append(
-                    Task(
-                        id=row[0],
-                        task_type=row[1],
-                        description=row[2],
-                        customer_name=row[3] or "",
-                        amount=row[4] or 0,
-                        created_at=datetime.fromisoformat(row[5]),
-                        completed=bool(row[6]),
-                        completed_at=datetime.fromisoformat(row[7]) if row[7] else None,
-                        notes=row[8] or "",
-                    )
-                )
-
+            tasks = [_row_to_task(row) for row in rows]
             return tasks
 
     @staticmethod
@@ -137,17 +124,7 @@ class TaskRepository:
             row = cursor.fetchone()
 
             if row:
-                return Task(
-                    id=row[0],
-                    task_type=row[1],
-                    description=row[2],
-                    customer_name=row[3] or "",
-                    amount=row[4] or 0,
-                    created_at=datetime.fromisoformat(row[5]),
-                    completed=bool(row[6]),
-                    completed_at=datetime.fromisoformat(row[7]) if row[7] else None,
-                    notes=row[8] or "",
-                )
+                return _row_to_task(row)
             return None
 
     @staticmethod
@@ -214,3 +191,224 @@ class TaskRepository:
                 (task_type,),
             )
             return cursor.fetchone()[0]
+
+    # ─────────────────────────────────────────
+    # Payment / VietQR helpers
+    # ─────────────────────────────────────────
+
+    @staticmethod
+    def update_payment(
+        task_id: int,
+        payment_status: str,
+        vietqr_url: str = "",
+        transfer_content: str = "",
+    ) -> None:
+        """Update payment_status, VietQR URL and transfer content on a task."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE tasks
+                SET payment_status = ?, vietqr_url = ?, transfer_content = ?
+                WHERE id = ?
+                """,
+                (payment_status, vietqr_url, transfer_content, task_id),
+            )
+            conn.commit()
+
+    @staticmethod
+    def complete_payment(task_id: int, source: str = "") -> bool:
+        """
+        Idempotently complete a task as paid.
+        Does nothing (returns True) if already completed.
+        Returns True on success, False if task not found.
+        """
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT completed, payment_status FROM tasks WHERE id = ?", (task_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                return False
+            if row[0] or row[1] == "completed":
+                return True  # already done — idempotent
+            cursor.execute(
+                """
+                UPDATE tasks
+                SET completed = 1, completed_at = ?, payment_status = 'completed'
+                WHERE id = ?
+                """,
+                (datetime.now().isoformat(), task_id),
+            )
+            conn.commit()
+        TaskRepository.log_event(task_id, "payment_completed", f"Auto-matched by {source or 'system'}")
+        return True
+
+    @staticmethod
+    def find_pending_by_code(note_code: str) -> Optional[Task]:
+        """
+        Find first unpaid+pending task whose GC{id} matches note_code exactly.
+        note_code should be in the form 'GC42'.
+        """
+        try:
+            note_id = int(note_code.upper().lstrip("GC"))
+        except (ValueError, AttributeError):
+            return None
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT * FROM tasks
+                WHERE id = ? AND completed = 0 AND task_type = 'unpaid'
+                  AND payment_status IN ('pending', 'none')
+                """,
+                (note_id,),
+            )
+            row = cursor.fetchone()
+            return _row_to_task(row) if row else None
+
+    @staticmethod
+    def find_pending_by_amount(
+        amount: float, tolerance: float = 1000
+    ) -> Optional[Task]:
+        """
+        FIFO: find oldest unpaid+pending task whose amount is within tolerance.
+        Returns the first (oldest) match, or None.
+        """
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT * FROM tasks
+                WHERE completed = 0 AND task_type = 'unpaid'
+                  AND payment_status IN ('pending', 'none')
+                  AND amount BETWEEN ? AND ?
+                ORDER BY created_at ASC
+                LIMIT 1
+                """,
+                (amount - tolerance, amount + tolerance),
+            )
+            row = cursor.fetchone()
+            return _row_to_task(row) if row else None
+
+    @staticmethod
+    def find_pending_payments() -> List[Task]:
+        """Return all unpaid tasks with payment_status='pending'."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT * FROM tasks
+                WHERE task_type = 'unpaid' AND payment_status = 'pending'
+                  AND completed = 0
+                ORDER BY created_at DESC
+                """
+            )
+            return [_row_to_task(r) for r in cursor.fetchall()]
+
+    # ─────────────────────────────────────────
+    # Invoice items
+    # ─────────────────────────────────────────
+
+    @staticmethod
+    def save_invoice_items(note_id: int, items: list) -> None:
+        """
+        Replace all invoice items for note_id.
+        Each item dict: {product_id, product_name, unit, qty, unit_price, line_total, item_note}
+        """
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM invoice_items WHERE note_id = ?", (note_id,))
+            for it in items:
+                cursor.execute(
+                    """
+                    INSERT INTO invoice_items
+                        (note_id, product_id, product_name, unit, qty, unit_price, line_total, item_note)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        note_id,
+                        it.get("product_id", 0),
+                        it.get("product_name", it.get("name", "")),
+                        it.get("unit", ""),
+                        it.get("qty", 1),
+                        it.get("unit_price", 0),
+                        it.get("line_total", it.get("qty", 1) * it.get("unit_price", 0)),
+                        it.get("item_note", ""),
+                    ),
+                )
+            conn.commit()
+
+    @staticmethod
+    def get_invoice_items(note_id: int) -> List[InvoiceItem]:
+        """Return invoice items for a note."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM invoice_items WHERE note_id = ? ORDER BY id ASC",
+                (note_id,),
+            )
+            result = []
+            for r in cursor.fetchall():
+                result.append(
+                    InvoiceItem(
+                        id=r[0],
+                        note_id=r[1],
+                        product_id=r[2] or 0,
+                        product_name=r[3],
+                        unit=r[4] or "",
+                        qty=r[5] or 1,
+                        unit_price=r[6] or 0,
+                        line_total=r[7] or 0,
+                        item_note=r[8] or "",
+                    )
+                )
+            return result
+
+    # ─────────────────────────────────────────
+    # Event log
+    # ─────────────────────────────────────────
+
+    @staticmethod
+    def log_event(
+        note_id: int,
+        event_type: str,
+        message: str = "",
+        metadata: str = "",
+    ) -> None:
+        """Append an event to the note event log."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO note_events (note_id, event_type, message, metadata, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (note_id, event_type, message, metadata, datetime.now().isoformat()),
+            )
+            conn.commit()
+
+    @staticmethod
+    def get_events(note_id: int) -> List[NoteEvent]:
+        """Return all events for a note, newest first."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM note_events WHERE note_id = ? ORDER BY created_at DESC",
+                (note_id,),
+            )
+            result = []
+            for r in cursor.fetchall():
+                result.append(
+                    NoteEvent(
+                        id=r[0],
+                        note_id=r[1],
+                        event_type=r[2],
+                        message=r[3] or "",
+                        metadata=r[4] or "",
+                        created_at=datetime.fromisoformat(r[5]),
+                    )
+                )
+            return result
+
