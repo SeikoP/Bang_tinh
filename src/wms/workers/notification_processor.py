@@ -10,6 +10,7 @@ from typing import Optional
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from ..services.bank_parser import BankStatementParser
+from ..core.constants import BANK_PACKAGES, ALL_BANK_PACKAGES
 
 
 class NotificationProcessor(QObject):
@@ -86,8 +87,21 @@ class NotificationProcessor(QObject):
             except (json.JSONDecodeError, ValueError):
                 pass
 
+            if self.logger:
+                safe_preview = (content_text or "")[:120].replace("\n", " ")
+                self.logger.info(
+                    f"[NOTIF PIPELINE] Step 1 - raw_len={len(message)}, "
+                    f"package={package_name}, content_preview={safe_preview}"
+                )
+
             # Parse ONLY the notification text, not the full JSON wrapper
             parsed = BankStatementParser.parse(content_text)
+
+            if self.logger:
+                self.logger.info(
+                    f"[NOTIF PIPELINE] Step 2 - amount={parsed.get('amount')!r}, "
+                    f"source={parsed.get('source')!r}, sender={parsed.get('sender_name')!r}"
+                )
 
             # Determine source (Package Map -> Parser detection -> Default)
             source = (
@@ -101,6 +115,15 @@ class NotificationProcessor(QObject):
             amount = parsed["amount"]
             timestamp = now.strftime("%H:%M:%S")
 
+            # Detect whether this is from a known bank/fintech/SMS package
+            is_bank = bool(package_name and package_name in ALL_BANK_PACKAGES)
+
+            if self.logger:
+                self.logger.info(
+                    f"[NOTIF PIPELINE] Step 3 - has_amount={bool(amount)}, "
+                    f"is_bank={is_bank}, source={source}, emitting signal"
+                )
+
             # Build processed data
             processed_data = {
                 "timestamp": timestamp,
@@ -111,6 +134,7 @@ class NotificationProcessor(QObject):
                 "content": parsed["content"],
                 "package": package_name,
                 "has_amount": bool(amount),
+                "is_bank": is_bank,
                 "datetime": parsed["datetime"],
             }
 

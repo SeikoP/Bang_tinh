@@ -778,6 +778,7 @@ class MainWindow(QMainWindow):
         sender_name = data.get("sender_name", "")
         content = data.get("content", "")
         has_amount = data.get("has_amount", False)
+        is_bank = data.get("is_bank", False)
 
         # Record notification for health monitoring
         self._last_notification_at = int(time.time() * 1000)
@@ -800,6 +801,21 @@ class MainWindow(QMainWindow):
             # Speak notification using TTS
             if self._tts_service and amount:
                 self._tts_service.speak_transaction(amount, sender_name)
+
+        elif is_bank:
+            # Bank notification received but amount could not be parsed —
+            # show a dim amber notice so the user knows something arrived
+            safe_source = html.escape(source)
+            safe_content = html.escape((content or "")[:80])
+            amber_text = (
+                f"<span style='font-size:12px; color:#FFD700;'>"
+                f"📬 {timestamp} | {safe_source} | {safe_content}"
+                f"</span>"
+            )
+            try:
+                self.task_banner.show_message(amber_text, duration=8000)
+            except Exception:
+                pass
 
         if hasattr(self, "bank_view"):
             # Always add to raw logs
