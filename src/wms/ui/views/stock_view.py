@@ -150,8 +150,14 @@ class StockView(QWidget):
         super().__init__()
         self.on_refresh_calc = on_refresh_calc
         self.calc_service = CalculatorService()
+        self._data_loaded = False
         self._setup_ui()
-        self.refresh_data()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._data_loaded:
+            self._data_loaded = True
+            self.refresh_data()
 
     def _setup_ui(self):
         main_layout = QVBoxLayout(self)

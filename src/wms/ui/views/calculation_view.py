@@ -1,10 +1,11 @@
 ﻿from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QDialog, QFileDialog, QFormLayout, QFrame,
-                             QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-                             QMessageBox, QPushButton, QSizePolicy,
-                             QTableWidget, QTableWidgetItem, QTextEdit,
-                             QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QButtonGroup, QDialog, QFileDialog, QFormLayout,
+                             QFrame, QHBoxLayout, QHeaderView, QLabel,
+                             QLineEdit, QMessageBox, QPushButton,
+                             QRadioButton, QSizePolicy, QTableWidget,
+                             QTableWidgetItem, QTextEdit, QVBoxLayout,
+                             QWidget)
 
 from ...database import HistoryRepository, ProductRepository, SessionRepository
 from ...database.connection import get_connection
@@ -186,7 +187,7 @@ class DragDropTableWidget(QTableWidget):
 
 
 class SaveSessionDialog(QDialog):
-    """Dialog lưu phiên"""
+    """Unified dialog lưu phiên – chọn Chốt ca / Giao ca trong cùng 1 dialog"""
 
     def __init__(self, total_amount: float, parent=None):
         super().__init__(parent)
@@ -195,7 +196,6 @@ class SaveSessionDialog(QDialog):
         self._setup_ui()
 
     def keyPressEvent(self, event):
-        """Handle Enter key to submit dialog"""
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             if (
                 not event.modifiers()
@@ -207,10 +207,10 @@ class SaveSessionDialog(QDialog):
 
     def _setup_ui(self):
         self.setWindowTitle("Lưu phiên làm việc")
-        self.setFixedWidth(420)
+        self.setFixedWidth(440)
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(20)
+        layout.setSpacing(16)
         layout.setContentsMargins(28, 24, 28, 24)
 
         # Total
@@ -227,9 +227,29 @@ class SaveSessionDialog(QDialog):
         total_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(total_label)
 
+        # Action radio buttons
+        action_label = QLabel("Hành động:")
+        action_label.setStyleSheet("font-weight: 600; font-size: 14px;")
+        layout.addWidget(action_label)
+
+        self._action_group = QButtonGroup(self)
+        self._radio_chot = QRadioButton("Chốt ca – kết thúc phiên, xoá dữ liệu")
+        self._radio_giao = QRadioButton("Giao ca – chuyển số chốt sang giao ca mới")
+        self._radio_chot.setChecked(True)
+        self._action_group.addButton(self._radio_chot, 0)
+        self._action_group.addButton(self._radio_giao, 1)
+        layout.addWidget(self._radio_chot)
+        layout.addWidget(self._radio_giao)
+
+        # Separator
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.HLine)
+        sep.setFrameShadow(QFrame.Shadow.Sunken)
+        layout.addWidget(sep)
+
         # Form
         form = QFormLayout()
-        form.setSpacing(16)
+        form.setSpacing(12)
         form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
         self.shift_input = QLineEdit()
@@ -238,8 +258,8 @@ class SaveSessionDialog(QDialog):
 
         self.notes_input = QTextEdit()
         self.notes_input.setPlaceholderText("Ghi chú (tuỳ chọn)")
-        self.notes_input.setMinimumHeight(80)
-        self.notes_input.setMaximumHeight(200)
+        self.notes_input.setMinimumHeight(60)
+        self.notes_input.setMaximumHeight(160)
         form.addRow("Ghi chú:", self.notes_input)
 
         layout.addLayout(form)
@@ -259,10 +279,15 @@ class SaveSessionDialog(QDialog):
 
         layout.addLayout(btn_layout)
 
+    @property
+    def is_handover(self) -> bool:
+        return self._radio_giao.isChecked()
+
     def _save(self):
         self.result_data = {
             "shift_name": self.shift_input.text().strip() or "Phiên làm việc",
             "notes": self.notes_input.toPlainText().strip(),
+            "is_handover": self.is_handover,
         }
         self.accept()
 
@@ -1197,7 +1222,7 @@ class CalculationView(QWidget):
         return f"{int(h[0:2], 16)}, {int(h[2:4], 16)}, {int(h[4:6], 16)}"
 
     def _save_session(self):
-        """Save session with handover confirmation"""
+        """Save session – single unified dialog"""
         if self._is_saving:
             return
 
@@ -1210,50 +1235,19 @@ class CalculationView(QWidget):
 
             total = SessionRepository.get_total_amount()
 
-            # Ask: Chốt ca or Giao ca?
-            action_dialog = QMessageBox(self)
-            action_dialog.setWindowTitle("Lưu phiên làm việc")
-            action_dialog.setText("Chọn hành động:")
-            action_dialog.setIcon(QMessageBox.Icon.Question)
-            
-            chot_btn = action_dialog.addButton("✅ Chốt ca", QMessageBox.ButtonRole.AcceptRole)
-            giao_btn = action_dialog.addButton("🔄 Giao ca", QMessageBox.ButtonRole.ActionRole)
-            cancel_btn = action_dialog.addButton("Hủy", QMessageBox.ButtonRole.RejectRole)
-            
-            action_dialog.exec()
-            clicked = action_dialog.clickedButton()
-            
-            if clicked == cancel_btn:
-                return
-            
-            is_handover = (clicked == giao_btn)
-            
-            # Show save dialog
             dialog = SaveSessionDialog(total, self)
             if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
-                
-                if is_handover:
-                    # Giao ca: Confirm before copying closing to handover
-                    confirm = QMessageBox.question(
-                        self,
-                        "Xác nhận giao ca",
-                        "Giao ca sẽ sao chép số chốt ca hiện tại sang giao ca mới.\n\nTiếp tục?",
-                        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-                    )
-                    if confirm != QMessageBox.StandardButton.Yes:
-                        return
-                
+                is_handover = dialog.result_data["is_handover"]
+
                 # Save to history
                 HistoryRepository.save_current_session(
                     shift_name=dialog.result_data["shift_name"],
                     notes=dialog.result_data["notes"],
                 )
-                
+
                 if is_handover:
-                    # Giao ca: Copy closing to handover, reset closing
                     SessionRepository.handover_shift()
                 else:
-                    # Chốt ca: Reset all
                     SessionRepository.reset_all()
 
                 self.refresh_table()
@@ -1261,7 +1255,7 @@ class CalculationView(QWidget):
                 self._show_report({})
                 if self.on_refresh_stock:
                     self.on_refresh_stock()
-                
+
                 msg = "Đã giao ca thành công!" if is_handover else "Đã chốt ca thành công!"
                 QMessageBox.information(self, "Thành công", msg)
         except Exception as e:
