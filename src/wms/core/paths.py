@@ -9,6 +9,7 @@ When running as PyInstaller bundle, ROOT = directory containing the .exe.
 """
 
 import sys
+import os
 from pathlib import Path
 
 
@@ -32,15 +33,37 @@ else:
     # Running as script: src/wms/core/paths.py -> parents[3] = project root
     ROOT = _find_project_root()
     BUNDLE = ROOT
+
+
+def _resolve_data_root() -> Path:
+    """Resolve writable data root for runtime files."""
+    override = os.getenv("WMS_DATA_DIR")
+    if override:
+        return Path(override).expanduser()
+
+    if getattr(sys, "frozen", False):
+        if sys.platform == "win32":
+            local_appdata = os.getenv("LOCALAPPDATA")
+            if local_appdata:
+                return Path(local_appdata) / "WMS"
+            return Path.home() / "AppData" / "Local" / "WMS"
+        return Path.home() / ".wms"
+
+    return ROOT / "data"
+
+
 # Data directories
-DATA = ROOT / "data"
+DATA = _resolve_data_root()
 LOGS = DATA / "logs"
 EXPORTS = DATA / "exports"
 BACKUPS = DATA / "backups"
 CACHE = DATA / "cache"
 
 # Database
-DATABASE = ROOT / "storage.db"
+if getattr(sys, "frozen", False):
+    DATABASE = DATA / "storage.db"
+else:
+    DATABASE = ROOT / "storage.db"
 
 # Build directories
 BUILD = ROOT / "build"
