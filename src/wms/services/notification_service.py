@@ -93,31 +93,100 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                 if config:
                     expected_key = config.secret_key
 
-            # Get Authorization header
+            parsed_url = urlparse(self.path)
+
+            # Log every incoming request for debugging Android connectivity
+            if hasattr(self.server, "logger"):
+                self.server.logger.info(
+                    f"[REQ] {self.command} {self.path} from {client_ip} "
+                    f"Auth={self.headers.get('Authorization', '(none)')!r} "
+                    f"CT={self.headers.get('Content-Type', '(none)')}"
+                )
+
+            # Allow unauthenticated GET probes only (Cloudflare tunnel health checks)
+            # POST requests MUST still authenticate — Android Ping should prove auth works.
+            if self.command == "GET" and parsed_url.path in ("/", "/health", "/favicon.ico"):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status":"ok","auth":"not_checked"}')
+                return
+
+            # --- Extract auth key from multiple sources ---
+            # Source 1: Authorization: Bearer <key>
             auth_header = self.headers.get("Authorization", "")
             provided_key = ""
             if auth_header.startswith("Bearer "):
-                provided_key = auth_header[7:]
+                provided_key = auth_header[7:].strip()
 
-            # If no Authorization header, check URL (for legacy/simple devices)
+            # Source 2: ?key=<key> query parameter
             if not provided_key:
-                parsed_url = urlparse(self.path)
                 query_params = parse_qs(parsed_url.query)
                 if "key" in query_params:
                     provided_key = query_params["key"][0]
 
+            # Source 3: Peek into JSON body for "key" field (Android fallback)
+            # This handles the case where Android sends key in the payload
+            _peeked_body = None
+            if not provided_key and self.command == "POST":
+                try:
+                    content_length = self.headers.get("Content-Length")
+                    transfer_encoding = self.headers.get("Transfer-Encoding", "").lower()
+                    if content_length and int(content_length) > 0 and int(content_length) <= 10240:
+                        _peeked_body = self.rfile.read(int(content_length))
+                        body_data = json.loads(_peeked_body.decode("utf-8", errors="replace"))
+                        if isinstance(body_data, dict) and "key" in body_data:
+                            provided_key = str(body_data["key"]).strip()
+                except Exception:
+                    pass
+
+            # Log full debug info for auth failures
             if expected_key and provided_key != expected_key:
                 if hasattr(self.server, "logger"):
-                    self.server.logger.warning(
-                        f"Unauthorized access attempt from {client_ip}"
+                    auth_dbg = (
+                        f"Unauthorized from {client_ip} path={parsed_url.path} "
+                        f"method={self.command} has_key={'yes' if provided_key else 'no'} "
+                        f"auth_header={'[Bearer ...]' if auth_header.startswith('Bearer ') else repr(auth_header)} "
+                        f"content_type={self.headers.get('Content-Type', 'none')}"
                     )
+                    self.server.logger.warning(auth_dbg)
                 self.send_error(401, "Unauthorized - Invalid API Key")
                 return
+
+            # If we peeked the body for auth, store it so handle_request can reuse it
+            self._peeked_body = _peeked_body
 
             # --- AUTHENTICATED ACCESS GRANTED ---
 
             # --- REMOTE SESSION API ---
-            parsed_url = urlparse(self.path)
+
+            # GET /api/ping - Real connectivity check
+            if self.command == "GET" and parsed_url.path == "/api/ping":
+                checks = {"server": True, "auth": True, "database": False, "signal": False}
+                errors = []
+                try:
+                    from ..database.repositories import SessionRepository
+                    SessionRepository.get_all()
+                    checks["database"] = True
+                except Exception as e:
+                    errors.append(f"database: {e}")
+                if getattr(self.server, "message_handler", None) is not None:
+                    checks["signal"] = True
+                else:
+                    errors.append("signal: message_handler not connected — notifications won't reach desktop")
+                all_ok = all(checks.values())
+                result = {
+                    "status": "ok" if all_ok else "degraded",
+                    "checks": checks,
+                    "ready": all_ok,
+                }
+                if errors:
+                    result["errors"] = errors
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
+                return
 
             # GET /api/session - Get current session data
             if self.command == "GET" and parsed_url.path == "/api/session":
@@ -571,11 +640,17 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
 
             # 2. If not in URL, try to get from request body
             if not msg:
+                # If body was already read during auth key extraction, reuse it
+                _peeked = getattr(self, "_peeked_body", None)
+
                 content_length = self.headers.get("Content-Length")
                 transfer_encoding = self.headers.get("Transfer-Encoding", "").lower()
 
                 post_data = None
-                if content_length and int(content_length) > 0:
+                if _peeked is not None:
+                    # Body was already consumed during auth — reuse it
+                    post_data = _peeked.decode("utf-8", errors="replace")
+                elif content_length and int(content_length) > 0:
                     # Validate content length (prevent DoS)
                     if int(content_length) > 10240:  # 10KB max
                         self.send_error(413, "Payload Too Large")
@@ -618,19 +693,31 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                             if isinstance(data, dict):
                                 # If it's a test ping from Android app
                                 if data.get("content") == "Ping":
-                                    # Send response to Android
+                                    # Auth passed (we got here), server is up,
+                                    # message_handler is the bridge to desktop UI
+                                    has_handler = bool(
+                                        hasattr(self.server, "message_handler")
+                                        and self.server.message_handler
+                                    )
+                                    pong = {
+                                        "status": "success",
+                                        "message": "pong",
+                                        "auth": "ok",
+                                        "handler": has_handler,
+                                        "ready": has_handler,
+                                    }
+                                    if not has_handler:
+                                        pong["error"] = "Desktop UI handler not registered — notifications will be lost"
+
                                     self.send_response(200)
                                     self.send_header("Content-Type", "application/json")
                                     self.end_headers()
                                     self.wfile.write(
-                                        b'{"status":"success","message":"pong"}'
+                                        json.dumps(pong).encode("utf-8")
                                     )
 
                                     # ALSO notify Desktop UI
-                                    if (
-                                        hasattr(self.server, "message_handler")
-                                        and self.server.message_handler
-                                    ):
+                                    if has_handler:
                                         self.server.message_handler(post_data)
                                     return
 
@@ -716,12 +803,23 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                 sanitized = sanitized.replace(char, "")
             return sanitized
 
+    def _touch_heartbeat(self):
+        """Notify heartbeat that this client IP is active."""
+        try:
+            heartbeat = getattr(self.server, "heartbeat", None)
+            if heartbeat:
+                heartbeat.touch_device(self.client_address[0])
+        except Exception:
+            pass
+
     def do_POST(self):
         """Handle POST requests"""
+        self._touch_heartbeat()
         self.handle_request()
 
     def do_GET(self):
         """Handle GET requests"""
+        self._touch_heartbeat()
         self.handle_request()
 
     def log_message(self, format, *args):
@@ -804,6 +902,7 @@ class NotificationService:
             self.server.logger = self.logger
             self.server.rate_limiter = self.rate_limiter
             self.server.container = self.container  # Pass container to handler
+            self.server.heartbeat = getattr(self, "heartbeat", None)
 
             # Start server in background thread
             self.server_thread = Thread(target=self._run_server, daemon=True)

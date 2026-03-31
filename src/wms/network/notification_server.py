@@ -22,6 +22,7 @@ class NotificationServer(QThread):
         self.logger = logger
         self.container = container
         self._server = None
+        self.heartbeat = None  # Set externally after creation
 
     def run(self):
         try:
@@ -33,6 +34,7 @@ class NotificationServer(QThread):
             self._server.signal = self.msg_received
             self._server.logger = self.logger
             self._server.container = self.container
+            self._server.heartbeat = self.heartbeat
 
             # --- AUTH CONFIG ---
             from ..core.config import Config

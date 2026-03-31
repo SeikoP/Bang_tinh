@@ -20,6 +20,22 @@ class NoWheelComboBox(QComboBox):
         event.ignore()
 
 
+class NoWheelSlider(QSlider):
+    """Custom Slider that ignores wheel events to prevent accidental changes while scrolling"""
+
+    def wheelEvent(self, event):
+        event.ignore()
+
+
+class NoWheelCheckBox(QCheckBox):
+    """Custom CheckBox that ignores wheel events to prevent accidental toggling while scrolling"""
+
+    def wheelEvent(self, event):
+        event.ignore()
+
+
+
+
 from ...core.constants import APP_NAME, APP_VERSION
 from ...core.config import BACKUPS as BACKUP_DIR
 from ..theme import AppColors
@@ -177,7 +193,7 @@ class SettingsView(QWidget):
         machine_label.setObjectName("subtitle")
         machine_layout.addWidget(machine_label)
 
-        machine_slider = QSlider(Qt.Orientation.Horizontal)
+        machine_slider = NoWheelSlider(Qt.Orientation.Horizontal)
         machine_slider.setMinimum(1)
         machine_slider.setMaximum(100)
         machine_slider.setValue(46)
@@ -196,7 +212,7 @@ class SettingsView(QWidget):
         row_height_label.setObjectName("subtitle")
         row_height_layout.addWidget(row_height_label)
 
-        row_height_slider = QSlider(Qt.Orientation.Horizontal)
+        row_height_slider = NoWheelSlider(Qt.Orientation.Horizontal)
         row_height_slider.setMinimum(40)
         row_height_slider.setMaximum(100)
         row_height_slider.setValue(self.current_row_height)
@@ -217,7 +233,7 @@ class SettingsView(QWidget):
         widget_height_label.setObjectName("subtitle")
         widget_height_layout.addWidget(widget_height_label)
 
-        widget_height_slider = QSlider(Qt.Orientation.Horizontal)
+        widget_height_slider = NoWheelSlider(Qt.Orientation.Horizontal)
         widget_height_slider.setMinimum(20)
         widget_height_slider.setMaximum(50)
         widget_height_slider.setValue(self.current_widget_height)
@@ -295,7 +311,7 @@ class SettingsView(QWidget):
         enable_layout.addWidget(enable_label)
         enable_layout.addStretch()
 
-        self.tts_enabled_checkbox = QCheckBox()
+        self.tts_enabled_checkbox = NoWheelCheckBox()
         self.tts_enabled_checkbox.setChecked(True)
         self.tts_enabled_checkbox.stateChanged.connect(self._on_tts_enabled_changed)
         enable_layout.addWidget(self.tts_enabled_checkbox)
@@ -323,7 +339,7 @@ class SettingsView(QWidget):
         self.volume_label.setObjectName("subtitle")
         volume_layout.addWidget(self.volume_label)
 
-        self.volume_slider = QSlider(Qt.Orientation.Horizontal)
+        self.volume_slider = NoWheelSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setMinimum(0)
         self.volume_slider.setMaximum(100)
         self.volume_slider.setValue(100)
@@ -535,7 +551,7 @@ class SettingsView(QWidget):
         # ── Start/Stop button row ──
         tunnel_btn_row = QHBoxLayout()
 
-        self.tunnel_toggle_btn = QPushButton("🚀 Bật Cloudflare Tunnel")
+        self.tunnel_toggle_btn = QPushButton("Bật Cloudflare Tunnel")
         self.tunnel_toggle_btn.setFixedWidth(220)
         self.tunnel_toggle_btn.setStyleSheet(f"""
             QPushButton {{
@@ -615,7 +631,7 @@ class SettingsView(QWidget):
         provider = self.tunnel_provider_combo.currentData()
         is_ngrok = provider == "ngrok"
         self.ngrok_token_widget.setVisible(is_ngrok)
-        label = "🚀 Bật ngrok" if is_ngrok else "🚀 Bật Cloudflare Tunnel"
+        label = "Bật ngrok" if is_ngrok else "Bật Cloudflare Tunnel"
         if not (self._tunnel_service and self._tunnel_service.is_running):
             self.tunnel_toggle_btn.setText(label)
             self.tunnel_toggle_btn.setFixedWidth(220)
@@ -659,11 +675,14 @@ class SettingsView(QWidget):
         from ...services.tunnel_service import TunnelService
 
         if self._tunnel_service and self._tunnel_service.is_running:
+            self.tunnel_toggle_btn.setText("Đang dừng...")
+            self.tunnel_toggle_btn.setEnabled(False)
             self._tunnel_service.stop()
             self._tunnel_service = None
             provider = self.tunnel_provider_combo.currentData()
-            label = "🚀 Bật ngrok" if provider == "ngrok" else "🚀 Bật Cloudflare Tunnel"
+            label = "Bật ngrok" if provider == "ngrok" else "Bật Cloudflare Tunnel"
             self.tunnel_toggle_btn.setText(label)
+            self.tunnel_toggle_btn.setEnabled(True)
             self.tunnel_toggle_btn.setStyleSheet(f"""
                 QPushButton {{
                     background: {AppColors.PRIMARY}; color: white;
@@ -672,9 +691,10 @@ class SettingsView(QWidget):
                 QPushButton:hover {{ background: #059669; }}
             """)
             self.tunnel_url_label.setText("")
-            self.tunnel_status.setText("⏹ Tunnel đã tắt")
+            self.tunnel_status.setText("Tunnel đã tắt")
             self.tunnel_status.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
             self.tunnel_input.clear()
+            self._write_tunnel_state("")
             self._refresh_ip()
             return
 
@@ -695,7 +715,7 @@ class SettingsView(QWidget):
         self._tunnel_service.tunnel_stopped.connect(self._on_tunnel_stopped)
         self._tunnel_service.progress.connect(self._on_tunnel_progress)
 
-        self.tunnel_toggle_btn.setText("⏳ Đang kết nối...")
+        self.tunnel_toggle_btn.setText("Đang kết nối...")
         self.tunnel_toggle_btn.setEnabled(False)
         self.tunnel_status.setText("Đang khởi động...")
         self.tunnel_status.setStyleSheet(f"color: {AppColors.WARNING}; font-size: 11px;")
@@ -707,7 +727,7 @@ class SettingsView(QWidget):
         self.tunnel_status.setStyleSheet(f"color: {AppColors.WARNING}; font-size: 11px;")
 
     def _on_tunnel_started(self, url: str):
-        self.tunnel_toggle_btn.setText("⏹ Tắt tunnel")
+        self.tunnel_toggle_btn.setText("Tắt tunnel")
         self.tunnel_toggle_btn.setEnabled(True)
         self.tunnel_toggle_btn.setFixedWidth(220)
         self.tunnel_toggle_btn.setStyleSheet(f"""
@@ -719,7 +739,7 @@ class SettingsView(QWidget):
         """)
         self.tunnel_url_label.setText(url)
         provider_name = self._tunnel_service.provider if self._tunnel_service else "tunnel"
-        self.tunnel_status.setText(f"✅ {provider_name} đang chạy — URL đã thêm vào QR code")
+        self.tunnel_status.setText(f"{provider_name} đang chạy — URL đã thêm vào QR code")
         self.tunnel_status.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 11px;")
         self.tunnel_input.setText(url)
         self._write_tunnel_state(url)
@@ -727,7 +747,7 @@ class SettingsView(QWidget):
 
     def _on_tunnel_error(self, msg: str):
         provider = self.tunnel_provider_combo.currentData()
-        label = "🚀 Bật ngrok" if provider == "ngrok" else "🚀 Bật Cloudflare Tunnel"
+        label = "Bật ngrok" if provider == "ngrok" else "Bật Cloudflare Tunnel"
         self.tunnel_toggle_btn.setText(label)
         self.tunnel_toggle_btn.setEnabled(True)
         self.tunnel_toggle_btn.setStyleSheet(f"""
@@ -738,12 +758,12 @@ class SettingsView(QWidget):
             QPushButton:hover {{ background: #059669; }}
         """)
         self.tunnel_url_label.setText("")
-        self.tunnel_status.setText(f"❌ {msg}")
+        self.tunnel_status.setText(f"Lỗi: {msg}")
         self.tunnel_status.setStyleSheet(f"color: #ef4444; font-size: 11px;")
 
     def _on_tunnel_stopped(self):
         provider = self.tunnel_provider_combo.currentData()
-        label = "🚀 Bật ngrok" if provider == "ngrok" else "🚀 Bật Cloudflare Tunnel"
+        label = "Bật ngrok" if provider == "ngrok" else "Bật Cloudflare Tunnel"
         self.tunnel_toggle_btn.setText(label)
         self.tunnel_toggle_btn.setEnabled(True)
         self._write_tunnel_state("")
@@ -849,6 +869,7 @@ class SettingsView(QWidget):
 
     # ── Bank Account Section ──────────────────────────────────────────────
     _BANK_CFG_PATH = Path(__file__).parents[3] / "config" / "bank_settings.json"
+    _BANK_PROFILES_PATH = Path(__file__).parents[3] / "config" / "bank_profiles.json"
     _TUNNEL_STATE_PATH = Path(__file__).parents[3] / "config" / "tunnel_state.json"
 
     def _write_tunnel_state(self, url: str):
@@ -868,14 +889,45 @@ class SettingsView(QWidget):
         layout.setSpacing(10)
 
         desc = QLabel(
-            "Thông tin này dùng để tạo mã QR VietQR cho các đơn hàng chưa thanh toán.\n"
-            "Nhập BIN ngân hàng (6 số), số tài khoản và tên chủ tài khoản."
+            "Thông tin dùng để tạo mã QR VietQR. Lưu template để chuyển đổi nhanh giữa các tài khoản."
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
         layout.addWidget(desc)
 
-        # Load current values
+        # Saved profiles selector
+        profile_row = QHBoxLayout()
+        profile_label = QLabel("TK đã lưu:")
+        profile_label.setFixedWidth(80)
+        profile_label.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px; font-weight: 600;")
+        profile_row.addWidget(profile_label)
+
+        self._bank_profile_combo = NoWheelComboBox()
+        self._bank_profile_combo.setStyleSheet(f"""
+            QComboBox {{
+                padding: 6px 10px; border: 1px solid {AppColors.BORDER};
+                border-radius: 6px; font-size: 12px; background: white;
+            }}
+        """)
+        self._bank_profile_combo.currentIndexChanged.connect(self._on_bank_profile_selected)
+        profile_row.addWidget(self._bank_profile_combo, 1)
+
+        del_profile_btn = QPushButton("Xoa")
+        del_profile_btn.setFixedSize(50, 32)
+        del_profile_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        del_profile_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {AppColors.ERROR}; color: white; border: none;
+                border-radius: 5px; font-size: 11px; font-weight: 600;
+            }}
+            QPushButton:hover {{ background: #B91C1C; }}
+        """)
+        del_profile_btn.clicked.connect(self._delete_bank_profile)
+        profile_row.addWidget(del_profile_btn)
+
+        layout.addLayout(profile_row)
+
+        # Load current active values
         saved = {}
         if self._BANK_CFG_PATH.exists():
             try:
@@ -883,6 +935,35 @@ class SettingsView(QWidget):
             except Exception:
                 pass
 
+        # BIN helper row
+        bin_helper_row = QHBoxLayout()
+        bin_helper_label = QLabel("Tra BIN:")
+        bin_helper_label.setFixedWidth(80)
+        bin_helper_label.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+        bin_helper_row.addWidget(bin_helper_label)
+
+        self._bin_quick_combo = NoWheelComboBox()
+        self._bin_quick_combo.addItem("-- Chọn ngân hàng --", "")
+        for name, bin_code in [
+            ("VietinBank", "970415"), ("Vietcombank", "970436"), ("MB Bank", "970422"),
+            ("Techcombank", "970407"), ("ACB", "970416"), ("BIDV", "970418"),
+            ("Agribank", "970405"), ("TPBank", "970423"), ("Sacombank", "970403"),
+            ("VPBank", "970432"), ("SHB", "970443"), ("VIB", "970441"),
+        ]:
+            self._bin_quick_combo.addItem(f"{name} ({bin_code})", bin_code)
+        self._bin_quick_combo.currentIndexChanged.connect(
+            lambda: self._bank_bin.setText(self._bin_quick_combo.currentData() or "")
+        )
+        self._bin_quick_combo.setStyleSheet(f"""
+            QComboBox {{
+                padding: 4px 8px; border: 1px solid {AppColors.BORDER};
+                border-radius: 5px; font-size: 11px; background: #f8fafc;
+            }}
+        """)
+        bin_helper_row.addWidget(self._bin_quick_combo, 1)
+        layout.addLayout(bin_helper_row)
+
+        # Form fields
         form_layout = QVBoxLayout()
         form_layout.setSpacing(8)
 
@@ -901,33 +982,118 @@ class SettingsView(QWidget):
             row.addWidget(inp, 1)
             return row, inp
 
-        bin_row, self._bank_bin = _field("BIN ngân hàng:", "bin", "Ví dụ: 970415 (VietinBank)")
-        acc_row, self._bank_account = _field("Số tài khoản:", "account", "Ví dụ: 1234567890")
-        holder_row, self._bank_holder = _field("Tên chủ tài khoản:", "holder", "NGUYEN VAN A")
+        bin_row, self._bank_bin = _field("BIN ngân hàng:", "bin", "970415")
+        acc_row, self._bank_account = _field("Số tài khoản:", "account", "1234567890")
+        holder_row, self._bank_holder = _field("Tên chủ TK:", "holder", "NGUYEN VAN A")
 
         form_layout.addLayout(bin_row)
         form_layout.addLayout(acc_row)
         form_layout.addLayout(holder_row)
         layout.addLayout(form_layout)
 
-        # BIN reference hint
-        hint = QLabel(
-            "Tra BIN: VietinBank=970415 | Vietcombank=970436 | MB=970422 | "
-            "Techcombank=970407 | ACB=970416 | BIDV=970418 | Agribank=970405"
-        )
-        hint.setWordWrap(True)
-        hint.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; font-style: italic;")
-        layout.addWidget(hint)
+        # Buttons row
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(8)
 
-        # Save button
-        save_btn = QPushButton("💾 Lưu cấu hình NH")
+        save_btn = QPushButton("Luu lam TK hien tai")
         save_btn.setFixedHeight(36)
         save_btn.setObjectName("primary")
         save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         save_btn.clicked.connect(self._save_bank_settings)
-        layout.addWidget(save_btn)
+        btn_row.addWidget(save_btn)
+
+        save_tpl_btn = QPushButton("Luu thanh template")
+        save_tpl_btn.setFixedHeight(36)
+        save_tpl_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        save_tpl_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: #3b82f6; color: white; border: none;
+                border-radius: 6px; font-weight: 600; font-size: 12px;
+            }}
+            QPushButton:hover {{ background: #2563eb; }}
+        """)
+        save_tpl_btn.clicked.connect(self._save_bank_profile)
+        btn_row.addWidget(save_tpl_btn)
+
+        layout.addLayout(btn_row)
+
+        # Load profiles into combo
+        self._refresh_bank_profiles()
 
         return content
+
+    def _load_bank_profiles(self) -> list:
+        """Load saved bank profiles from disk"""
+        if self._BANK_PROFILES_PATH.exists():
+            try:
+                return json.loads(self._BANK_PROFILES_PATH.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        return []
+
+    def _save_bank_profiles_to_disk(self, profiles: list):
+        self._BANK_PROFILES_PATH.parent.mkdir(parents=True, exist_ok=True)
+        self._BANK_PROFILES_PATH.write_text(
+            json.dumps(profiles, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+    def _refresh_bank_profiles(self):
+        """Reload profile combo from disk"""
+        self._bank_profile_combo.blockSignals(True)
+        self._bank_profile_combo.clear()
+        self._bank_profile_combo.addItem("-- Chon template --", None)
+        profiles = self._load_bank_profiles()
+        for p in profiles:
+            label = f"{p.get('holder', '?')} - {p.get('account', '?')} ({p.get('bin', '?')})"
+            self._bank_profile_combo.addItem(label, p)
+        self._bank_profile_combo.blockSignals(False)
+
+    def _on_bank_profile_selected(self, index):
+        """Fill form from selected profile AND auto-save as active bank account"""
+        profile = self._bank_profile_combo.currentData()
+        if not profile or not isinstance(profile, dict):
+            return
+        self._bank_bin.setText(profile.get("bin", ""))
+        self._bank_account.setText(profile.get("account", ""))
+        self._bank_holder.setText(profile.get("holder", ""))
+        # Auto-save as active bank settings so QR dialog picks it up immediately
+        self._auto_save_bank(profile)
+
+    def _save_bank_profile(self):
+        """Save current form as a reusable template"""
+        data = {
+            "bin": self._bank_bin.text().strip(),
+            "account": self._bank_account.text().strip(),
+            "holder": self._bank_holder.text().strip().upper(),
+        }
+        if not data["bin"] or not data["account"]:
+            QMessageBox.warning(self, "Thiếu thông tin", "Cần nhập BIN và số tài khoản để lưu template.")
+            return
+
+        profiles = self._load_bank_profiles()
+        # Check duplicate by account number
+        for i, p in enumerate(profiles):
+            if p.get("account") == data["account"] and p.get("bin") == data["bin"]:
+                profiles[i] = data  # Update existing
+                break
+        else:
+            profiles.append(data)
+
+        self._save_bank_profiles_to_disk(profiles)
+        self._refresh_bank_profiles()
+        QMessageBox.information(self, "OK", f"Đã lưu template: {data['holder']} - {data['account']}")
+
+    def _delete_bank_profile(self):
+        """Delete the currently selected profile"""
+        profile = self._bank_profile_combo.currentData()
+        if not profile or not isinstance(profile, dict):
+            return
+        profiles = self._load_bank_profiles()
+        profiles = [p for p in profiles
+                    if not (p.get("account") == profile.get("account")
+                            and p.get("bin") == profile.get("bin"))]
+        self._save_bank_profiles_to_disk(profiles)
+        self._refresh_bank_profiles()
 
     def _save_bank_settings(self):
         data = {
@@ -938,12 +1104,16 @@ class SettingsView(QWidget):
         if not data["bin"] or not data["account"]:
             QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập BIN và số tài khoản.")
             return
+        self._auto_save_bank(data)
+        QMessageBox.information(self, "Đã lưu", "Cấu hình tài khoản ngân hàng đã được lưu.")
+
+    def _auto_save_bank(self, data: dict):
+        """Silently persist bank settings to disk (no popup)."""
         try:
             self._BANK_CFG_PATH.parent.mkdir(parents=True, exist_ok=True)
             self._BANK_CFG_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
-            QMessageBox.information(self, "Đã lưu", "Cấu hình tài khoản ngân hàng đã được lưu.")
-        except Exception as e:
-            QMessageBox.critical(self, "Lỗi", f"Không lưu được: {e}")
+        except Exception:
+            pass
 
     def _info_row(self, label: str, value: str, color: str | None = None) -> QHBoxLayout:
         row = QHBoxLayout()

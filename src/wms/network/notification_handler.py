@@ -67,36 +67,49 @@ class NotificationHandler(BaseHTTPRequestHandler):
                 )
                 self.server.logger.info(f"Headers: {dict(self.headers)}")
 
+            # --- HEALTH / PROBE bypass (GET only — Cloudflare tunnel probes) ---
+            # POST requests MUST authenticate so Android Ping proves auth works.
+            parsed_url = urlparse(self.path)
+            if self.command == "GET" and parsed_url.path in ("/", "/health", "/favicon.ico"):
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"status":"ok","auth":"not_checked"}')
+                return
+
             # --- SECURITY CHECK ---
-            auth_header = self.headers.get("Authorization")
             expected_key = getattr(self.server, "secret_key", None)
 
-            # If server has a secret key configured, enforce it
             if expected_key:
-                if not auth_header or not auth_header.startswith("Bearer "):
+                provided_key = self._extract_key()
+                if not provided_key:
                     self.send_response(401)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
                     self.wfile.write(
-                        b'{"status":"error","message":"Unauthorized: Missing or invalid token"}'
+                        b'{"status":"error","message":"Unauthorized: Missing API key"}'
                     )
                     if hasattr(self.server, "logger") and self.server.logger:
+                        auth_header = self.headers.get("Authorization", "")
                         self.server.logger.warning(
-                            f"Unauthorized request from {self.client_address}"
+                            f"Unauthorized (no key) from {self.client_address} "
+                            f"path={parsed_url.path} method={self.command} "
+                            f"auth_header={repr(auth_header)} "
+                            f"content_type={self.headers.get('Content-Type', 'none')}"
                         )
                     return
 
-                token = auth_header.split(" ")[1].strip()
-                if token != expected_key:
+                if provided_key != expected_key:
                     self.send_response(403)
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
                     self.wfile.write(
-                        b'{"status":"error","message":"Forbidden: Invalid token"}'
+                        b'{"status":"error","message":"Forbidden: Invalid API key"}'
                     )
                     if hasattr(self.server, "logger") and self.server.logger:
                         self.server.logger.warning(
-                            f"Forbidden request from {self.client_address}: Invalid token"
+                            f"Forbidden (wrong key) from {self.client_address} path={parsed_url.path} "
+                            f"got={provided_key[:8]}... expected={expected_key[:8]}..."
                         )
                     return
             # ----------------------
@@ -114,6 +127,9 @@ class NotificationHandler(BaseHTTPRequestHandler):
 
             # 2. Nếu URL không có, thử lấy từ Body
             if not msg:
+                # If body was already read during auth key extraction, reuse it
+                _peeked = getattr(self, "_peeked_body", None)
+
                 content_length = self.headers.get("Content-Length")
                 transfer_encoding = self.headers.get("Transfer-Encoding", "").lower()
                 content_type = self.headers.get("Content-Type", "")
@@ -125,7 +141,10 @@ class NotificationHandler(BaseHTTPRequestHandler):
                     )
 
                 post_data = None
-                if content_length and int(content_length) > 0:
+                if _peeked is not None:
+                    # Body was already consumed during auth — reuse it
+                    post_data = _peeked.decode("utf-8", errors="replace")
+                elif content_length and int(content_length) > 0:
                     # Standard HTTP/1.1 with Content-Length
                     raw = self.rfile.read(int(content_length))
                     post_data = raw.decode("utf-8", errors="replace")
@@ -263,6 +282,15 @@ class NotificationHandler(BaseHTTPRequestHandler):
             except:
                 pass
 
+    def _touch_heartbeat(self):
+        """Notify heartbeat that this client IP is active."""
+        try:
+            heartbeat = getattr(self.server, "heartbeat", None)
+            if heartbeat:
+                heartbeat.touch_device(self.client_address[0])
+        except Exception:
+            pass
+
     def do_GET(self):
         """Handle GET requests"""
         # Check rate limit first for ALL requests
@@ -270,7 +298,13 @@ class NotificationHandler(BaseHTTPRequestHandler):
             self.send_error(429, "Too Many Requests")
             return
 
-        if self.path.startswith("/api/session"):
+        # Track device activity for connection status
+        self._touch_heartbeat()
+
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/ping":
+            self.handle_ping()
+        elif self.path.startswith("/api/session"):
             self.handle_get_session()
         elif self.path.startswith("/api/notes"):
             self.handle_get_notes()
@@ -284,6 +318,9 @@ class NotificationHandler(BaseHTTPRequestHandler):
             self.send_error(429, "Too Many Requests")
             return
 
+        # Track device activity for connection status
+        self._touch_heartbeat()
+
         if self.path.startswith("/api/session"):
             self.handle_post_session()
         elif self.path.startswith("/api/notes"):
@@ -291,18 +328,82 @@ class NotificationHandler(BaseHTTPRequestHandler):
         else:
             self.handle_request()
 
-    def _check_auth(self):
-        """Helper to enforce auth"""
-        auth_header = self.headers.get("Authorization")
-        expected_key = getattr(self.server, "secret_key", None)
+    def _extract_key(self):
+        """Extract auth key from Bearer header, ?key= query param, or JSON body."""
+        # 1. Authorization: Bearer <key>
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            return auth_header[7:].strip()
+        # 2. Fallback: ?key=<key> query param (legacy / simple devices)
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+        if "key" in params:
+            return params["key"][0]
+        # 3. Fallback: "key" field in JSON body (Android may send key this way)
+        if self.command == "POST":
+            try:
+                content_length = self.headers.get("Content-Length")
+                if content_length and 0 < int(content_length) <= 10240:
+                    raw = self.rfile.read(int(content_length))
+                    self._peeked_body = raw  # store for later reuse
+                    body_data = json.loads(raw.decode("utf-8", errors="replace"))
+                    if isinstance(body_data, dict) and "key" in body_data:
+                        return str(body_data["key"]).strip()
+            except Exception:
+                pass
+        return ""
 
-        if expected_key:
-            if not auth_header or not auth_header.startswith("Bearer "):
-                return False
-            token = auth_header.split(" ")[1].strip()
-            if token != expected_key:
-                return False
-        return True
+    def _check_auth(self):
+        """Helper to enforce auth — supports Bearer header AND ?key= param."""
+        expected_key = getattr(self.server, "secret_key", None)
+        if not expected_key:
+            return True
+        return self._extract_key() == expected_key
+
+    def handle_ping(self):
+        """API: Real connectivity check — tests auth, DB access, signal readiness."""
+        checks = {"auth": False, "database": False, "signal": False}
+        errors = []
+
+        # 1. Auth check
+        if self._check_auth():
+            checks["auth"] = True
+        else:
+            errors.append("Auth failed: invalid or missing key")
+
+        # 2. DB check — can we read session data?
+        try:
+            container = getattr(self.server, "container", None)
+            if container:
+                repo = container.get("session_repo")
+                if repo:
+                    repo.get_all()  # lightweight query
+                    checks["database"] = True
+                else:
+                    errors.append("session_repo not found in container")
+            else:
+                errors.append("container not available")
+        except Exception as e:
+            errors.append(f"DB error: {e}")
+
+        # 3. Signal check — is the Qt signal connected?
+        if getattr(self.server, "signal", None) is not None:
+            checks["signal"] = True
+        else:
+            errors.append("UI signal not connected")
+
+        all_ok = all(checks.values())
+        result = {
+            "status": "ok" if all_ok else "partial",
+            "checks": checks,
+        }
+        if errors:
+            result["errors"] = errors
+
+        self.send_response(200 if all_ok else 503)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(result).encode("utf-8"))
 
     def handle_get_session(self):
         """API: Get current session data"""
@@ -645,6 +746,54 @@ class NotificationHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+
+    def handle_ping(self):
+        """Real connectivity check — tests auth, DB, signal bridge, reports each."""
+        checks = {
+            "server": True,
+            "auth": False,
+            "database": False,
+            "signal": False,
+        }
+        errors = []
+
+        # 1. Auth
+        try:
+            if self._check_auth():
+                checks["auth"] = True
+            else:
+                errors.append("auth: key missing or invalid — re-scan QR code")
+        except Exception as e:
+            errors.append(f"auth: {e}")
+
+        # 2. Database
+        try:
+            from ..database.connection import get_connection
+            with get_connection() as conn:
+                conn.execute("SELECT 1")
+            checks["database"] = True
+        except Exception as e:
+            errors.append(f"database: {e}")
+
+        # 3. Signal (UI bridge)
+        if getattr(self.server, "signal", None) is not None:
+            checks["signal"] = True
+        else:
+            errors.append("signal: UI bridge not connected")
+
+        all_ok = all(checks.values())
+        result = {
+            "status": "ok" if all_ok else "degraded",
+            "checks": checks,
+            "ready": all_ok,
+        }
+        if errors:
+            result["errors"] = errors
+
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(result, ensure_ascii=False).encode("utf-8"))
 
     def log_message(self, format, *args):
         # Silent logging - use server logger instead

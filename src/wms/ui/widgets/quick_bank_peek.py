@@ -84,7 +84,7 @@ class QuickBankPeek(QFrame):
             else:
                 amt_item.setForeground(QColor(AppColors.SUCCESS))
 
-            amt_item.setFont(QFont("Roboto", 8, QFont.Weight.Bold))
+            amt_item.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
             self.table.setItem(r, 1, amt_item)
 
             self.table.setItem(

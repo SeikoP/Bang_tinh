@@ -156,16 +156,28 @@ class _CloudflareWorker(QThread):
         self._cleanup()
 
     def _cleanup(self):
-        if self._process and self._process.poll() is None:
+        proc = self._process
+        if proc is None:
+            return
+        self._process = None
+        # Close pipes first to unblock readline() in the run() thread
+        try:
+            if proc.stderr:
+                proc.stderr.close()
+        except Exception:
+            pass
+        try:
+            if proc.stdout:
+                proc.stdout.close()
+        except Exception:
+            pass
+        # On Windows, terminate() may not be enough for cloudflared — use kill()
+        if proc.poll() is None:
             try:
-                self._process.terminate()
-                self._process.wait(timeout=5)
+                proc.kill()
+                proc.wait(timeout=5)
             except Exception:
-                try:
-                    self._process.kill()
-                except Exception:
-                    pass
-            self._process = None
+                pass
 
 
 # ═══════════════════════════════════════════════════════
@@ -277,7 +289,8 @@ class TunnelService(QObject):
     def start(self, port: int, provider: str = "cloudflare",
               authtoken: str = "", region: str = ""):
         if self.is_running:
-            return
+            # Stop previous worker first
+            self.stop()
 
         self._provider = provider
 
@@ -298,7 +311,10 @@ class TunnelService(QObject):
     def stop(self):
         if self._worker:
             self._worker.stop()
-            self._worker.wait(8000)
+            if not self._worker.wait(5000):
+                # Force terminate the thread if it didn't stop in time
+                self._worker.terminate()
+                self._worker.wait(2000)
             self._worker = None
         self._public_url = ""
 

@@ -64,10 +64,13 @@ class BaseBanner(QFrame):
 
     def hide_banner(self):
         """Hide with animation"""
+        self.fade_anim.stop()
         self.fade_anim.setStartValue(1.0)
         self.fade_anim.setEndValue(0.0)
-        self.fade_anim.finished.connect(self.hide)
         self.fade_anim.start()
+        # Use singleShot so we hide once after the fade-out, without
+        # leaving a persistent connection that would fire on future fade-ins.
+        QTimer.singleShot(self.fade_anim.duration(), self.hide)
 
 
 class BankNotificationBanner(BaseBanner):
@@ -78,15 +81,15 @@ class BankNotificationBanner(BaseBanner):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedHeight(30)  # Compact height
-        self.setMaximumWidth(320)  # Limit width to stay compact
+        self.setFixedHeight(36)  # Taller for readability
+        self.setMaximumWidth(480)  # Wider to avoid text truncation
         
         # Style: Modern Glassmorphism/Solid blend
         self.setStyleSheet("""
             QFrame {
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                     stop:0 #059669, stop:1 #10b981);
-                border-radius: 15px;
+                border-radius: 18px;
                 padding: 0px;
                 border: 1px solid rgba(255, 255, 255, 0.2);
             }
@@ -94,21 +97,22 @@ class BankNotificationBanner(BaseBanner):
         
         # Layout
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(10, 0, 3, 0)
-        layout.setSpacing(6)
+        layout.setContentsMargins(12, 0, 4, 0)
+        layout.setSpacing(8)
         
         # Icon/Indicator
         self.dot = QFrame()
-        self.dot.setFixedSize(7, 7)
-        self.dot.setStyleSheet("background: #fdf2f2; border-radius: 3px;")
+        self.dot.setFixedSize(8, 8)
+        self.dot.setStyleSheet("background: #fdf2f2; border-radius: 4px;")
         layout.addWidget(self.dot)
         
         # Label
         self.label = QLabel("Đang chờ...")
         self.label.setStyleSheet(
-            "color: white; font-weight: 700; font-size: 12px; background: transparent;"
+            "color: white; font-weight: 700; font-size: 13px; background: transparent;"
         )
-        layout.addWidget(self.label)
+        self.label.setTextFormat(Qt.TextFormat.RichText)
+        layout.addWidget(self.label, 1)
         
         layout.addStretch()
         
@@ -150,7 +154,7 @@ class BankNotificationBanner(BaseBanner):
         self.fade_anim.start()
         
         self.slide_anim.setStartValue(0)
-        self.slide_anim.setEndValue(320)  # Match compact max width
+        self.slide_anim.setEndValue(480)  # Match wider max width
         self.slide_anim.start()
         
         if duration > 0:

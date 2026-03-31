@@ -1,11 +1,14 @@
 """
-Connection Heartbeat - Periodic ping between PC and connected Android devices.
+Connection Heartbeat - Tracks Android device connectivity via activity-based detection.
 
 Features:
-  - Tracks connected Android clients (discovered via UDP or HTTP ping)
-  - Sends periodic heartbeat checks
+  - Tracks connected Android clients by monitoring their HTTP activity
+  - Detects online/offline based on last communication time (not TCP ping)
   - Emits signals when a device goes offline/online
   - Provides connection quality metrics (latency, packet loss)
+
+The Android phone sends HTTP requests (notifications, pings) to the PC server.
+We track the last time each device communicated to determine online/offline status.
 """
 
 import json
@@ -15,6 +18,10 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from PyQt6.QtCore import QThread, QTimer, pyqtSignal
+
+
+# Timeout: if no activity from device for this many seconds, mark offline
+ACTIVITY_OFFLINE_TIMEOUT = 45  # ~1.5x the Android check interval (30s)
 
 
 @dataclass
@@ -45,7 +52,12 @@ class DeviceInfo:
 
 class ConnectionHeartbeat(QThread):
     """
-    Background thread that pings known Android devices periodically.
+    Background thread that monitors Android device connectivity.
+
+    Instead of TCP-pinging the phone (which has no listening port),
+    this tracks when the phone last sent an HTTP request to our server.
+    If no activity is seen within ACTIVITY_OFFLINE_TIMEOUT seconds,
+    the device is marked offline.
 
     Signals:
         device_online(str, float):   (ip, latency_ms)
@@ -59,14 +71,12 @@ class ConnectionHeartbeat(QThread):
     device_discovered = pyqtSignal(str)
     status_update = pyqtSignal(dict)
 
-    # How many consecutive failures before marking offline
-    OFFLINE_THRESHOLD = 3
     # Forget devices not seen for 1 hour
     EXPIRY_SECONDS = 3600
 
     def __init__(
         self,
-        ping_interval: float = 15.0,
+        ping_interval: float = 10.0,
         server_port: int = 5005,
         secret_key: str = "",
         logger=None,
@@ -108,18 +118,53 @@ class ConnectionHeartbeat(QThread):
     def get_online_count(self) -> int:
         return sum(1 for d in self._devices.values() if d.is_online)
 
+    def touch_device(self, ip: str, latency_ms: float = 0.0):
+        """
+        Mark a device as 'just seen' — called when the PC receives
+        any HTTP request from a known Android device IP.
+        """
+        if ip in self._devices:
+            dev = self._devices[ip]
+            dev.last_seen = time.time()
+            dev.last_latency_ms = latency_ms
+            dev.successful_pings += 1
+            dev.total_pings += 1
+            dev.consecutive_failures = 0
+            if not dev.is_online:
+                dev.is_online = True
+                if self.logger:
+                    self.logger.info(
+                        f"Heartbeat: {ip} came ONLINE (activity-based)"
+                    )
+                self.device_online.emit(ip, latency_ms)
+        else:
+            # Auto-track new device on first HTTP contact
+            self._devices[ip] = DeviceInfo(
+                ip=ip,
+                last_seen=time.time(),
+                last_latency_ms=latency_ms,
+                is_online=True,
+                successful_pings=1,
+                total_pings=1,
+            )
+            if self.logger:
+                self.logger.info(f"Heartbeat: auto-tracking new device {ip}")
+            self.device_discovered.emit(ip)
+            self.device_online.emit(ip, latency_ms)
+
     # ── Thread loop ─────────────────────────────────────────────
 
     def run(self):
         self._running = True
         if self.logger:
             self.logger.info(
-                f"ConnectionHeartbeat started (interval={self._interval}s)"
+                f"ConnectionHeartbeat started (interval={self._interval}s, "
+                f"offline_timeout={ACTIVITY_OFFLINE_TIMEOUT}s)"
             )
 
         while self._running:
             try:
-                self._ping_all_devices()
+                self._check_device_activity()
                 self._expire_old_devices()
                 self._emit_status()
             except Exception as e:
@@ -137,60 +182,27 @@ class ConnectionHeartbeat(QThread):
 
     # ── Internal ────────────────────────────────────────────────
 
-    def _ping_all_devices(self):
-        """Send HTTP ping to each tracked device."""
+    def _check_device_activity(self):
+        """
+        Check each tracked device's last_seen time.
+        If no activity within ACTIVITY_OFFLINE_TIMEOUT, mark offline.
+        """
+        now = time.time()
         for ip, device in list(self._devices.items()):
-            latency = self._ping_device(device)
-            device.total_pings += 1
+            if device.last_seen == 0:
+                # Never seen via HTTP yet — skip
+                continue
 
-            if latency is not None:
-                # Success
-                device.last_latency_ms = latency
-                device.last_seen = time.time()
-                device.successful_pings += 1
-                device.consecutive_failures = 0
-
-                if not device.is_online:
-                    device.is_online = True
-                    if self.logger:
-                        self.logger.info(
-                            f"Heartbeat: {ip} came ONLINE (latency={latency:.0f}ms)"
-                        )
-                    self.device_online.emit(ip, latency)
-            else:
-                # Failure
+            elapsed = now - device.last_seen
+            if device.is_online and elapsed > ACTIVITY_OFFLINE_TIMEOUT:
+                device.is_online = False
                 device.consecutive_failures += 1
-                if (
-                    device.is_online
-                    and device.consecutive_failures >= self.OFFLINE_THRESHOLD
-                ):
-                    device.is_online = False
-                    if self.logger:
-                        self.logger.warning(
-                            f"Heartbeat: {ip} went OFFLINE "
-                            f"({device.consecutive_failures} failures)"
-                        )
-                    self.device_offline.emit(ip)
-
-    def _ping_device(self, device: DeviceInfo) -> Optional[float]:
-        """
-        Send a lightweight TCP connect ping.
-
-        Returns latency in ms, or None on failure.
-        """
-        try:
-            start = time.perf_counter()
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(3)
-            result = sock.connect_ex((device.ip, device.port))
-            elapsed = (time.perf_counter() - start) * 1000
-            sock.close()
-
-            if result == 0:
-                return round(elapsed, 1)
-            return None
-        except Exception:
-            return None
+                if self.logger:
+                    self.logger.warning(
+                        f"Heartbeat: {ip} went OFFLINE "
+                        f"(no activity for {elapsed:.0f}s)"
+                    )
+                self.device_offline.emit(ip)
 
     def _expire_old_devices(self):
         """Remove devices not seen for a long time."""

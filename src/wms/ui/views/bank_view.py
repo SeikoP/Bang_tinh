@@ -145,20 +145,38 @@ class BankView(QWidget):
         h.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         h.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         h.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        h.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        h.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         h.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         h.setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
 
         self.table.setColumnWidth(0, 70)
-        self.table.setColumnWidth(1, 90)
-        self.table.setColumnWidth(2, 110)
-        self.table.setColumnWidth(3, 180)
-        self.table.setColumnWidth(5, 50)
+        self.table.setColumnWidth(1, 100)
+        self.table.setColumnWidth(2, 130)
+        self.table.setColumnWidth(5, 42)
 
+        h.setMinimumSectionSize(60)
+        self.table.setWordWrap(True)
         self.table.setAlternatingRowColors(True)
         self.table.verticalHeader().setVisible(False)
-        self.table.verticalHeader().setDefaultSectionSize(45)
-        self.table.verticalHeader().setMinimumSectionSize(35)
+        self.table.verticalHeader().setDefaultSectionSize(52)
+        self.table.verticalHeader().setMinimumSectionSize(40)
+        self.table.setStyleSheet(f"""
+            QTableWidget {{
+                gridline-color: {AppColors.BORDER};
+                font-size: 11px;
+            }}
+            QTableWidget::item {{
+                padding: 4px 6px;
+            }}
+            QHeaderView::section {{
+                background: {AppColors.BG_SECONDARY};
+                border: 1px solid {AppColors.BORDER};
+                padding: 6px 8px;
+                font-weight: 700;
+                font-size: 11px;
+                color: {AppColors.TEXT_SECONDARY};
+            }}
+        """)
         trans_layout.addWidget(self.table)
 
     def _setup_logs_tab(self):
@@ -360,56 +378,68 @@ class BankView(QWidget):
         row = 0
         self.table.insertRow(row)
 
-        self.table.setItem(row, 0, QTableWidgetItem(time_str))
+        # Time column
+        time_item = QTableWidgetItem(time_str)
+        time_item.setFont(QFont("Consolas", 10))
+        time_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.table.setItem(row, 0, time_item)
 
-        src_item = QTableWidgetItem(source)
+        # Source column with bank icon
+        src_icons = {
+            "MoMo": "💜", "VietinBank": "🏦", "Vietcombank": "🏦",
+            "MB Bank": "🏦", "BIDV": "🏦", "ACB": "🏦",
+            "TPBank": "🏦", "Techcombank": "🏦", "VNPay": "💳",
+        }
+        icon = src_icons.get(source, "📱")
+        src_item = QTableWidgetItem(f"{icon} {source}")
         src_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        src_item.setFont(QFont("Segoe UI", 10, QFont.Weight.DemiBold))
         self.table.setItem(row, 1, src_item)
 
-        amt_item = QTableWidgetItem(amount if amount else "---")
-
-        # Set color based on transaction type (+ green, - red)
+        # Amount column — bold, colored
+        amt_display = amount if amount else "---"
+        amt_item = QTableWidgetItem(amt_display)
         if amount and amount.startswith("+"):
             amt_item.setForeground(QColor(AppColors.SUCCESS))
         elif amount and amount.startswith("-"):
             amt_item.setForeground(QColor(AppColors.ERROR))
         else:
             amt_item.setForeground(QColor(AppColors.SUCCESS))
-
-        amt_item.setFont(QFont("Roboto", 9, QFont.Weight.Bold))
+        amt_item.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         amt_item.setTextAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
         self.table.setItem(row, 2, amt_item)
 
-        # Cột người chuyển
-        sender_item = QTableWidgetItem(sender_name if sender_name else "---")
-        sender_item.setFont(QFont("Roboto", 9))
+        # Sender column — full text, tooltip for overflow
+        sender_text = sender_name if sender_name else "---"
+        sender_item = QTableWidgetItem(sender_text)
+        sender_item.setFont(QFont("Segoe UI", 10))
+        sender_item.setToolTip(sender_text)
         self.table.setItem(row, 3, sender_item)
 
-        # Cột chi tiết - font nhỏ hơn
+        # Details column — full content with tooltip
         detail_item = QTableWidgetItem(raw_message)
-        detail_item.setFont(QFont("Roboto", 8))
+        detail_item.setFont(QFont("Segoe UI", 10))
         detail_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
+        detail_item.setToolTip(raw_message)
         self.table.setItem(row, 4, detail_item)
 
-        # Nút xóa từng dòng
+        # Delete button — compact
         del_container = QWidget()
         del_container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         del_layout = QHBoxLayout(del_container)
         del_layout.setContentsMargins(0, 0, 0, 0)
         del_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        del_btn = QPushButton("X")
-        del_btn.setFixedSize(30, 30)
+        del_btn = QPushButton("✕")
+        del_btn.setFixedSize(26, 26)
         del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         del_btn.setStyleSheet("""
             QPushButton {
                 background-color: transparent; 
                 border: none; 
-                font-size: 16px; 
-                margin: 0px; 
-                padding: 0px;
+                font-size: 13px; 
                 color: #ef4444; 
             }
             QPushButton:hover {
@@ -423,7 +453,7 @@ class BankView(QWidget):
         del_layout.addWidget(del_btn)
         self.table.setCellWidget(row, 5, del_container)
 
-        # Lưu ID vào item ẩn để tham chiếu nếu cần
+        # Store DB ID for reference
         self.table.item(row, 0).setData(Qt.ItemDataRole.UserRole, db_id)
 
     def _delete_row(self, db_id):

@@ -25,6 +25,7 @@ from ..network.notification_server import NotificationServer
 from ..network.discovery_server import DiscoveryServer
 from ..network.network_monitor import NetworkMonitor, get_best_ip
 from ..network.connection_heartbeat import ConnectionHeartbeat
+from ..database.task_repository import TaskRepository
 # Import views
 from .views.calculation_view import CalculationView
 from .views.calculator_tool_view import CalculatorToolView
@@ -267,9 +268,7 @@ class MainWindow(QMainWindow):
 
         # Status indicator - shows server state
         self.status_indicator = StatusIndicator()
-        self.status_indicator.mousePressEvent = lambda e: self._switch_view(
-            4
-        )  # Click → Settings
+        self.status_indicator.clicked.connect(self._show_connection_detail)
         sidebar_layout.addWidget(self.status_indicator)
 
         version = QLabel(f"v{APP_VERSION}")
@@ -624,7 +623,7 @@ class MainWindow(QMainWindow):
             secret_key = config.secret_key
 
         self._heartbeat = ConnectionHeartbeat(
-            ping_interval=15.0,
+            ping_interval=10.0,
             server_port=config.notification_port if config else 5005,
             secret_key=secret_key,
             logger=self.logger,
@@ -633,6 +632,17 @@ class MainWindow(QMainWindow):
         self._heartbeat.device_offline.connect(self._on_heartbeat_device_offline)
         self._heartbeat.status_update.connect(self._on_heartbeat_status)
         self._heartbeat.start()
+
+        # Wire heartbeat to notification servers so they can call touch_device
+        notification_service = self.container.get("notification")
+        if notification_service:
+            notification_service.heartbeat = self._heartbeat
+            if notification_service.server:
+                notification_service.server.heartbeat = self._heartbeat
+        if hasattr(self, "notif_thread") and self.notif_thread:
+            self.notif_thread.heartbeat = self._heartbeat
+            if hasattr(self.notif_thread, "_server") and self.notif_thread._server:
+                self.notif_thread._server.heartbeat = self._heartbeat
 
     # ── Network event handlers ──────────────────────────────────
 
@@ -700,14 +710,33 @@ class MainWindow(QMainWindow):
 
     def _on_heartbeat_device_online(self, ip: str, latency: float):
         self.logger.info(f"Device online: {ip} ({latency:.0f}ms)")
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.log_connection_event(
+                "📱", f"Thiết bị {ip} đã kết nối ({latency:.0f}ms)"
+            )
 
     def _on_heartbeat_device_offline(self, ip: str):
         self.logger.warning(f"Device offline: {ip}")
+        if hasattr(self, "status_indicator"):
+            self.status_indicator.log_connection_event(
+                "📴", f"Thiết bị {ip} đã mất kết nối"
+            )
 
     def _on_heartbeat_status(self, status: dict):
-        """Update device count in status indicator."""
+        """Update device count and heartbeat data in status indicator."""
         if hasattr(self, "status_indicator"):
             self.status_indicator.set_device_count(status.get("online_count", 0))
+            self.status_indicator.update_heartbeat_status(status)
+
+    def _show_connection_detail(self):
+        """Show the connection detail popup from StatusIndicator."""
+        from .widgets.status_indicator import ConnectionDetailDialog
+        heartbeat = getattr(self, "_heartbeat", None)
+        info = self.status_indicator.gather_info(
+            container=self.container, heartbeat=heartbeat
+        )
+        dlg = ConnectionDetailDialog(info, parent=self)
+        dlg.exec()
 
     def _restart_notification_server(self):
         """Stop and restart notification + discovery servers."""
@@ -737,6 +766,17 @@ class MainWindow(QMainWindow):
 
             # Re-start
             self._start_notification_server()
+
+            # Re-wire heartbeat to new servers
+            if hasattr(self, "_heartbeat"):
+                notification_service = self.container.get("notification")
+                if notification_service:
+                    notification_service.heartbeat = self._heartbeat
+                    if notification_service.server:
+                        notification_service.server.heartbeat = self._heartbeat
+                if hasattr(self, "notif_thread") and self.notif_thread:
+                    self.notif_thread.heartbeat = self._heartbeat
+
             self.logger.info("Notification infrastructure restarted successfully")
         except Exception as e:
             self.logger.error(f"Failed to restart notification server: {e}")
@@ -856,7 +896,47 @@ class MainWindow(QMainWindow):
             self.notif_banner.show_message(banner_msg)
         except Exception:
             pass
+
+        # Play payment success sound (kaching)
+        self._play_payment_sound()
+
+        # Show completion popup with task details + QR + notes
+        # Each match gets its own popup — they stack for concurrent payments
+        try:
+            from .views.task_view import TaskCompletionPopup
+            task = TaskRepository.get_by_id(note_id)
+            if task:
+                popup = TaskCompletionPopup(task, amount_text=amount, parent=self)
+                # Offset position for multiple popups so they don't overlap
+                if not hasattr(self, "_completion_popups"):
+                    self._completion_popups = []
+                # Clean up closed popups
+                self._completion_popups = [p for p in self._completion_popups if p.isVisible()]
+                offset = len(self._completion_popups) * 30
+                popup.show()
+                if offset > 0:
+                    pos = popup.pos()
+                    popup.move(pos.x() + offset, pos.y() + offset)
+                self._completion_popups.append(popup)
+        except Exception as e:
+            if self.logger:
+                self.logger.error(f"Error showing completion popup: {e}")
+
         self._refresh_tasks()
+
+    def _play_payment_sound(self):
+        """Play a 'kaching' sound on payment match using winsound (Windows)."""
+        try:
+            import winsound
+            import threading
+            def _beep():
+                # Two-tone ascending beep: "ka-ching!"
+                winsound.Beep(800, 100)   # low tone
+                winsound.Beep(1200, 100)  # mid tone
+                winsound.Beep(1600, 200)  # high tone (longer)
+            threading.Thread(target=_beep, daemon=True).start()
+        except Exception:
+            pass  # winsound only on Windows; silently skip elsewhere
 
     def _refresh_tasks(self):
         if hasattr(self, "task_view"):
