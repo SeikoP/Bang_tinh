@@ -2,6 +2,7 @@
 Task repository for work notes
 """
 
+import re
 from datetime import datetime
 from typing import List, Optional
 
@@ -248,12 +249,22 @@ class TaskRepository:
     @staticmethod
     def find_pending_by_code(note_code: str) -> Optional[Task]:
         """
-        Find first unpaid+pending task whose GC{id} matches note_code exactly.
-        note_code should be in the form 'GC42'.
+        Find first unpaid+pending task by note code.
+        Supports GC{ID} and INV-YYYY-MM-ID formats.
         """
+        if not note_code:
+            return None
+        match = re.search(
+            r"\b(?:GC(?P<gc>\d+)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+))\b",
+            str(note_code),
+            re.IGNORECASE,
+        )
+        if not match:
+            return None
+        raw_id = match.group("gc") or match.group("inv")
         try:
-            note_id = int(note_code.upper().lstrip("GC"))
-        except (ValueError, AttributeError):
+            note_id = int(raw_id)
+        except (TypeError, ValueError):
             return None
         with get_connection() as conn:
             cursor = conn.cursor()
@@ -411,4 +422,54 @@ class TaskRepository:
                     )
                 )
             return result
+
+    @staticmethod
+    def get_manual_review_events(limit: int = 200) -> List[NoteEvent]:
+        """Return manual-review payment events, newest first."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT * FROM note_events
+                WHERE event_type = 'payment_manual_review_needed'
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                (limit,),
+            )
+            result = []
+            for r in cursor.fetchall():
+                result.append(
+                    NoteEvent(
+                        id=r[0],
+                        note_id=r[1],
+                        event_type=r[2],
+                        message=r[3] or "",
+                        metadata=r[4] or "",
+                        created_at=datetime.fromisoformat(r[5]),
+                    )
+                )
+            return result
+
+    @staticmethod
+    def count_manual_review_events() -> int:
+        """Count pending manual-review payment events."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT COUNT(*) FROM note_events
+                WHERE event_type = 'payment_manual_review_needed'
+                """
+            )
+            row = cursor.fetchone()
+            return int(row[0]) if row else 0
+
+    @staticmethod
+    def delete_event(event_id: int) -> None:
+        """Delete a note event by id."""
+        with get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM note_events WHERE id = ?", (event_id,))
+            conn.commit()
 

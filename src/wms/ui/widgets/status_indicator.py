@@ -225,7 +225,8 @@ class ConnectionDetailDialog(QDialog):
 
         # ── Tunnel card ────────────────────────────────────────
         tunnel_url = self._info.get("tunnel_url", "Khong co")
-        has_tunnel = tunnel_url not in ("Khong co", "", "—")
+        tunnel_status_raw = str(self._info.get("tunnel_status", "down")).strip().lower()
+        has_tunnel = tunnel_status_raw == "up" and tunnel_url not in ("Khong co", "", "—")
 
         tun_inner = self._card(root)
         tun_inner.addWidget(self._section_title("CLOUDFLARE TUNNEL"))
@@ -237,7 +238,13 @@ class ConnectionDetailDialog(QDialog):
         tun_dot.set_color(AppColors.PRIMARY if has_tunnel else "#9CA3AF")
         tun_row.addWidget(tun_dot)
 
-        tun_status = QLabel("Dang hoat dong" if has_tunnel else "Khong kich hoat")
+        if has_tunnel:
+            tunnel_label = "Dang hoat dong"
+        elif tunnel_status_raw == "error":
+            tunnel_label = "Loi tunnel"
+        else:
+            tunnel_label = "Khong kich hoat"
+        tun_status = QLabel(tunnel_label)
         tun_status_color = AppColors.PRIMARY if has_tunnel else AppColors.TEXT_SECONDARY
         tun_status.setStyleSheet(f"""
             color: {tun_status_color}; font-size: 12px; font-weight: 600;
@@ -779,7 +786,9 @@ class StatusIndicator(QFrame):
             if tunnel_path.exists():
                 data = json.loads(tunnel_path.read_text(encoding="utf-8"))
                 url = data.get("tunnel_url", "")
-                if url:
+                status = str(data.get("status", "down")).strip().lower()
+                info["tunnel_status"] = status
+                if url and status == "up":
                     info["tunnel_url"] = url
         except Exception:
             pass

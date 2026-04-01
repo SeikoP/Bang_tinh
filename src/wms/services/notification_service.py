@@ -296,29 +296,59 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
             if self.command == "GET" and parsed_url.path == "/api/config":
                 try:
                     from pathlib import Path as _Path
+                    import hashlib as _hashlib
                     _tunnel_state = _Path(__file__).parents[2] / "config" / "tunnel_state.json"
                     _tunnel_url = ""
+                    _tunnel_status = "down"
+                    _tunnel_updated_at = 0
                     if _tunnel_state.exists():
                         try:
                             import json as _j
-                            _tunnel_url = _j.loads(
+                            _state = _j.loads(
                                 _tunnel_state.read_text(encoding="utf-8")
-                            ).get("tunnel_url", "")
+                            )
+                            _tunnel_url = _state.get("tunnel_url", "")
+                            _tunnel_status = _state.get("status", "up" if _tunnel_url else "down")
+                            _tunnel_updated_at = int(_state.get("updated_at", 0) or 0)
                         except Exception:
                             pass
                     try:
-                        from ..network.network_monitor import get_all_ips_flat
+                        from ..network.network_monitor import get_all_ips_flat, get_best_ip
                         _ips = get_all_ips_flat()
+                        _best_ip, _best_type = get_best_ip()
                     except Exception:
                         _ips = []
+                        _best_ip, _best_type = "127.0.0.1", "loopback"
                     _port = 5005
                     try:
                         _port = self.server.server_address[1]
                     except Exception:
                         pass
+
+                    _version_input = json.dumps(
+                        {
+                            "tunnel_url": _tunnel_url,
+                            "tunnel_status": _tunnel_status,
+                            "ips": _ips,
+                            "best_ip": _best_ip,
+                            "port": _port,
+                            "tunnel_updated_at": _tunnel_updated_at,
+                        },
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    )
+                    _config_version = _hashlib.sha1(_version_input.encode("utf-8")).hexdigest()[:12]
+                    _now_ts = int(datetime.now().timestamp())
+
                     body = json.dumps({
                         "success": True,
                         "tunnel_url": _tunnel_url,
+                        "tunnel_status": _tunnel_status,
+                        "tunnel_updated_at": _tunnel_updated_at,
+                        "config_version": _config_version,
+                        "config_expires_at": _now_ts + 300,
+                        "primary_ip": _best_ip,
+                        "primary_type": _best_type,
                         "ips": _ips,
                         "port": _port,
                     }, ensure_ascii=False).encode("utf-8")
@@ -487,7 +517,20 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     account = bank.get("account", "")
                     holder = bank.get("holder", "")
 
-                    transfer_content = f"GC{note_id}"
+                    task = TaskRepository.get_by_id(note_id)
+                    parts = [f"GC{note_id}"]
+                    if task and task.customer_name:
+                        cust_short = task.customer_name.strip().split()[0]
+                        if cust_short:
+                            parts.append(cust_short)
+                    if final_amount > 0:
+                        amount_k = int(final_amount // 1000)
+                        if amount_k > 0:
+                            parts.append(f"{amount_k}K")
+                    transfer_content = " ".join(parts)
+                    if len(transfer_content) > 50:
+                        transfer_content = transfer_content[:47] + "..."
+
                     vietqr_url = ""
                     if bin_code and account:
                         from urllib.parse import quote
@@ -535,24 +578,12 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     matched_task = None
                     matched_by = ""
 
-                    # 1. Match by GCxx code
-                    gc_match = _re.search(r"\bGC(\d+)\b", content + " " + transfer_content, _re.IGNORECASE)
-                    if gc_match:
-                        note_code = f"GC{gc_match.group(1)}"
+                    # Auto-match only when note code is present (GC/INV formats).
+                    note_code = BankStatementParser.extract_note_code(content + " " + transfer_content)
+                    if note_code:
                         matched_task = TaskRepository.find_pending_by_code(note_code)
                         if matched_task:
                             matched_by = "code"
-
-                    # 2. Fallback: match by amount
-                    if not matched_task and amount_str:
-                        try:
-                            amt_val = float(_re.sub(r"[^\d]", "", amount_str))
-                            if amt_val > 0:
-                                matched_task = TaskRepository.find_pending_by_amount(amt_val)
-                                if matched_task:
-                                    matched_by = "amount"
-                        except ValueError:
-                            pass
 
                     if matched_task:
                         TaskRepository.complete_payment(matched_task.id, source=f"Android/{pkg}")
@@ -578,7 +609,21 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                             "amount": amount_str,
                         })
                     else:
-                        _send_json(self, {"matched": False})
+                        TaskRepository.log_event(
+                            0,
+                            "payment_manual_review_needed",
+                            "No GC/INV code found or no pending note matched",
+                            json.dumps(
+                                {
+                                    "package": pkg,
+                                    "amount": amount_str,
+                                    "transfer_content": transfer_content,
+                                    "content": (content or "")[:200],
+                                },
+                                ensure_ascii=False,
+                            ),
+                        )
+                        _send_json(self, {"matched": False, "reason": "manual_review_required"})
                 except Exception as e:
                     self.send_error(500, str(e))
                 return

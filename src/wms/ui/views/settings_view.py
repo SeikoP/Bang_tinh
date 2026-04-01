@@ -694,7 +694,7 @@ class SettingsView(QWidget):
             self.tunnel_status.setText("Tunnel đã tắt")
             self.tunnel_status.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
             self.tunnel_input.clear()
-            self._write_tunnel_state("")
+            self._write_tunnel_state("", status="down", provider=provider)
             self._refresh_ip()
             return
 
@@ -742,7 +742,7 @@ class SettingsView(QWidget):
         self.tunnel_status.setText(f"{provider_name} đang chạy — URL đã thêm vào QR code")
         self.tunnel_status.setStyleSheet(f"color: {AppColors.SUCCESS}; font-size: 11px;")
         self.tunnel_input.setText(url)
-        self._write_tunnel_state(url)
+        self._write_tunnel_state(url, status="up", provider=provider_name)
         self._refresh_ip()
 
     def _on_tunnel_error(self, msg: str):
@@ -760,13 +760,16 @@ class SettingsView(QWidget):
         self.tunnel_url_label.setText("")
         self.tunnel_status.setText(f"Lỗi: {msg}")
         self.tunnel_status.setStyleSheet(f"color: #ef4444; font-size: 11px;")
+        provider = self.tunnel_provider_combo.currentData()
+        self._write_tunnel_state("", status="error", provider=provider)
 
     def _on_tunnel_stopped(self):
         provider = self.tunnel_provider_combo.currentData()
         label = "Bật ngrok" if provider == "ngrok" else "Bật Cloudflare Tunnel"
         self.tunnel_toggle_btn.setText(label)
         self.tunnel_toggle_btn.setEnabled(True)
-        self._write_tunnel_state("")
+        provider = self.tunnel_provider_combo.currentData()
+        self._write_tunnel_state("", status="down", provider=provider)
 
     def _refresh_ip(self):
         """Async refresh IP & QR"""
@@ -872,12 +875,21 @@ class SettingsView(QWidget):
     _BANK_PROFILES_PATH = Path(__file__).parents[3] / "config" / "bank_profiles.json"
     _TUNNEL_STATE_PATH = Path(__file__).parents[3] / "config" / "tunnel_state.json"
 
-    def _write_tunnel_state(self, url: str):
+    def _write_tunnel_state(self, url: str, status: str = "up", provider: str = ""):
         """Persist current tunnel URL so notification_service can expose it via /api/config."""
         try:
+            import time
             self._TUNNEL_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
             self._TUNNEL_STATE_PATH.write_text(
-                json.dumps({"tunnel_url": url}, ensure_ascii=False),
+                json.dumps(
+                    {
+                        "tunnel_url": url,
+                        "status": status,
+                        "provider": provider,
+                        "updated_at": int(time.time()),
+                    },
+                    ensure_ascii=False,
+                ),
                 encoding="utf-8",
             )
         except Exception:

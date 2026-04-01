@@ -105,9 +105,12 @@ class BankStatementParser:
     # Transfer content / note code patterns
     _TRANSFER_CONTENT_RE = [
         re.compile(r"(?:ND|Noi\s*dung|ND:)\s*([^\n]{2,60})", re.IGNORECASE),
-        re.compile(r"\bGC\d+\b", re.IGNORECASE),
+        re.compile(r"\b(?:GC\d+|INV(?:-\d{4}-\d{2})?-\d+)\b", re.IGNORECASE),
     ]
-    _NOTE_CODE_RE = re.compile(r"\bGC(\d+)\b", re.IGNORECASE)
+    _NOTE_CODE_RE = re.compile(
+        r"\b(?:GC(?P<gc>\d+)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+))\b",
+        re.IGNORECASE,
+    )
 
     @classmethod
     def parse(cls, raw_message: str) -> Dict[str, Any]:
@@ -145,10 +148,10 @@ class BankStatementParser:
         Extract transfer content / note code (e.g. 'GC42') from normalized message.
         Returns the raw noi dung field or the GCxx code, or empty string.
         """
-        # First look for an explicit GCxx code anywhere
-        gc_match = cls._NOTE_CODE_RE.search(message)
-        if gc_match:
-            return f"GC{gc_match.group(1)}"
+        # First look for an explicit note code anywhere.
+        note_code = cls.extract_note_code(message)
+        if note_code:
+            return note_code
 
         # Fallback: grab the first Noi dung / ND value (first 40 chars only)
         for pattern in cls._TRANSFER_CONTENT_RE:
@@ -160,6 +163,22 @@ class BankStatementParser:
                     # the GC\d+ pattern has no capture group — handled above
                     pass
         return ""
+
+    @classmethod
+    def extract_note_code(cls, message: str) -> Optional[str]:
+        """Extract a normalized note code (GC{id}) from message text."""
+        if not message:
+            return None
+        match = cls._NOTE_CODE_RE.search(message)
+        if not match:
+            return None
+        raw_id = match.group("gc") or match.group("inv")
+        if not raw_id:
+            return None
+        try:
+            return f"GC{int(raw_id)}"
+        except ValueError:
+            return None
 
     @classmethod
     def _clean_message(cls, normalized_msg: str) -> str:

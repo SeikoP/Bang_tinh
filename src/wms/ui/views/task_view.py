@@ -967,6 +967,16 @@ class PaymentLinkDialog(QDialog):
         self._copy_link_btn.clicked.connect(self._copy_qr_link)
         btn_row.addWidget(self._copy_link_btn)
 
+        self._copy_msg_btn = QPushButton("Copy tin nhan TT")
+        self._copy_msg_btn.setFixedHeight(36)
+        self._copy_msg_btn.setStyleSheet(
+            "background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; padding: 0 12px;"
+            "QPushButton:hover { background: #1d4ed8; }"
+        )
+        self._copy_msg_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._copy_msg_btn.clicked.connect(self._copy_payment_message)
+        btn_row.addWidget(self._copy_msg_btn)
+
         self._paid_btn = QPushButton("Da TT")
         self._paid_btn.setFixedHeight(36)
         self._paid_btn.setStyleSheet(
@@ -1012,6 +1022,29 @@ class PaymentLinkDialog(QDialog):
         from PyQt6.QtWidgets import QApplication
         QApplication.clipboard().setText(self._tc_value.text())
         self._tc_value.selectAll()
+
+    def _build_payment_message(self) -> str:
+        """Build chat-friendly payment text for one-tap copy."""
+        amount = int(self.task.amount or 0)
+        amount_text = f"{amount:,} đ" if amount > 0 else "theo hoa don"
+        transfer_content = (self._tc_value.text() or self.task.note_code).strip()
+        qr_url = (self._url_edit.text() or "").strip()
+        customer = (self.task.customer_name or "Khach").strip()
+
+        lines = [
+            f"Ma CK: {transfer_content}",
+            f"So tien: {amount_text}",
+            f"Khach: {customer}",
+        ]
+        if qr_url:
+            lines.append(f"QR: {qr_url}")
+        return "\n".join(lines)
+
+    def _copy_payment_message(self):
+        from PyQt6.QtWidgets import QApplication
+        QApplication.clipboard().setText(self._build_payment_message())
+        self._copy_msg_btn.setText("Da copy!")
+        QTimer.singleShot(1500, lambda: self._copy_msg_btn.setText("Copy tin nhan TT"))
 
     def _copy_qr_link(self):
         """Copy the VietQR image URL to clipboard"""
@@ -1129,6 +1162,133 @@ class PaymentLinkDialog(QDialog):
         QMessageBox.information(self, "OK", f"{self.task.note_code} đã được đánh dấu là ĐÃ THANH TOÁN.")
 
 
+class ManualReviewDialog(QDialog):
+    """Review queue for payment events that require manual confirmation."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Manual Review - Chuyen khoan khong ma")
+        self.setMinimumWidth(900)
+        self.setMinimumHeight(500)
+        self._setup_ui()
+        self.refresh_events()
+
+    def _setup_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setSpacing(10)
+        layout.setContentsMargins(16, 16, 16, 16)
+
+        hint = QLabel("Danh sach giao dich khong co ma GC/INV hoac khong tim thay ghi chu pending.")
+        hint.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px;")
+        layout.addWidget(hint)
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(5)
+        self.table.setHorizontalHeaderLabels(["Thoi gian", "Nguon", "So tien", "Noi dung CK", "Noi dung thong bao"])
+        self.table.setAlternatingRowColors(True)
+        self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.table.verticalHeader().setVisible(False)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        self.table.setColumnWidth(0, 150)
+        self.table.setColumnWidth(1, 140)
+        self.table.setColumnWidth(2, 120)
+        self.table.setColumnWidth(3, 180)
+        layout.addWidget(self.table, 1)
+
+        row = QHBoxLayout()
+        self._stats = QLabel("")
+        self._stats.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px;")
+        row.addWidget(self._stats)
+        row.addStretch()
+
+        refresh_btn = QPushButton("Lam moi")
+        refresh_btn.clicked.connect(self.refresh_events)
+        row.addWidget(refresh_btn)
+
+        copy_btn = QPushButton("Copy dong da chon")
+        copy_btn.clicked.connect(self._copy_selected)
+        row.addWidget(copy_btn)
+
+        resolve_btn = QPushButton("Danh dau da xu ly")
+        resolve_btn.setObjectName("primary")
+        resolve_btn.clicked.connect(self._resolve_selected)
+        row.addWidget(resolve_btn)
+
+        close_btn = QPushButton("Dong")
+        close_btn.clicked.connect(self.accept)
+        row.addWidget(close_btn)
+
+        layout.addLayout(row)
+
+    def refresh_events(self):
+        events = TaskRepository.get_manual_review_events(limit=300)
+        self.table.setRowCount(len(events))
+
+        for row, ev in enumerate(events):
+            metadata = {}
+            if ev.metadata:
+                try:
+                    metadata = json.loads(ev.metadata)
+                except Exception:
+                    metadata = {}
+
+            source = metadata.get("source") or metadata.get("package") or "unknown"
+            amount = str(metadata.get("amount", ""))
+            transfer_content = str(metadata.get("transfer_content", ""))
+            content = str(metadata.get("content", ""))
+            time_text = ev.created_at.strftime("%d/%m %H:%M:%S")
+
+            cells = [time_text, source, amount, transfer_content, content]
+            for col, text in enumerate(cells):
+                item = QTableWidgetItem(text)
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+                if col == 0:
+                    item.setData(Qt.ItemDataRole.UserRole, ev.id)
+                self.table.setItem(row, col, item)
+
+        self._stats.setText(f"Can manual review: {len(events)} giao dich")
+
+    def _selected_event_id(self):
+        row = self.table.currentRow()
+        if row < 0:
+            return None
+        cell = self.table.item(row, 0)
+        if not cell:
+            return None
+        return cell.data(Qt.ItemDataRole.UserRole)
+
+    def _copy_selected(self):
+        row = self.table.currentRow()
+        if row < 0:
+            QMessageBox.information(self, "Thong bao", "Hay chon 1 dong de copy.")
+            return
+
+        parts = []
+        for col in range(self.table.columnCount()):
+            header = self.table.horizontalHeaderItem(col).text()
+            item = self.table.item(row, col)
+            value = item.text() if item else ""
+            parts.append(f"{header}: {value}")
+
+        from PyQt6.QtWidgets import QApplication
+        QApplication.clipboard().setText("\n".join(parts))
+        QMessageBox.information(self, "Da copy", "Da copy thong tin giao dich vao clipboard.")
+
+    def _resolve_selected(self):
+        event_id = self._selected_event_id()
+        if not event_id:
+            QMessageBox.information(self, "Thong bao", "Hay chon 1 dong truoc.")
+            return
+
+        TaskRepository.delete_event(int(event_id))
+        self.refresh_events()
+
+
 class TaskView(QWidget):
     """View quản lý công việc"""
 
@@ -1178,6 +1338,11 @@ class TaskView(QWidget):
         self.show_completed.stateChanged.connect(self.refresh_list)
         toolbar.addWidget(self.show_completed)
 
+        self.manual_review_btn = QPushButton("Manual Review (0)")
+        self.manual_review_btn.setFixedWidth(170)
+        self.manual_review_btn.clicked.connect(self._open_manual_review)
+        toolbar.addWidget(self.manual_review_btn)
+
         toolbar.addStretch()
 
         add_btn = QPushButton("Thêm")
@@ -1197,6 +1362,21 @@ class TaskView(QWidget):
         self.table = QTableWidget()
         self._setup_table()
         layout.addWidget(self.table, 1)
+
+    def _update_manual_review_badge(self):
+        pending = TaskRepository.count_manual_review_events()
+        self.manual_review_btn.setText(f"Manual Review ({pending})")
+        if pending > 0:
+            self.manual_review_btn.setStyleSheet(
+                "background: #dc2626; color: white; border: none; border-radius: 6px; font-weight: bold; padding: 6px 10px;"
+            )
+        else:
+            self.manual_review_btn.setStyleSheet("")
+
+    def _open_manual_review(self):
+        dlg = ManualReviewDialog(parent=self)
+        dlg.exec()
+        self._update_manual_review_badge()
 
     def _setup_table(self):
         self.table.setColumnCount(5)
@@ -1235,6 +1415,7 @@ class TaskView(QWidget):
 
             pending_count = TaskRepository.count_pending()
             self.stats_label.setText(f"Tổng: {len(tasks)} việc | Chưa xong: {pending_count} việc")
+            self._update_manual_review_badge()
 
             self._check_pending_tasks()
 

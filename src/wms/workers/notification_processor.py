@@ -175,31 +175,19 @@ class NotificationProcessor(QObject):
 
             # Auto-match: try to complete a pending payment from local notification pipeline
             if is_bank and amount:
-                import re as _re
                 try:
                     transfer_content = parsed.get("transfer_content", "") or ""
                     search_text = (content_text or "") + " " + transfer_content
-                    gc_match = _re.search(r"\bGC(\d+)\b", search_text, _re.IGNORECASE)
 
                     from ..database.task_repository import TaskRepository
                     matched_task = None
                     matched_by = ""
 
-                    if gc_match:
-                        note_code = f"GC{gc_match.group(1)}"
+                    note_code = BankStatementParser.extract_note_code(search_text)
+                    if note_code:
                         matched_task = TaskRepository.find_pending_by_code(note_code)
                         if matched_task:
                             matched_by = "code"
-
-                    if not matched_task:
-                        try:
-                            amt_val = float(_re.sub(r"[^\d]", "", amount))
-                            if amt_val > 0:
-                                matched_task = TaskRepository.find_pending_by_amount(amt_val)
-                                if matched_task:
-                                    matched_by = "amount"
-                        except (ValueError, TypeError):
-                            pass
 
                     if matched_task:
                         TaskRepository.complete_payment(matched_task.id, source=source)
@@ -215,6 +203,22 @@ class NotificationProcessor(QObject):
                                 f"{matched_task.note_code} by {matched_by}, amount={amount}"
                             )
                         self.task_matched.emit(matched_task.id, matched_task.note_code, amount)
+                    else:
+                        TaskRepository.log_event(
+                            0,
+                            "payment_manual_review_needed",
+                            "No GC/INV code found or no pending note matched",
+                            json.dumps(
+                                {
+                                    "source": source,
+                                    "package": package_name,
+                                    "amount": amount,
+                                    "transfer_content": transfer_content,
+                                    "content": (content_text or "")[:200],
+                                },
+                                ensure_ascii=False,
+                            ),
+                        )
                 except Exception as _match_err:
                     if self.logger:
                         self.logger.warning(f"[NOTIF PIPELINE] auto-match error: {_match_err}")
