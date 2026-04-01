@@ -8,6 +8,7 @@ from typing import Optional
 
 # Import centralized paths
 from .paths import ROOT, DATABASE, LOGS, EXPORTS, BACKUPS, ASSETS
+from .. import __version__ as PACKAGE_VERSION
 
 
 @dataclass
@@ -72,7 +73,7 @@ class Config:
             backup_dir=Path(os.getenv("BACKUP_DIR", BACKUPS)),
             log_dir=Path(os.getenv("LOG_DIR", LOGS)),
             app_name=os.getenv("APP_NAME", "WMS"),
-            app_version=os.getenv("APP_VERSION", "2.0.0"),
+            app_version=os.getenv("APP_VERSION", PACKAGE_VERSION),
             environment=os.getenv("ENVIRONMENT", "production"),
             window_width=int(os.getenv("WINDOW_WIDTH", "1200")),
             window_height=int(os.getenv("WINDOW_HEIGHT", "800")),

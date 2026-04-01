@@ -3,6 +3,8 @@
 import hashlib
 import json
 import logging
+import os
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -424,17 +426,9 @@ class GitHubReleaseUpdater:
         self.logger = logger or logging.getLogger(__name__)
 
     def check_for_updates(self) -> Optional[UpdateInfo]:
+        fallback_error: Optional[Exception] = None
         try:
-            response = requests.get(
-                self.api_url,
-                headers={
-                    "Accept": "application/vnd.github+json",
-                    "User-Agent": f"WarehouseApp/{self.current_version}",
-                },
-                timeout=10,
-            )
-            response.raise_for_status()
-            data = response.json()
+            data = self._fetch_latest_release_from_api()
 
             latest_version = _normalize_version(data.get("tag_name", ""))
             if not latest_version:
@@ -459,19 +453,88 @@ class GitHubReleaseUpdater:
                 asset_name=asset.get("name", ""),
             )
         except requests.RequestException as e:
-            self.logger.error(f"Failed to check GitHub releases: {e}")
-            raise AppException(
-                "Cannot connect to GitHub Releases",
-                "UPDATE_CHECK_ERROR",
-                {"error": str(e)},
-            ) from e
+            fallback_error = e
+            self.logger.warning(f"GitHub API update check failed, trying fallback: {e}")
         except (KeyError, TypeError, ValueError) as e:
-            self.logger.error(f"Invalid GitHub release payload: {e}")
+            fallback_error = e
+            self.logger.warning(f"GitHub API payload invalid, trying fallback: {e}")
+
+        try:
+            return self._check_for_updates_via_latest_download()
+        except Exception as e:
+            error_msg = str(fallback_error or e)
+            self.logger.error(f"Fallback update check failed: {e}")
             raise AppException(
-                "Invalid GitHub release response",
+                "Khong the kiem tra cap nhat tu GitHub (API va fallback deu that bai)",
                 "UPDATE_CHECK_ERROR",
-                {"error": str(e)},
+                {"error": error_msg, "fallback_error": str(e)},
             ) from e
+
+    def _build_headers(self) -> dict[str, str]:
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "User-Agent": f"WarehouseApp/{self.current_version}",
+        }
+        github_token = os.getenv("GITHUB_TOKEN", "").strip()
+        if github_token:
+            headers["Authorization"] = f"Bearer {github_token}"
+        return headers
+
+    def _fetch_latest_release_from_api(self) -> dict[str, Any]:
+        response = requests.get(
+            self.api_url,
+            headers=self._build_headers(),
+            timeout=10,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def _check_for_updates_via_latest_download(self) -> Optional[UpdateInfo]:
+        fallback_asset_name = "BangTinhSetup.exe"
+        latest_download_url = self._derive_latest_download_url(fallback_asset_name)
+
+        response = requests.head(
+            latest_download_url,
+            headers={"User-Agent": f"WarehouseApp/{self.current_version}"},
+            allow_redirects=True,
+            timeout=10,
+        )
+        response.raise_for_status()
+
+        final_url = response.url
+        latest_version = _normalize_version(self._extract_tag_from_release_url(final_url))
+        if not latest_version:
+            self.logger.warning("Could not extract release tag from latest download URL")
+            return None
+
+        if not _is_newer_version(latest_version, self.current_version):
+            self.logger.info("Application is up to date (fallback check)")
+            return None
+
+        self.logger.info(f"Update available via fallback check: {latest_version}")
+        return UpdateInfo(
+            version=latest_version,
+            download_url=final_url,
+            release_notes="",
+            file_size=0,
+            asset_name=fallback_asset_name,
+        )
+
+    def _derive_latest_download_url(self, asset_name: str) -> str:
+        match = re.search(r"github\.com/repos/([^/]+)/([^/]+)/releases/latest", self.api_url)
+        if not match:
+            return f"https://github.com/SeikoP/Bang_tinh/releases/latest/download/{asset_name}"
+        owner = match.group(1)
+        repo = match.group(2)
+        return f"https://github.com/{owner}/{repo}/releases/latest/download/{asset_name}"
+
+    @staticmethod
+    def _extract_tag_from_release_url(url: str) -> str:
+        # Typical final URL: https://github.com/{owner}/{repo}/releases/download/v2.1.0/BangTinhSetup.exe
+        match = re.search(r"/releases/download/([^/]+)/", url)
+        if match:
+            return match.group(1)
+        return ""
 
     def download_update(
         self,
