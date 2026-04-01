@@ -1043,8 +1043,8 @@ class PaymentLinkDialog(QDialog):
     def _copy_payment_message(self):
         from PyQt6.QtWidgets import QApplication
         QApplication.clipboard().setText(self._build_payment_message())
-        self._copy_msg_btn.setText("Da copy!")
-        QTimer.singleShot(1500, lambda: self._copy_msg_btn.setText("Copy tin nhan TT"))
+        self._copy_msg_btn.setText("Đã copy!")
+        QTimer.singleShot(1500, lambda: self._copy_msg_btn.setText("Copy tin nhắn TT"))
 
     def _copy_qr_link(self):
         """Copy the VietQR image URL to clipboard"""
@@ -1052,7 +1052,7 @@ class PaymentLinkDialog(QDialog):
         url = self._url_edit.text().strip()
         if url:
             QApplication.clipboard().setText(url)
-            self._copy_link_btn.setText("Da copy!")
+            self._copy_link_btn.setText("Đã copy!")
             QTimer.singleShot(1500, lambda: self._copy_link_btn.setText("Copy link QR"))
 
     def _generate_qr(self):
@@ -1184,7 +1184,7 @@ class ManualReviewDialog(QDialog):
 
         self.table = QTableWidget()
         self.table.setColumnCount(5)
-        self.table.setHorizontalHeaderLabels(["Thoi gian", "Nguon", "So tien", "Noi dung CK", "Noi dung thong bao"])
+        self.table.setHorizontalHeaderLabels(["Thời gian", "Nguồn", "Số tiền", "Nội dung CK", "Nội dung thông báo"])
         self.table.setAlternatingRowColors(True)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)
@@ -1265,7 +1265,7 @@ class ManualReviewDialog(QDialog):
     def _copy_selected(self):
         row = self.table.currentRow()
         if row < 0:
-            QMessageBox.information(self, "Thong bao", "Hay chon 1 dong de copy.")
+            QMessageBox.information(self, "Thông báo", "Hãy chọn 1 dòng để copy.")
             return
 
         parts = []
@@ -1277,12 +1277,12 @@ class ManualReviewDialog(QDialog):
 
         from PyQt6.QtWidgets import QApplication
         QApplication.clipboard().setText("\n".join(parts))
-        QMessageBox.information(self, "Da copy", "Da copy thong tin giao dich vao clipboard.")
+        QMessageBox.information(self, "Đã copy", "Đã copy thông tin giao dịch vào clipboard.")
 
     def _resolve_selected(self):
         event_id = self._selected_event_id()
         if not event_id:
-            QMessageBox.information(self, "Thong bao", "Hay chon 1 dong truoc.")
+            QMessageBox.information(self, "Thông báo", "Hãy chọn 1 dòng trước.")
             return
 
         TaskRepository.delete_event(int(event_id))

@@ -4,6 +4,7 @@ Toast Notification Widget
 
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QPoint
 from PyQt6.QtWidgets import QWidget, QLabel, QHBoxLayout, QPushButton, QGraphicsOpacityEffect
+from ..theme import AppColors
 
 
 class NotificationToast(QWidget):
@@ -90,19 +91,19 @@ class NotificationToast(QWidget):
         # Set style based on type
         styles = {
             "success": {
-                "bg": "#4caf50",
+                "bg": AppColors.SUCCESS,
                 "icon": "✓"
             },
             "error": {
-                "bg": "#f44336",
+                "bg": AppColors.ERROR,
                 "icon": "✗"
             },
             "warning": {
-                "bg": "#ff9800",
+                "bg": AppColors.WARNING_AMBER,
                 "icon": "!"
             },
             "info": {
-                "bg": "#2196f3",
+                "bg": AppColors.INFO,
                 "icon": "ℹ"
             }
         }

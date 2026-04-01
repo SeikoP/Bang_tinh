@@ -56,10 +56,23 @@ class AppColors:
     SIDEBAR_ITEM_HOVER = "#1e293b"  # Slate-800
     SIDEBAR_ITEM_ACTIVE = "#10b981"  # Emerald-500
 
+    # Extended status colors (semantic backgrounds/text for alerts)
+    WARNING_AMBER = "#F59E0B"  # Amber-500
+    WARNING_AMBER_BG = "#FEF3C7"  # Amber-100
+    WARNING_AMBER_TEXT = "#92400E"  # Amber-800
+    ERROR_LIGHT = "#ef4444"  # Red-500
+    ERROR_BG = "#FEE2E2"  # Red-100
+    ERROR_TEXT = "#991B1B"  # Red-800
+    INFO_BG = "#DBEAFE"  # Blue-100
+    INFO_TEXT = "#1E40AF"  # Blue-800
+    ORANGE = "#f97316"  # Orange-500
+
     # Accent colors
     ACCENT_PURPLE = "#8B5CF6"
     ACCENT_PINK = "#EC4899"
     ACCENT_TEAL = "#14B8A6"
+    ACCENT_INDIGO = "#4F46E5"  # Indigo-600
+    ACCENT_INDIGO_LIGHT = "#6366F1"  # Indigo-500
 
 
 class AppTheme:

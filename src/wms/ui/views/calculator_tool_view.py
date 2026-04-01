@@ -110,7 +110,7 @@ class CalculatorToolView(QWidget):
         calc_layout.setSpacing(12)
 
         # Header info
-        header_info = QLabel("STANDARD CALCULATOR")
+        header_info = QLabel("MÁY TÍNH TIÊU CHUẨN")
         header_info.setStyleSheet(
             f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 9px; letter-spacing: 2.5px; padding-bottom: 2px;"
         )

@@ -72,7 +72,7 @@ class Container:
         from ..services.backup_service import BackupService
 
         self._singletons["backup_service"] = BackupService(
-            db_path=Path("storage.db"),
+            db_path=Path(self._config.db_path),
             backup_dir=self._config.backup_dir,
             keep_backups=30,
             logger=logger,

@@ -8,17 +8,19 @@ import sys
 import time
 from pathlib import Path
 
-from PyQt6.QtCore import (QEasingCurve, QEvent, QPropertyAnimation, Qt, QTimer,
-                          pyqtSignal)
+from PyQt6.QtCore import (QEasingCurve, QEvent, QPropertyAnimation, Qt, QThread,
+                                  QTimer, pyqtSignal)
 from PyQt6.QtGui import QFont, QIcon
 from PyQt6.QtWidgets import (QApplication, QFrame, QGraphicsOpacityEffect,
                              QHBoxLayout, QLabel, QMainWindow, QPushButton,
-                             QStackedWidget, QTabWidget, QVBoxLayout, QWidget)
+                                      QMessageBox, QStackedWidget, QTabWidget,
+                                      QVBoxLayout, QWidget)
 
 from ..core.constants import (APP_NAME, APP_VERSION, WINDOW_HEIGHT,
                               WINDOW_MIN_HEIGHT, WINDOW_MIN_WIDTH, WINDOW_WIDTH)
 from .theme import AppColors, AppTheme
-from ..core.paths import ASSETS
+from ..core.paths import ASSETS, DATA
+from ..core.updater import GitHubReleaseUpdater, UpdateInfo
 
 # Import network components
 from ..network.notification_server import NotificationServer
@@ -37,10 +39,31 @@ from .views.task_view import TaskView
 from .views.bank_view import BankView
 from .widgets.quick_bank_peek import QuickBankPeek
 from .widgets.status_indicator import StatusIndicator
+from .widgets.update_dialog import UpdateDialog
 from ..workers.notification_processor import NotificationProcessor
 
 # BankView, NotificationHandler, NotificationServer, QuickBankPeek
 # have been moved to separate files for better organization
+
+
+class UpdateCheckWorker(QThread):
+    update_available = pyqtSignal(object)
+    no_update = pyqtSignal()
+    check_failed = pyqtSignal(str)
+
+    def __init__(self, updater: GitHubReleaseUpdater):
+        super().__init__()
+        self.updater = updater
+
+    def run(self):
+        try:
+            update_info = self.updater.check_for_updates()
+            if update_info:
+                self.update_available.emit(update_info)
+            else:
+                self.no_update.emit()
+        except Exception as e:
+            self.check_failed.emit(str(e))
 
 
 class MainWindow(QMainWindow):
@@ -101,6 +124,16 @@ class MainWindow(QMainWindow):
         self.command_history = self.container.get("command_history")
         self.backup_service = self.container.get("backup_service")
         self.alert_service = self.container.get("alert_service")
+        self._update_worker = None
+        self._update_dialog = None
+        self._update_check_manual = False
+        self._ignored_update_path = DATA / "ignored_update_version.txt"
+        self._github_updater = GitHubReleaseUpdater(
+            current_version=self.config.app_version,
+            api_url=self.config.update_check_url,
+            asset_pattern=self.config.desktop_installer_pattern,
+            logger=self.logger,
+        )
 
         # Register alert handler
         if self.alert_service:
@@ -117,6 +150,9 @@ class MainWindow(QMainWindow):
         # Start network monitor + heartbeat
         self._start_network_monitor()
         self._start_heartbeat()
+
+        # Check for new desktop installer after the window is visible
+        QTimer.singleShot(2000, self._check_for_updates_on_startup)
 
         # Timer để ẩn Quick Peek có độ trễ nhỏ (tránh flickering)
         self._peek_timer = QTimer()
@@ -154,6 +190,114 @@ class MainWindow(QMainWindow):
                     self.logger.info(f"Startup backup created: {backup_file.name}")
             except Exception as e:
                 self.logger.error(f"Startup backup failed: {e}")
+
+    def _check_for_updates_on_startup(self):
+        self._start_update_check(manual=False)
+
+    def _check_for_updates_manually(self):
+        self._start_update_check(manual=True)
+
+    def _start_update_check(self, manual: bool):
+        if not self.config.update_check_url:
+            if manual:
+                QMessageBox.information(
+                    self,
+                    "Cập nhật",
+                    "Chưa cấu hình địa chỉ kiểm tra phiên bản mới.",
+                )
+            return
+
+        if self._update_worker and self._update_worker.isRunning():
+            if manual:
+                QMessageBox.information(
+                    self,
+                    "Cập nhật",
+                    "Đang kiểm tra phiên bản mới. Vui lòng chờ trong giây lát.",
+                )
+            return
+
+        self._update_check_manual = manual
+        self._update_worker = UpdateCheckWorker(self._github_updater)
+        self._update_worker.update_available.connect(self._on_update_available)
+        self._update_worker.no_update.connect(self._on_no_update_available)
+        self._update_worker.check_failed.connect(self._on_update_check_failed)
+        self._update_worker.finished.connect(self._on_update_check_finished)
+        self._update_worker.start()
+
+    def _read_ignored_update_version(self) -> str:
+        try:
+            if self._ignored_update_path.exists():
+                return self._ignored_update_path.read_text(encoding="utf-8").strip()
+        except Exception as e:
+            self.logger.debug(f"Unable to read ignored update version: {e}")
+        return ""
+
+    def _write_ignored_update_version(self, version: str):
+        try:
+            self._ignored_update_path.parent.mkdir(parents=True, exist_ok=True)
+            self._ignored_update_path.write_text(version.strip(), encoding="utf-8")
+        except Exception as e:
+            self.logger.warning(f"Unable to persist ignored update version: {e}")
+
+    def _clear_ignored_update_version(self):
+        try:
+            if self._ignored_update_path.exists():
+                self._ignored_update_path.unlink()
+        except Exception as e:
+            self.logger.debug(f"Unable to clear ignored update version: {e}")
+
+    def _on_update_available(self, update_info: UpdateInfo):
+        ignored_version = self._read_ignored_update_version()
+        if not self._update_check_manual and ignored_version == update_info.version:
+            self.logger.info(f"Skipping ignored update version {update_info.version}")
+            return
+
+        if ignored_version and ignored_version != update_info.version:
+            self._clear_ignored_update_version()
+
+        self._show_update_dialog(update_info)
+
+    def _on_no_update_available(self):
+        if self._update_check_manual:
+            QMessageBox.information(
+                self,
+                "Cập nhật",
+                "Bạn đang dùng phiên bản mới nhất.",
+            )
+
+    def _on_update_check_failed(self, error_message: str):
+        self.logger.warning(f"Update check failed: {error_message}")
+        if self._update_check_manual:
+            QMessageBox.warning(
+                self,
+                "Không thể kiểm tra cập nhật",
+                error_message,
+            )
+
+    def _on_update_check_finished(self):
+        self._update_worker = None
+
+    def _show_update_dialog(self, update_info: UpdateInfo):
+        if self._update_dialog and self._update_dialog.isVisible():
+            self._update_dialog.raise_()
+            self._update_dialog.activateWindow()
+            return
+
+        self._update_dialog = UpdateDialog(
+            update_info=update_info,
+            updater=self._github_updater,
+            backup_service=self.backup_service,
+            parent=self,
+        )
+        self._update_dialog.ignore_requested.connect(self._write_ignored_update_version)
+        self._update_dialog.update_started.connect(
+            lambda: self.logger.info(f"Applying update {update_info.version}")
+        )
+        self._update_dialog.finished.connect(self._on_update_dialog_closed)
+        self._update_dialog.show()
+
+    def _on_update_dialog_closed(self):
+        self._update_dialog = None
 
     def _setup_animations_internal(self):
         """Setup animations for UI elements - called internally after content_stack is ready.
@@ -259,7 +403,7 @@ class MainWindow(QMainWindow):
         self.nav_btns = []
         self._add_nav_btn(sidebar_layout, "Quản lý", 0)
         self._add_nav_btn(sidebar_layout, "Ghi chú", 1)
-        self._add_nav_btn(sidebar_layout, "Bank", 2)
+        self._add_nav_btn(sidebar_layout, "Ngân hàng", 2)
         self._add_nav_btn(sidebar_layout, "Lịch sử", 3)
         self._add_nav_btn(sidebar_layout, "Cài đặt", 4)
         self._add_nav_btn(sidebar_layout, "Máy tính", 5)
@@ -271,15 +415,26 @@ class MainWindow(QMainWindow):
         self.status_indicator.clicked.connect(self._show_connection_detail)
         sidebar_layout.addWidget(self.status_indicator)
 
-        version = QLabel(f"v{APP_VERSION}")
-        version.setStyleSheet(f"""
-            color: rgba(148, 163, 184, 0.6); 
-            font-size: 10px; 
-            padding: 10px 14px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+        self.version_button = QPushButton(f"v{self.config.app_version}")
+        self.version_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.version_button.setFlat(True)
+        self.version_button.clicked.connect(self._check_for_updates_manually)
+        self.version_button.setStyleSheet(f"""
+            QPushButton {{
+                color: rgba(148, 163, 184, 0.6);
+                font-size: 10px;
+                padding: 10px 14px;
+                font-weight: 600;
+                letter-spacing: 0.5px;
+                text-align: left;
+                border: none;
+                background: transparent;
+            }}
+            QPushButton:hover {{
+                color: rgba(226, 232, 240, 0.95);
+            }}
         """)
-        sidebar_layout.addWidget(version)
+        sidebar_layout.addWidget(self.version_button)
 
         main_layout.addWidget(self.sidebar)
 
@@ -480,7 +635,7 @@ class MainWindow(QMainWindow):
 
         # Switch page and update UI immediately
         self.content_stack.setCurrentIndex(index)
-        names = ["Quản lý", "Ghi chú", "Bank", "Lịch sử", "Cài đặt", "Máy tính"]
+        names = ["Quản lý", "Ghi chú", "Ngân hàng", "Lịch sử", "Cài đặt", "Máy tính"]
         self.breadcrumb.setText(f"Trang chủ / {names[index]}")
 
         # Update nav buttons
@@ -508,7 +663,7 @@ class MainWindow(QMainWindow):
     def _switch_view_direct(self, index):
         """Switch view directly without animation (fallback)"""
         self.content_stack.setCurrentIndex(index)
-        names = ["Quản lý", "Ghi chú", "Bank", "Lịch sử", "Cài đặt", "Máy tính"]
+        names = ["Quản lý", "Ghi chú", "Ngân hàng", "Lịch sử", "Cài đặt", "Máy tính"]
         self.breadcrumb.setText(f"Trang chủ / {names[index]}")
         for i, btn in enumerate(self.nav_btns):
             btn.setProperty("active", i == index)
@@ -854,7 +1009,7 @@ class MainWindow(QMainWindow):
             safe_source = html.escape(source)
             safe_content = html.escape((content or "")[:80])
             amber_text = (
-                f"<span style='font-size:12px; color:#FFD700;'>"
+                f"<span style='font-size:12px; color:{AppColors.WARNING_AMBER};'>"
                 f"📬 {timestamp} | {safe_source} | {safe_content}"
                 f"</span>"
             )
@@ -887,7 +1042,7 @@ class MainWindow(QMainWindow):
         """Called when a bank payment is auto-matched to a task"""
         import html as _html
         banner_msg = (
-            f"<span style='font-size:13px; color:#4ade80;'>"
+            f"<span style='font-size:13px; color:{AppColors.PRIMARY_LIGHT};'>"
             f"✅ Thanh toán khớp: <b>{_html.escape(note_code)}</b> "
             f"— {_html.escape(amount)}"
             f"</span>"
@@ -1234,6 +1389,8 @@ class MainWindow(QMainWindow):
             self._backup_timer.stop()
         if hasattr(self, "_status_timer"):
             self._status_timer.stop()
+        if self._update_worker and self._update_worker.isRunning():
+            self._update_worker.wait(500)
 
         # Stop network monitor + heartbeat
         if hasattr(self, "_network_monitor"):
@@ -1324,7 +1481,7 @@ def main():
                 print(f"Failed to load font: {font_file}")
 
     # Load Cabin fonts
-    cabin_dir = fonts_dir / "Cabin-master" / "fonts" / "TTF"
+    cabin_dir = fonts_dir / "Cabin"
     if cabin_dir.exists():
         for font_file in cabin_dir.glob("*.ttf"):
             font_id = QFontDatabase.addApplicationFont(str(font_file))
@@ -1343,8 +1500,6 @@ def main():
             app.setWindowIcon(icon)
 
     # Initialize container with configuration
-    from PyQt6.QtWidgets import QMessageBox
-
     from ..core.config import Config
     from ..core.container import Container
     config = Config.from_env()
@@ -1352,8 +1507,8 @@ def main():
     # Validate configuration
     config_errors = config.validate()
     if config_errors:
-        error_msg = "Configuration errors:\n" + "\n".join(config_errors)
-        QMessageBox.critical(None, "Configuration Error", error_msg)
+        error_msg = "Lỗi cấu hình:\n" + "\n".join(config_errors)
+        QMessageBox.critical(None, "Lỗi Cấu Hình", error_msg)
         sys.exit(1)
 
     container = Container(config)

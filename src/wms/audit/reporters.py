@@ -169,7 +169,7 @@ class AuditReport:
         }}
         
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
             color: #333;
             background: #f5f7fa;
@@ -357,7 +357,7 @@ class AuditReport:
             color: #666;
             font-size: 14px;
             margin-bottom: 12px;
-            font-family: 'Courier New', monospace;
+            font-family: 'Roboto', monospace;
         }}
         
         .finding-recommendation {{

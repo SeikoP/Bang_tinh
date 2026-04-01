@@ -85,8 +85,12 @@ Type: filesandordirs; Name: "{app}\logs"
 function InitializeUninstall(): Boolean;
 var
   Response: Integer;
+  DataDir: String;
 begin
   Result := True;
+
+  if UninstallSilent then
+    Exit;
   
   // Ask user if they want to keep their data
   Response := MsgBox('Bạn có muốn giữ lại dữ liệu và cấu hình không?', 
@@ -94,9 +98,12 @@ begin
   
   if Response = IDNO then
   begin
-    // Delete all user data
-    DelTree(ExpandConstant('{app}\storage.db'), False, True, False);
-    DelTree(ExpandConstant('{app}\.env'), False, True, False);
+    // Delete runtime data stored outside Program Files
+    DataDir := ExpandConstant('{localappdata}\WMS');
+    DelTree(DataDir, True, True, True);
+
+    // Delete local configuration shipped with the installer
+    DeleteFile(ExpandConstant('{app}\.env'));
     DelTree(ExpandConstant('{app}\exports'), True, True, True);
   end;
 end;

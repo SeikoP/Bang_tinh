@@ -64,28 +64,28 @@ class BankView(QWidget):
 
         # Sub-tabs
         self.tabs = QTabWidget()
-        self.tabs.setStyleSheet("""
-            QTabWidget::pane {
-                border: 1px solid #e0e0e0;
+        self.tabs.setStyleSheet(f"""
+            QTabWidget::pane {{
+                border: 1px solid {AppColors.BORDER};
                 border-radius: 4px;
                 background: white;
-            }
-            QTabBar::tab {
+            }}
+            QTabBar::tab {{
                 padding: 10px 20px;
                 margin-right: 4px;
-                background: #f5f5f5;
-                border: 1px solid #e0e0e0;
+                background: {AppColors.BG_SECONDARY};
+                border: 1px solid {AppColors.BORDER};
                 border-bottom: none;
                 border-top-left-radius: 4px;
                 border-top-right-radius: 4px;
-            }
-            QTabBar::tab:selected {
+            }}
+            QTabBar::tab:selected {{
                 background: white;
-                border-bottom: 2px solid #2196F3;
-            }
-            QTabBar::tab:hover {
-                background: #e8f5e9;
-            }
+                border-bottom: 2px solid {AppColors.INFO};
+            }}
+            QTabBar::tab:hover {{
+                background: {AppColors.BG_HOVER};
+            }}
         """)
 
         # Tab 1: Bank Transactions
@@ -336,7 +336,7 @@ class BankView(QWidget):
 
         # Message
         msg_item = QTableWidgetItem(message)
-        msg_item.setFont(QFont("Segoe UI", 9))
+        msg_item.setFont(QFont("Roboto", 9))
         msg_item.setForeground(QColor(AppColors.TEXT))
         self.logs_table.setItem(row, 2, msg_item)
         
@@ -357,12 +357,12 @@ class BankView(QWidget):
         # Package name
         pkg_item = QTableWidgetItem(package)
         pkg_item.setFont(QFont("Roboto", 9))
-        pkg_item.setForeground(QColor("#666"))
+        pkg_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
         self.logs_table.setItem(row, 1, pkg_item)
 
         # Raw message
         msg_item = QTableWidgetItem(raw_message)
-        msg_item.setFont(QFont("Courier New", 8))
+        msg_item.setFont(QFont("Roboto", 8))
         msg_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
         self.logs_table.setItem(row, 2, msg_item)
 
@@ -380,7 +380,7 @@ class BankView(QWidget):
 
         # Time column
         time_item = QTableWidgetItem(time_str)
-        time_item.setFont(QFont("Consolas", 10))
+        time_item.setFont(QFont("Roboto", 10))
         time_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         self.table.setItem(row, 0, time_item)
 
@@ -393,7 +393,7 @@ class BankView(QWidget):
         icon = src_icons.get(source, "📱")
         src_item = QTableWidgetItem(f"{icon} {source}")
         src_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        src_item.setFont(QFont("Segoe UI", 10, QFont.Weight.DemiBold))
+        src_item.setFont(QFont("Roboto", 10, QFont.Weight.DemiBold))
         self.table.setItem(row, 1, src_item)
 
         # Amount column — bold, colored
@@ -405,7 +405,7 @@ class BankView(QWidget):
             amt_item.setForeground(QColor(AppColors.ERROR))
         else:
             amt_item.setForeground(QColor(AppColors.SUCCESS))
-        amt_item.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        amt_item.setFont(QFont("Roboto", 11, QFont.Weight.Bold))
         amt_item.setTextAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
@@ -414,13 +414,13 @@ class BankView(QWidget):
         # Sender column — full text, tooltip for overflow
         sender_text = sender_name if sender_name else "---"
         sender_item = QTableWidgetItem(sender_text)
-        sender_item.setFont(QFont("Segoe UI", 10))
+        sender_item.setFont(QFont("Roboto", 10))
         sender_item.setToolTip(sender_text)
         self.table.setItem(row, 3, sender_item)
 
         # Details column — full content with tooltip
         detail_item = QTableWidgetItem(raw_message)
-        detail_item.setFont(QFont("Segoe UI", 10))
+        detail_item.setFont(QFont("Roboto", 10))
         detail_item.setForeground(QColor(AppColors.TEXT_SECONDARY))
         detail_item.setToolTip(raw_message)
         self.table.setItem(row, 4, detail_item)
@@ -435,18 +435,18 @@ class BankView(QWidget):
         del_btn = QPushButton("✕")
         del_btn.setFixedSize(26, 26)
         del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        del_btn.setStyleSheet("""
-            QPushButton {
+        del_btn.setStyleSheet(f"""
+            QPushButton {{
                 background-color: transparent; 
                 border: none; 
                 font-size: 13px; 
-                color: #ef4444; 
-            }
-            QPushButton:hover {
-                background-color: #fef2f2;
-                border: 1px solid #ef4444;
+                color: {AppColors.ERROR_LIGHT}; 
+            }}
+            QPushButton:hover {{
+                background-color: {AppColors.ERROR_BG};
+                border: 1px solid {AppColors.ERROR_LIGHT};
                 border-radius: 4px;
-            }
+            }}
         """)
         del_btn.clicked.connect(lambda: self._delete_row(db_id))
 

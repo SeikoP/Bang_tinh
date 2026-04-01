@@ -38,16 +38,16 @@ class AlertPanel(QFrame):
         # Refresh button
         refresh_btn = QPushButton("R")
         refresh_btn.setFixedSize(32, 32)
-        refresh_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #cbd5e1;
+        refresh_btn.setStyleSheet(f"""
+            QPushButton {{
+                border: 1px solid {AppColors.BORDER_HOVER};
                 border-radius: 16px;
                 background: white;
                 font-size: 14px;
-            }
-            QPushButton:hover {
-                background: #f1f5f9;
-            }
+            }}
+            QPushButton:hover {{
+                background: {AppColors.BG_SECONDARY};
+            }}
         """)
         refresh_btn.clicked.connect(self.refresh_alerts)
         header.addWidget(refresh_btn)
@@ -109,17 +109,17 @@ class AlertPanel(QFrame):
 
         # Color based on level
         if alert.level == AlertLevel.CRITICAL:
-            bg_color = "#FEE2E2"
-            border_color = "#DC2626"
-            text_color = "#991B1B"
+            bg_color = AppColors.ERROR_BG
+            border_color = AppColors.ERROR
+            text_color = AppColors.ERROR_TEXT
         elif alert.level == AlertLevel.WARNING:
-            bg_color = "#FEF3C7"
-            border_color = "#F59E0B"
-            text_color = "#92400E"
+            bg_color = AppColors.WARNING_AMBER_BG
+            border_color = AppColors.WARNING_AMBER
+            text_color = AppColors.WARNING_AMBER_TEXT
         else:
-            bg_color = "#DBEAFE"
-            border_color = "#3B82F6"
-            text_color = "#1E40AF"
+            bg_color = AppColors.INFO_BG
+            border_color = AppColors.INFO
+            text_color = AppColors.INFO_TEXT
 
         widget.setStyleSheet(f"""
             QFrame#alert_item {{

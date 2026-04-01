@@ -5,6 +5,7 @@ Loading Spinner Widget
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QRect
 from PyQt6.QtGui import QPainter, QColor, QPen
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from ..theme import AppColors
 
 
 class LoadingSpinner(QWidget):
@@ -62,7 +63,7 @@ class LoadingSpinner(QWidget):
         radius = min(self.width(), self.height()) // 2 - 5
         
         # Draw arcs
-        pen = QPen(QColor("#334e88"))
+        pen = QPen(QColor(AppColors.INFO))
         pen.setWidth(4)
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)

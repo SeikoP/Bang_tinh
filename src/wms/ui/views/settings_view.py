@@ -454,7 +454,7 @@ class SettingsView(QWidget):
         # Key info
         self.key_label = QLabel("Key: ...")
         self.key_label.setStyleSheet(
-            f"font-size: 13px; color: {AppColors.TEXT_SECONDARY}; font-family: monospace;"
+            f"font-size: 13px; color: {AppColors.TEXT_SECONDARY}; font-family: 'Roboto', monospace;"
         )
         info_layout.addWidget(self.key_label)
 

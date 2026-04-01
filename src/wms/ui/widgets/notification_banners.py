@@ -6,6 +6,7 @@ Encapsulates notification display logic and animations.
 from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSignal, QTimer, QSize, QRect
 from PyQt6.QtGui import QPainter, QLinearGradient, QColor, QFont
 from PyQt6.QtWidgets import QFrame, QLabel, QHBoxLayout, QPushButton, QGraphicsOpacityEffect, QWidget
+from ..theme import AppColors
 
 
 class BaseBanner(QFrame):
@@ -182,13 +183,13 @@ class SystemNotificationBanner(QFrame):
         self._scroll_offset = 0.0
 
         # Style – indigo gradient bar
-        self.setStyleSheet("""
-            QFrame {
+        self.setStyleSheet(f"""
+            QFrame {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #4F46E5, stop:0.5 #6366F1, stop:1 #4F46E5);
+                    stop:0 {AppColors.ACCENT_INDIGO}, stop:0.5 {AppColors.ACCENT_INDIGO_LIGHT}, stop:1 {AppColors.ACCENT_INDIGO});
                 border: none;
                 border-top: 1px solid rgba(255, 255, 255, 0.15);
-            }
+            }}
         """)
 
         layout = QHBoxLayout(self)

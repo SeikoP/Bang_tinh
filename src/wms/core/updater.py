@@ -6,9 +6,12 @@ import logging
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+import requests
+from packaging.version import InvalidVersion, Version
 
 try:
     from cryptography.exceptions import InvalidSignature
@@ -29,10 +32,11 @@ class UpdateInfo:
         self,
         version: str,
         download_url: str,
-        signature_url: str,
         release_notes: str,
         file_size: int,
-        checksum: str,
+        signature_url: str = "",
+        checksum: str = "",
+        asset_name: str = "",
     ):
         """
         Initialize update information.
@@ -51,6 +55,7 @@ class UpdateInfo:
         self.release_notes = release_notes
         self.file_size = file_size
         self.checksum = checksum
+        self.asset_name = asset_name
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "UpdateInfo":
@@ -62,7 +67,43 @@ class UpdateInfo:
             release_notes=data.get("release_notes", ""),
             file_size=data.get("file_size", 0),
             checksum=data.get("checksum", ""),
+            asset_name=data.get("asset_name", ""),
         )
+
+
+def _normalize_version(version: str) -> str:
+    return str(version).strip().lstrip("vV")
+
+
+def _is_newer_version(version1: str, version2: str) -> bool:
+    try:
+        return Version(_normalize_version(version1)) > Version(_normalize_version(version2))
+    except InvalidVersion:
+        try:
+            v1_parts = [int(x) for x in _normalize_version(version1).split(".")]
+            v2_parts = [int(x) for x in _normalize_version(version2).split(".")]
+            max_len = max(len(v1_parts), len(v2_parts))
+            v1_parts += [0] * (max_len - len(v1_parts))
+            v2_parts += [0] * (max_len - len(v2_parts))
+            return v1_parts > v2_parts
+        except (ValueError, AttributeError):
+            return False
+
+
+def _launch_installer(update_file: Path, logger: logging.Logger) -> bool:
+    try:
+        logger.info(f"Applying update from {update_file}")
+
+        import subprocess
+
+        subprocess.Popen([str(update_file), "/SILENT", "/NORESTART"])
+        logger.info("Update installer launched")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to apply update: {e}")
+        raise AppException(
+            "Failed to apply update", "UPDATE_APPLY_ERROR", {"error": str(e)}
+        ) from e
 
 
 class SecureUpdater:
@@ -263,22 +304,7 @@ tmIYsqONpzKJ7WTktrqnOfKf1/+WK8DXv3xKCQIDAQAB
         Note:
             This typically involves launching the installer and exiting the application.
         """
-        try:
-            self.logger.info(f"Applying update from {update_file}")
-
-            # Launch installer
-            import subprocess
-
-            subprocess.Popen([str(update_file), "/SILENT"])
-
-            self.logger.info("Update installer launched")
-            return True
-
-        except Exception as e:
-            self.logger.error(f"Failed to apply update: {e}")
-            raise AppException(
-                "Failed to apply update", "UPDATE_APPLY_ERROR", {"error": str(e)}
-            ) from e
+        return _launch_installer(update_file, self.logger)
 
     def _download_file(self, url: str, destination: Path) -> None:
         """
@@ -376,30 +402,136 @@ tmIYsqONpzKJ7WTktrqnOfKf1/+WK8DXv3xKCQIDAQAB
             return False
 
     def _is_newer_version(self, version1: str, version2: str) -> bool:
-        """
-        Compare version strings.
+        is_newer = _is_newer_version(version1, version2)
+        if not is_newer and _normalize_version(version1) != _normalize_version(version2):
+            self.logger.debug(f"Version compare result: {version1} <= {version2}")
+        return is_newer
 
-        Args:
-            version1: First version string (e.g., "2.1.0")
-            version2: Second version string (e.g., "2.0.0")
 
-        Returns:
-            True if version1 is newer than version2
-        """
+class GitHubReleaseUpdater:
+    """Checks GitHub Releases for new desktop installers."""
+
+    def __init__(
+        self,
+        current_version: str,
+        api_url: str,
+        asset_pattern: str = "BangTinhSetup",
+        logger: Optional[logging.Logger] = None,
+    ):
+        self.current_version = current_version
+        self.api_url = api_url
+        self.asset_pattern = asset_pattern.lower()
+        self.logger = logger or logging.getLogger(__name__)
+
+    def check_for_updates(self) -> Optional[UpdateInfo]:
         try:
-            v1_parts = [int(x) for x in version1.split(".")]
-            v2_parts = [int(x) for x in version2.split(".")]
+            response = requests.get(
+                self.api_url,
+                headers={
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": f"WarehouseApp/{self.current_version}",
+                },
+                timeout=10,
+            )
+            response.raise_for_status()
+            data = response.json()
 
-            # Pad with zeros if needed
-            max_len = max(len(v1_parts), len(v2_parts))
-            v1_parts += [0] * (max_len - len(v1_parts))
-            v2_parts += [0] * (max_len - len(v2_parts))
+            latest_version = _normalize_version(data.get("tag_name", ""))
+            if not latest_version:
+                self.logger.warning("GitHub release response missing tag_name")
+                return None
 
-            return v1_parts > v2_parts
+            if not _is_newer_version(latest_version, self.current_version):
+                self.logger.info("Application is up to date")
+                return None
 
-        except (ValueError, AttributeError):
-            self.logger.warning(f"Invalid version format: {version1} or {version2}")
-            return False
+            asset = self._find_installer_asset(data.get("assets", []))
+            if not asset:
+                self.logger.warning("No matching installer asset found in latest release")
+                return None
+
+            self.logger.info(f"Update available on GitHub Releases: {latest_version}")
+            return UpdateInfo(
+                version=latest_version,
+                download_url=asset["browser_download_url"],
+                release_notes=data.get("body", ""),
+                file_size=int(asset.get("size", 0)),
+                asset_name=asset.get("name", ""),
+            )
+        except requests.RequestException as e:
+            self.logger.error(f"Failed to check GitHub releases: {e}")
+            raise AppException(
+                "Cannot connect to GitHub Releases",
+                "UPDATE_CHECK_ERROR",
+                {"error": str(e)},
+            ) from e
+        except (KeyError, TypeError, ValueError) as e:
+            self.logger.error(f"Invalid GitHub release payload: {e}")
+            raise AppException(
+                "Invalid GitHub release response",
+                "UPDATE_CHECK_ERROR",
+                {"error": str(e)},
+            ) from e
+
+    def download_update(
+        self,
+        update_info: UpdateInfo,
+        download_dir: Optional[Path] = None,
+        progress_callback: Optional[Callable[[int, int], None]] = None,
+    ) -> Path:
+        if download_dir is None:
+            download_dir = Path(tempfile.gettempdir()) / "warehouse_updates"
+
+        download_dir.mkdir(parents=True, exist_ok=True)
+        file_name = update_info.asset_name or f"BangTinhSetup_{update_info.version}.exe"
+        destination = download_dir / file_name
+
+        try:
+            with requests.get(
+                update_info.download_url,
+                headers={"User-Agent": f"WarehouseApp/{self.current_version}"},
+                stream=True,
+                timeout=(10, 300),
+            ) as response:
+                response.raise_for_status()
+
+                total_bytes = int(
+                    response.headers.get("content-length") or update_info.file_size or 0
+                )
+                downloaded_bytes = 0
+
+                with open(destination, "wb") as file_handle:
+                    for chunk in response.iter_content(chunk_size=1024 * 128):
+                        if not chunk:
+                            continue
+                        file_handle.write(chunk)
+                        downloaded_bytes += len(chunk)
+                        if progress_callback:
+                            progress_callback(downloaded_bytes, total_bytes)
+
+            return destination
+        except requests.RequestException as e:
+            if destination.exists():
+                destination.unlink()
+            raise AppException(
+                "Failed to download update package",
+                "DOWNLOAD_ERROR",
+                {"error": str(e)},
+            ) from e
+
+    def apply_update(self, update_file: Path) -> bool:
+        return _launch_installer(update_file, self.logger)
+
+    def _find_installer_asset(self, assets: list[dict[str, Any]]) -> Optional[dict[str, Any]]:
+        for asset in assets:
+            name = str(asset.get("name", "")).lower()
+            if name.endswith(".exe") and self.asset_pattern in name:
+                return asset
+        for asset in assets:
+            name = str(asset.get("name", "")).lower()
+            if name.endswith(".exe"):
+                return asset
+        return None
 
 
 class UpdateManager:

@@ -23,11 +23,11 @@ from ..theme import AppColors
 def _format_elapsed(seconds: float) -> str:
     """Human-friendly elapsed time string."""
     if seconds < 60:
-        return f"{int(seconds)}s truoc"
+        return f"{int(seconds)}s trước"
     elif seconds < 3600:
-        return f"{int(seconds // 60)} phut truoc"
+        return f"{int(seconds // 60)} phút trước"
     else:
-        return f"{int(seconds // 3600)}h truoc"
+        return f"{int(seconds // 3600)}h trước"
 
 
 class StatusDot(QWidget):
@@ -35,7 +35,7 @@ class StatusDot(QWidget):
 
     def __init__(self, size=8, parent=None):
         super().__init__(parent)
-        self._color = QColor("#22c55e")
+        self._color = QColor(AppColors.SUCCESS)
         self._size = size
         self.setFixedSize(size + 4, size + 4)
 
@@ -66,14 +66,14 @@ class ConnectionDetailDialog(QDialog):
 
     _CHECK_LABELS = {
         "server": "HTTP Server",
-        "auth": "Xac thuc (Auth)",
-        "database": "Co so du lieu",
+        "auth": "Xác thực (Auth)",
+        "database": "Cơ sở dữ liệu",
         "signal": "Signal Bridge",
     }
 
     def __init__(self, info: dict, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Chi tiet ket noi")
+        self.setWindowTitle("Chi tiết kết nối")
         self.setFixedWidth(480)
         self._info = info
         self.setStyleSheet(f"""
@@ -124,7 +124,7 @@ class ConnectionDetailDialog(QDialog):
         """)
         k.setFixedWidth(110)
         v = QLabel(val)
-        font_family = "'Consolas', 'Courier New', monospace" if mono else "'Roboto', sans-serif"
+        font_family = "'Roboto', monospace" if mono else "'Roboto', sans-serif"
         v.setStyleSheet(f"""
             color: {AppColors.TEXT}; font-size: 12px; font-weight: 600;
             font-family: {font_family}; background: transparent; border: none;
@@ -144,8 +144,8 @@ class ConnectionDetailDialog(QDialog):
 
         # ── Status banner ──────────────────────────────────────
         state = self._info.get("state", "stopped")
-        color = self._info.get("state_color", "#ef4444")
-        label = self._info.get("state_label", "Server: OFF")
+        color = self._info.get("state_color", AppColors.ERROR)
+        label = self._info.get("state_label", "Server: TẮT")
 
         banner = QFrame()
         banner.setStyleSheet(f"""
@@ -210,13 +210,13 @@ class ConnectionDetailDialog(QDialog):
         title_suffix = f" — {online_count} online"
         if offline_count:
             title_suffix += f", {offline_count} offline"
-        dev_inner.addWidget(self._section_title(f"THIET BI{title_suffix}"))
+        dev_inner.addWidget(self._section_title(f"THIẾT BỊ{title_suffix}"))
 
         if devices:
             for dev in devices:
                 self._build_device_row(dev_inner, dev)
         else:
-            empty = QLabel("Chua co thiet bi nao ket noi")
+            empty = QLabel("Chưa có thiết bị nào kết nối")
             empty.setStyleSheet(f"""
                 color: {AppColors.TEXT_SECONDARY}; font-size: 11px;
                 font-style: italic; background: transparent; border: none;
@@ -224,9 +224,9 @@ class ConnectionDetailDialog(QDialog):
             dev_inner.addWidget(empty)
 
         # ── Tunnel card ────────────────────────────────────────
-        tunnel_url = self._info.get("tunnel_url", "Khong co")
+        tunnel_url = self._info.get("tunnel_url", "Không có")
         tunnel_status_raw = str(self._info.get("tunnel_status", "down")).strip().lower()
-        has_tunnel = tunnel_status_raw == "up" and tunnel_url not in ("Khong co", "", "—")
+        has_tunnel = tunnel_status_raw == "up" and tunnel_url not in ("Không có", "", "—")
 
         tun_inner = self._card(root)
         tun_inner.addWidget(self._section_title("CLOUDFLARE TUNNEL"))
@@ -239,11 +239,11 @@ class ConnectionDetailDialog(QDialog):
         tun_row.addWidget(tun_dot)
 
         if has_tunnel:
-            tunnel_label = "Dang hoat dong"
+            tunnel_label = "Đang hoạt động"
         elif tunnel_status_raw == "error":
-            tunnel_label = "Loi tunnel"
+            tunnel_label = "Lỗi tunnel"
         else:
-            tunnel_label = "Khong kich hoat"
+            tunnel_label = "Không kích hoạt"
         tun_status = QLabel(tunnel_label)
         tun_status_color = AppColors.PRIMARY if has_tunnel else AppColors.TEXT_SECONDARY
         tun_status.setStyleSheet(f"""
@@ -254,7 +254,7 @@ class ConnectionDetailDialog(QDialog):
         tun_row.addStretch()
 
         if has_tunnel:
-            copy_tun_btn = QPushButton("Copy URL")
+            copy_tun_btn = QPushButton("Sao chép URL")
             copy_tun_btn.setFixedHeight(26)
             copy_tun_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             copy_tun_btn.setStyleSheet(f"""
@@ -279,7 +279,7 @@ class ConnectionDetailDialog(QDialog):
             url_lbl = QLabel(tunnel_url)
             url_lbl.setStyleSheet(f"""
                 color: {AppColors.INFO}; font-size: 11px;
-                font-family: 'Consolas', monospace;
+                font-family: 'Roboto', monospace;
                 background: rgba(37, 99, 235, 0.06); padding: 6px 10px;
                 border-radius: 6px; border: none;
             """)
@@ -290,12 +290,12 @@ class ConnectionDetailDialog(QDialog):
         # ── Health checks card ─────────────────────────────────
         checks = self._info.get("server_checks")
         chk_inner = self._card(root)
-        chk_inner.addWidget(self._section_title("KIEM TRA HE THONG"))
+        chk_inner.addWidget(self._section_title("KIỂM TRA HỆ THỐNG"))
 
         if checks:
             all_ok = all(checks.values())
             summary_color = AppColors.PRIMARY if all_ok else AppColors.ERROR
-            summary_text = "Tat ca binh thuong" if all_ok else "Co loi can xu ly"
+            summary_text = "Tất cả bình thường" if all_ok else "Có lỗi cần xử lý"
             summary = QLabel(summary_text)
             summary.setStyleSheet(f"""
                 color: {summary_color}; font-size: 11px; font-weight: 700;
@@ -319,7 +319,7 @@ class ConnectionDetailDialog(QDialog):
                 """)
                 chk_row.addWidget(chk_name, 1)
 
-                chk_badge = QLabel("OK" if ok else "LOI")
+                chk_badge = QLabel("OK" if ok else "LỖI")
                 badge_bg = "rgba(16,185,129,0.1)" if ok else "rgba(220,38,38,0.1)"
                 badge_color = AppColors.PRIMARY if ok else AppColors.ERROR
                 chk_badge.setStyleSheet(f"""
@@ -344,7 +344,7 @@ class ConnectionDetailDialog(QDialog):
                     """)
                     chk_inner.addWidget(e_lbl)
         else:
-            no_chk = QLabel("Khong kiem tra duoc (server chua chay?)")
+            no_chk = QLabel("Không kiểm tra được (server chưa chạy?)")
             no_chk.setStyleSheet(f"""
                 color: {AppColors.TEXT_SECONDARY}; font-size: 11px;
                 font-style: italic; background: transparent; border: none;
@@ -355,7 +355,7 @@ class ConnectionDetailDialog(QDialog):
         events = self._info.get("connection_events", [])
         if events:
             log_inner = self._card(root)
-            log_inner.addWidget(self._section_title("LICH SU KET NOI"))
+            log_inner.addWidget(self._section_title("LỊCH SỪ KẾT NỐI"))
             for ev in events[:15]:  # show last 15
                 ev_row = QHBoxLayout()
                 ev_row.setSpacing(6)
@@ -377,7 +377,7 @@ class ConnectionDetailDialog(QDialog):
                 ev_time = QLabel(ev.get("time", ""))
                 ev_time.setStyleSheet(f"""
                     color: {AppColors.TEXT_SECONDARY}; font-size: 10px;
-                    font-family: 'Consolas', monospace;
+                    font-family: 'Roboto', monospace;
                     background: transparent; border: none;
                 """)
                 ev_row.addWidget(ev_time)
@@ -385,10 +385,10 @@ class ConnectionDetailDialog(QDialog):
                 log_inner.addLayout(ev_row)
 
         # ── Last notification ──────────────────────────────────
-        last_notif = self._info.get("last_notification", "Chua co")
+        last_notif = self._info.get("last_notification", "Chưa có")
         notif_row = QHBoxLayout()
         notif_row.setContentsMargins(4, 0, 4, 0)
-        notif_k = QLabel("Thong bao cuoi:")
+        notif_k = QLabel("Thông báo cuối:")
         notif_k.setStyleSheet(f"""
             color: {AppColors.TEXT_SECONDARY}; font-size: 11px;
             background: transparent; border: none;
@@ -407,7 +407,7 @@ class ConnectionDetailDialog(QDialog):
         btn_row.setSpacing(8)
         btn_row.setContentsMargins(0, 2, 0, 0)
 
-        copy_btn = QPushButton("Copy IP:Port")
+        copy_btn = QPushButton("Sao chép IP:Port")
         copy_btn.setFixedHeight(36)
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         copy_btn.setStyleSheet(f"""
@@ -422,7 +422,7 @@ class ConnectionDetailDialog(QDialog):
 
         btn_row.addStretch()
 
-        close_btn = QPushButton("Dong")
+        close_btn = QPushButton("Đóng")
         close_btn.setFixedHeight(36)
         close_btn.setFixedWidth(80)
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -481,7 +481,7 @@ class ConnectionDetailDialog(QDialog):
         top.addWidget(name_lbl)
         top.addStretch()
 
-        status_lbl = QLabel("Online" if is_online else "Offline")
+        status_lbl = QLabel("Trực tuyến" if is_online else "Ngoại tuyến")
         sc = AppColors.PRIMARY if is_online else AppColors.ERROR
         sbg = "rgba(16,185,129,0.12)" if is_online else "rgba(220,38,38,0.12)"
         status_lbl.setStyleSheet(f"""
@@ -501,13 +501,13 @@ class ConnectionDetailDialog(QDialog):
         ip_lbl = QLabel(f"IP: {ip}")
         ip_lbl.setStyleSheet(f"""
             color: {AppColors.TEXT_SECONDARY}; font-size: 10px;
-            font-family: 'Consolas', monospace;
+            font-family: 'Roboto', monospace;
             background: transparent; border: none;
         """)
         details.addWidget(ip_lbl)
 
         if is_online and latency > 0:
-            lat_color = AppColors.PRIMARY if latency < 50 else ("#f59e0b" if latency < 200 else AppColors.ERROR)
+            lat_color = AppColors.PRIMARY if latency < 50 else (AppColors.WARNING_AMBER if latency < 200 else AppColors.ERROR)
             lat_lbl = QLabel(f"⏱ {latency:.0f}ms")
             lat_lbl.setStyleSheet(f"""
                 color: {lat_color}; font-size: 10px; font-weight: 600;
@@ -516,7 +516,7 @@ class ConnectionDetailDialog(QDialog):
             details.addWidget(lat_lbl)
 
         if packet_loss > 0:
-            pl_lbl = QLabel(f"📉 {packet_loss:.1f}% mat")
+            pl_lbl = QLabel(f"📉 {packet_loss:.1f}% mất")
             pl_lbl.setStyleSheet(f"""
                 color: {AppColors.ERROR}; font-size: 10px;
                 background: transparent; border: none;
@@ -524,7 +524,7 @@ class ConnectionDetailDialog(QDialog):
             details.addWidget(pl_lbl)
 
         if last_seen:
-            ls_lbl = QLabel(f"Lan cuoi: {last_seen}")
+            ls_lbl = QLabel(f"Lần cuối: {last_seen}")
             ls_lbl.setStyleSheet(f"""
                 color: {AppColors.TEXT_SECONDARY}; font-size: 10px;
                 background: transparent; border: none;
@@ -566,21 +566,21 @@ class StatusIndicator(QFrame):
     STATE_RECONNECTING = "reconnecting"
 
     _COLORS = {
-        STATE_RUNNING: "#22c55e",
-        STATE_STOPPED: "#ef4444",
-        STATE_STARTING: "#f59e0b",
-        STATE_NO_DATA: "#f97316",
-        STATE_NO_NETWORK: "#dc2626",
-        STATE_RECONNECTING: "#a855f7",
+        STATE_RUNNING: AppColors.SUCCESS,
+        STATE_STOPPED: AppColors.ERROR_LIGHT,
+        STATE_STARTING: AppColors.WARNING_AMBER,
+        STATE_NO_DATA: AppColors.ORANGE,
+        STATE_NO_NETWORK: AppColors.ERROR,
+        STATE_RECONNECTING: AppColors.ACCENT_PURPLE,
     }
 
     _LABELS = {
-        STATE_RUNNING: "Server: ON",
-        STATE_STOPPED: "Server: OFF",
-        STATE_STARTING: "Starting...",
-        STATE_NO_DATA: "No data",
-        STATE_NO_NETWORK: "No network",
-        STATE_RECONNECTING: "Reconnecting...",
+        STATE_RUNNING: "Server: BẬT",
+        STATE_STOPPED: "Server: TẮT",
+        STATE_STARTING: "Đang khởi động...",
+        STATE_NO_DATA: "Không có dữ liệu",
+        STATE_NO_NETWORK: "Mất mạng",
+        STATE_RECONNECTING: "Đang kết nối lại...",
     }
 
     _INTERFACE_LABELS = {
@@ -645,7 +645,7 @@ class StatusIndicator(QFrame):
             }
         """)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip("Click de xem chi tiet ket noi")
+        self.setToolTip("Nhấn để xem chi tiết kết nối")
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
@@ -717,7 +717,7 @@ class StatusIndicator(QFrame):
         """Collect all connection info for the detail popup."""
         info = {
             "state": self._state,
-            "state_color": self._COLORS.get(self._state, "#ef4444"),
+            "state_color": self._COLORS.get(self._state, AppColors.ERROR_LIGHT),
             "state_label": self._LABELS.get(self._state, "Unknown"),
             "connection_type": self._INTERFACE_LABELS.get(
                 self._connection_type, self._connection_type or "—"
@@ -726,8 +726,8 @@ class StatusIndicator(QFrame):
             "ip": "—",
             "port": 5005,
             "secret_key_short": "—",
-            "tunnel_url": "Khong co",
-            "last_notification": "Chua co",
+            "tunnel_url": "Không có",
+            "last_notification": "Chưa có",
             "devices": [],
             "all_ips": [],
             "connection_events": list(self._connection_events),

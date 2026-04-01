@@ -44,6 +44,8 @@ class Config:
     log_level: str
     log_rotation: str
     secret_key: str
+    update_check_url: str = "https://api.github.com/repos/SeikoP/Bang_tinh/releases/latest"
+    desktop_installer_pattern: str = "BangTinhSetup"
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -83,6 +85,13 @@ class Config:
             secret_key=secret_key,
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             log_rotation=os.getenv("LOG_ROTATION", "daily"),
+            update_check_url=os.getenv(
+                "UPDATE_CHECK_URL",
+                "https://api.github.com/repos/SeikoP/Bang_tinh/releases/latest",
+            ),
+            desktop_installer_pattern=os.getenv(
+                "DESKTOP_INSTALLER_PATTERN", "BangTinhSetup"
+            ),
         )
 
     def validate(self) -> list[str]:
