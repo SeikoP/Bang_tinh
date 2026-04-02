@@ -45,6 +45,7 @@ a = Analysis(
         # Third-party
         'qrcode',
         'qrcode.image.pure',
+        'segno',
         'openpyxl',
         'openpyxl.styles',
         # ── Explicit WMS modules (ensures they're ALWAYS included) ──

@@ -54,17 +54,34 @@ class Config:
         base_dir = Path(os.getenv("APP_BASE_DIR", ROOT))
 
         # Load or generate secret key
-        secret_file = base_dir / ".secret_key"
-        if secret_file.exists():
-            secret_key = secret_file.read_text().strip()
+        # Prefer portable location (src/config/) which is bundled in builds,
+        # so the key survives across build/deploy cycles (home → work).
+        _config_dir = Path(__file__).resolve().parents[2] / "config"
+        _portable_secret = _config_dir / "secret_key.txt"
+        _legacy_secret = base_dir / ".secret_key"
+
+        if _portable_secret.exists():
+            secret_key = _portable_secret.read_text().strip()
+        elif _legacy_secret.exists():
+            secret_key = _legacy_secret.read_text().strip()
+            # Migrate to portable location
+            try:
+                _config_dir.mkdir(parents=True, exist_ok=True)
+                _portable_secret.write_text(secret_key)
+            except Exception:
+                pass
         else:
             import uuid
 
             secret_key = str(uuid.uuid4())
             try:
-                secret_file.write_text(secret_key)
+                _config_dir.mkdir(parents=True, exist_ok=True)
+                _portable_secret.write_text(secret_key)
             except Exception:
-                pass  # Fail silently if cannot write, key will change on restart (acceptable fallback)
+                try:
+                    _legacy_secret.write_text(secret_key)
+                except Exception:
+                    pass
 
         return cls(
             base_dir=base_dir,

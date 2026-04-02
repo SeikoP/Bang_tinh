@@ -39,6 +39,7 @@ coverage.xml
 
 # Security — never commit secret keys
 .secret_key
+secret_key.txt
 
 # Runtime data
 data/logs/*.log

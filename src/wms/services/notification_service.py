@@ -141,17 +141,24 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     pass
 
             # Log full debug info for auth failures
+            # Auth-exempt GET endpoints (expose no secrets, needed for
+            # Android auto-config refresh even when auth_token is stale)
+            _AUTH_EXEMPT_PATHS = {"/api/config"}
+
             if expected_key and provided_key != expected_key:
-                if hasattr(self.server, "logger"):
-                    auth_dbg = (
-                        f"Unauthorized from {client_ip} path={parsed_url.path} "
-                        f"method={self.command} has_key={'yes' if provided_key else 'no'} "
-                        f"auth_header={'[Bearer ...]' if auth_header.startswith('Bearer ') else repr(auth_header)} "
-                        f"content_type={self.headers.get('Content-Type', 'none')}"
-                    )
-                    self.server.logger.warning(auth_dbg)
-                self.send_error(401, "Unauthorized - Invalid API Key")
-                return
+                if self.command == "GET" and parsed_url.path in _AUTH_EXEMPT_PATHS:
+                    pass  # Allow through without auth
+                else:
+                    if hasattr(self.server, "logger"):
+                        auth_dbg = (
+                            f"Unauthorized from {client_ip} path={parsed_url.path} "
+                            f"method={self.command} has_key={'yes' if provided_key else 'no'} "
+                            f"auth_header={'[Bearer ...]' if auth_header.startswith('Bearer ') else repr(auth_header)} "
+                            f"content_type={self.headers.get('Content-Type', 'none')}"
+                        )
+                        self.server.logger.warning(auth_dbg)
+                    self.send_error(401, "Unauthorized - Invalid API Key")
+                    return
 
             # If we peeked the body for auth, store it so handle_request can reuse it
             self._peeked_body = _peeked_body
@@ -515,7 +522,6 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                     bank = _load_bank_settings()
                     bin_code = bank.get("bin", "")
                     account = bank.get("account", "")
-                    holder = bank.get("holder", "")
 
                     task = TaskRepository.get_by_id(note_id)
                     parts = [f"GC{note_id}"]
@@ -532,13 +538,20 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                         transfer_content = transfer_content[:47] + "..."
 
                     vietqr_url = ""
+                    emvco_payload = ""
                     if bin_code and account:
                         from urllib.parse import quote
                         vietqr_url = (
                             f"https://img.vietqr.io/image/{bin_code}-{account}-compact.png"
                             f"?amount={int(final_amount)}&addInfo={quote(transfer_content)}"
-                            f"&accountName={quote(holder)}"
                         )
+                        try:
+                            from ..utils.vietqr import build_emvco_payload
+                            emvco_payload = build_emvco_payload(
+                                bin_code, account, int(final_amount), transfer_content
+                            )
+                        except Exception:
+                            pass
 
                     if items:
                         TaskRepository.save_invoice_items(note_id, items)
@@ -551,6 +564,7 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
                         "note_id": note_id,
                         "transfer_content": transfer_content,
                         "vietqr_url": vietqr_url,
+                        "emvco_payload": emvco_payload,
                     })
 
                     if hasattr(self.server, "message_handler") and self.server.message_handler:

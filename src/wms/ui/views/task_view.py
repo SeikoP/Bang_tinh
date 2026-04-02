@@ -13,7 +13,7 @@ from PyQt6.QtGui import QColor, QPixmap
 from PyQt6.QtWidgets import (QCheckBox, QComboBox, QCompleter, QDialog,
                              QFormLayout, QFrame, QHBoxLayout, QHeaderView,
                              QLabel, QLineEdit, QMessageBox, QPushButton,
-                             QScrollArea, QTableWidget, QTableWidgetItem,
+                             QPlainTextEdit, QScrollArea, QTableWidget, QTableWidgetItem,
                              QVBoxLayout, QWidget, QSpinBox)
 
 from ...database.task_repository import TaskRepository
@@ -914,8 +914,8 @@ class PaymentLinkDialog(QDialog):
         self._tc_value.setStyleSheet(
             "font-weight: bold; font-size: 13px; background:#1e293b; color:#38bdf8; border-radius:5px;"
         )
-        copy_btn = QPushButton("Copy")
-        copy_btn.setFixedWidth(60)
+        copy_btn = QPushButton("Sao chép")
+        copy_btn.setFixedWidth(70)
         copy_btn.setFixedHeight(32)
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         copy_btn.clicked.connect(self._copy_content)
@@ -940,12 +940,43 @@ class PaymentLinkDialog(QDialog):
         self._refresh_status()
         layout.addWidget(self._status_label)
 
-        # URL row
-        self._url_edit = QLineEdit(task.vietqr_url or "")
-        self._url_edit.setReadOnly(True)
-        self._url_edit.setPlaceholderText("Chưa tạo link QR (cấu hình tài khoản ngân hàng trong Cài đặt)")
-        self._url_edit.setStyleSheet("font-size: 10px; color:#64748b;")
-        layout.addWidget(self._url_edit)
+        # QR text preview for text-only channels
+        qr_text_row = QHBoxLayout()
+        qr_text_hint = QLabel("QR văn bản (sao chép thủ công):")
+        qr_text_hint.setStyleSheet("font-size: 12px; color: #94a3b8;")
+        qr_text_row.addWidget(qr_text_hint)
+        qr_text_row.addStretch(1)
+
+        self._qr_text_mode = QComboBox()
+        self._qr_text_mode.addItem("Data URL ảnh (khuyên dùng)", "dataurl")
+        self._qr_text_mode.addItem("Double-halfblock", "doublehalf")
+        self._qr_text_mode.addItem("Double-width", "double")
+        self._qr_text_mode.addItem("Braille", "braille")
+        self._qr_text_mode.addItem("Half-block", "halfblock")
+        self._qr_text_mode.addItem("Block", "block")
+        self._qr_text_mode.addItem("ASCII", "ascii")
+        self._qr_text_mode.setCurrentIndex(0)
+        self._qr_text_mode.setFixedWidth(230)
+        self._qr_text_mode.currentIndexChanged.connect(self._on_qr_mode_changed)
+        qr_text_row.addWidget(self._qr_text_mode)
+
+        self._qr_invert = QCheckBox("Đảo màu")
+        self._qr_invert.setStyleSheet("font-size: 11px; color: #94a3b8;")
+        self._qr_invert.toggled.connect(lambda _=None: self._refresh_qr_text_preview())
+        qr_text_row.addWidget(self._qr_invert)
+        layout.addLayout(qr_text_row)
+
+        self._qr_text_view = QPlainTextEdit()
+        self._qr_text_view.setReadOnly(True)
+        self._qr_text_view.setMinimumHeight(150)
+        self._qr_text_view.setStyleSheet(
+            "font-family: 'Consolas', 'Courier New', monospace;"
+            "font-size: 11px;"
+            "line-height: 1.0;"
+            "background: #0b1220; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px;"
+        )
+        self._qr_text_view.setPlaceholderText("Chưa có QR text. Bấm 'Tạo / Làm mới QR' để tạo.")
+        layout.addWidget(self._qr_text_view)
 
         # Button row
         btn_row = QHBoxLayout()
@@ -957,17 +988,7 @@ class PaymentLinkDialog(QDialog):
         self._gen_btn.clicked.connect(self._generate_qr)
         btn_row.addWidget(self._gen_btn)
 
-        self._copy_link_btn = QPushButton("Copy link QR")
-        self._copy_link_btn.setFixedHeight(36)
-        self._copy_link_btn.setStyleSheet(
-            "background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: bold; padding: 0 12px;"
-            "QPushButton:hover { background: #2563eb; }"
-        )
-        self._copy_link_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._copy_link_btn.clicked.connect(self._copy_qr_link)
-        btn_row.addWidget(self._copy_link_btn)
-
-        self._copy_msg_btn = QPushButton("Copy tin nhan TT")
+        self._copy_msg_btn = QPushButton("Sao chép tin nhắn TT")
         self._copy_msg_btn.setFixedHeight(36)
         self._copy_msg_btn.setStyleSheet(
             "background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; padding: 0 12px;"
@@ -977,15 +998,15 @@ class PaymentLinkDialog(QDialog):
         self._copy_msg_btn.clicked.connect(self._copy_payment_message)
         btn_row.addWidget(self._copy_msg_btn)
 
-        self._paid_btn = QPushButton("Da TT")
-        self._paid_btn.setFixedHeight(36)
-        self._paid_btn.setStyleSheet(
-            "background: #059669; color: white; border: none; border-radius: 6px; font-weight: bold;"
-            "QPushButton:hover { background: #047857; }"
+        self._copy_qr_text_btn = QPushButton("Sao chép QR văn bản")
+        self._copy_qr_text_btn.setFixedHeight(36)
+        self._copy_qr_text_btn.setStyleSheet(
+            "background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: bold; padding: 0 12px;"
+            "QPushButton:hover { background: #2563eb; }"
         )
-        self._paid_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._paid_btn.clicked.connect(self._mark_paid)
-        btn_row.addWidget(self._paid_btn)
+        self._copy_qr_text_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._copy_qr_text_btn.clicked.connect(self._copy_qr_text)
+        btn_row.addWidget(self._copy_qr_text_btn)
 
         close_btn = QPushButton("Đóng")
         close_btn.setFixedHeight(36)
@@ -996,13 +1017,35 @@ class PaymentLinkDialog(QDialog):
 
         layout.addLayout(btn_row)
 
-        # Disable paid button if already completed
-        if task.payment_status in ("completed", "matched"):
-            self._paid_btn.setEnabled(False)
-
         # Auto-load QR image if URL present
         if task.vietqr_url:
+            self._rebuild_emvco_from_url()
+            self._refresh_qr_text_preview()
             QTimer.singleShot(50, self._load_qr_image)
+
+    def _rebuild_emvco_from_url(self):
+        """Rebuild EMVCo payload from the stored vietqr_url for local QR rendering."""
+        url = self.task.vietqr_url or ""
+        if not url:
+            return
+        try:
+            from urllib.parse import urlparse, parse_qs, unquote
+            parsed = urlparse(url)
+            # Path: /image/{bin}-{account}-compact.png
+            path_parts = parsed.path.rsplit("/", 1)[-1]  # "970415-107875070594-compact.png"
+            base = path_parts.replace("-compact.png", "").replace("-compact2.png", "")
+            segments = base.split("-", 1)
+            if len(segments) < 2:
+                return
+            bank_bin, account = segments[0], segments[1]
+            qs = parse_qs(parsed.query)
+            amount = int(qs.get("amount", ["0"])[0])
+            add_info = unquote(qs.get("addInfo", [""])[0])
+
+            from ...utils.vietqr import build_emvco_payload
+            self._emvco_payload = build_emvco_payload(bank_bin, account, amount, add_info)
+        except Exception:
+            pass  # Fallback to vietqr.io download
 
     def _refresh_status(self):
         status_map = {
@@ -1023,37 +1066,83 @@ class PaymentLinkDialog(QDialog):
         QApplication.clipboard().setText(self._tc_value.text())
         self._tc_value.selectAll()
 
-    def _build_payment_message(self) -> str:
-        """Build chat-friendly payment text for one-tap copy."""
-        amount = int(self.task.amount or 0)
-        amount_text = f"{amount:,} đ" if amount > 0 else "theo hoa don"
-        transfer_content = (self._tc_value.text() or self.task.note_code).strip()
-        qr_url = (self._url_edit.text() or "").strip()
-        customer = (self.task.customer_name or "Khach").strip()
+    def _on_qr_mode_changed(self, _=None):
+        is_dataurl = (self._qr_text_mode.currentData() == "dataurl")
+        self._qr_invert.setEnabled(not is_dataurl)
+        self._refresh_qr_text_preview()
 
-        lines = [
-            f"Ma CK: {transfer_content}",
-            f"So tien: {amount_text}",
-            f"Khach: {customer}",
-        ]
-        if qr_url:
-            lines.append(f"QR: {qr_url}")
+    def _refresh_qr_text_preview(self):
+        qr_text = self._build_qr_text()
+        mode = self._qr_text_mode.currentData() if hasattr(self, '_qr_text_mode') else 'doublehalf'
+        if mode != 'dataurl' and hasattr(self, '_qr_invert') and self._qr_invert.isChecked() and qr_text:
+            table = str.maketrans("█░▀▄⣿⠀10X ", "░█▄▀⠀⣿01 X")
+            qr_text = qr_text.translate(table)
+        self._qr_text_view.setPlainText(qr_text)
+
+    def _build_qr_text(self) -> str:
+        """Build text QR from EMVCo payload for text-only chat systems."""
+        emvco = getattr(self, "_emvco_payload", "")
+        if not emvco:
+            return ""
+        try:
+            mode = "dataurl"
+            if hasattr(self, "_qr_text_mode"):
+                mode = self._qr_text_mode.currentData() or "dataurl"
+
+            if mode == "dataurl":
+                from ...utils.vietqr import generate_qr_data_url
+                return generate_qr_data_url(emvco)
+
+            from ...utils.vietqr import generate_qr_text
+            try:
+                return generate_qr_text(emvco, mode=mode)
+            except Exception:
+                return generate_qr_text(emvco)
+        except Exception:
+            return ""
+
+    def _build_payment_message(self) -> str:
+        """Build short payment message for manual transfer in text-only channels."""
+        amount = int(self.task.amount or 0)
+        amount_text = f"{amount:,} d" if amount > 0 else "theo hoa don"
+        transfer_content = (self._tc_value.text() or self.task.note_code).strip()
+        account = ""
+        holder = ""
+        try:
+            cfg_path = Path(__file__).parents[3] / "config" / "bank_settings.json"
+            if cfg_path.exists():
+                bank = json.loads(cfg_path.read_text(encoding="utf-8"))
+                account = (bank.get("account", "") or "").strip()
+                holder = (bank.get("holder", "") or "").strip()
+        except Exception:
+            pass
+
+        lines = [f"So tien: {amount_text}"]
+        if account:
+            lines.append(f"STK: {account}")
+        if holder:
+            lines.append(f"Chu TK: {holder}")
+        lines.append(f"Noi dung: {transfer_content}")
+
         return "\n".join(lines)
 
     def _copy_payment_message(self):
         from PyQt6.QtWidgets import QApplication
         QApplication.clipboard().setText(self._build_payment_message())
         self._copy_msg_btn.setText("Đã copy!")
-        QTimer.singleShot(1500, lambda: self._copy_msg_btn.setText("Copy tin nhắn TT"))
+        QTimer.singleShot(1500, lambda: self._copy_msg_btn.setText("Sao chép tin nhắn TT"))
 
-    def _copy_qr_link(self):
-        """Copy the VietQR image URL to clipboard"""
+    def _copy_qr_text(self):
+        """Copy QR text block to clipboard for manual send in text channels."""
         from PyQt6.QtWidgets import QApplication
-        url = self._url_edit.text().strip()
-        if url:
-            QApplication.clipboard().setText(url)
-            self._copy_link_btn.setText("Đã copy!")
-            QTimer.singleShot(1500, lambda: self._copy_link_btn.setText("Copy link QR"))
+        qr_text = self._qr_text_view.toPlainText().strip() or self._build_qr_text()
+        if qr_text:
+            QApplication.clipboard().setText(qr_text)
+            self._copy_qr_text_btn.setText("Đã sao chép")
+            QTimer.singleShot(1500, lambda: self._copy_qr_text_btn.setText("Sao chép QR văn bản"))
+        else:
+            self._copy_qr_text_btn.setText("Chưa có QR")
+            QTimer.singleShot(1500, lambda: self._copy_qr_text_btn.setText("Sao chép QR văn bản"))
 
     def _generate_qr(self):
         """Build VietQR URL from bank settings and update task"""
@@ -1071,8 +1160,6 @@ class PaymentLinkDialog(QDialog):
 
         bin_code = bank.get("bin", "")
         account = bank.get("account", "")
-        holder = bank.get("holder", "")
-
         if not bin_code or not account:
             QMessageBox.warning(self, "Thiếu thông tin",
                 "Cần nhập BIN ngân hàng và số tài khoản trong Cài đặt.")
@@ -1113,10 +1200,15 @@ class PaymentLinkDialog(QDialog):
             tc = tc[:47] + "..."
 
         amount = int(self.task.amount)
+
+        # Build EMVCo payload and generate QR locally (no vietqr.io dependency)
+        from ...utils.vietqr import build_emvco_payload
+        emvco_payload = build_emvco_payload(bin_code, account, amount, tc)
+
+        # Keep vietqr.io URL as shareable fallback link
         url = (
             f"https://img.vietqr.io/image/{bin_code}-{account}-compact.png"
             f"?amount={amount}&addInfo={urllib.parse.quote(tc)}"
-            f"&accountName={urllib.parse.quote(holder)}"
         )
 
         TaskRepository.update_payment(self.task.id, "pending", url, tc)
@@ -1125,13 +1217,33 @@ class PaymentLinkDialog(QDialog):
         self.task.payment_status = "pending"
         self.task.vietqr_url = url
         self.task.transfer_content = tc
-        self._url_edit.setText(url)
+        self._emvco_payload = emvco_payload
         self._tc_value.setText(tc)
         self._refresh_status()
+        self._refresh_qr_text_preview()
         self._load_qr_image()
 
     def _load_qr_image(self):
-        """Download and display QR image"""
+        """Generate and display QR image locally, fallback to vietqr.io download."""
+        # Prefer local EMVCo generation (offline, fast, shorter payload)
+        emvco = getattr(self, "_emvco_payload", "")
+        if emvco:
+            try:
+                from ...utils.vietqr import generate_qr_pixmap
+                pixmap = generate_qr_pixmap(emvco)
+                if not pixmap.isNull():
+                    pixmap = pixmap.scaled(
+                        200, 200,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                    self._qr_label.setPixmap(pixmap)
+                    self._qr_label.setText("")
+                    return
+            except Exception:
+                pass  # Fall through to vietqr.io download
+
+        # Fallback: download from vietqr.io
         url = self.task.vietqr_url
         if not url:
             return
