@@ -304,19 +304,38 @@ class SettingsView(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(16)
 
+        audio_settings = self._load_audio_settings()
+        tts_enabled = bool(audio_settings.get("tts_enabled", False))
+        beep_enabled = bool(audio_settings.get("beep_enabled", False))
+        selected_voice = audio_settings.get("voice", "edge_female")
+        selected_volume = int(audio_settings.get("volume", 100))
+
         # Enable/Disable TTS
         enable_layout = QHBoxLayout()
-        enable_label = QLabel("Bật thông báo âm thanh")
+        enable_label = QLabel("Bật giọng đọc (TTS)")
         enable_label.setObjectName("subtitle")
         enable_layout.addWidget(enable_label)
         enable_layout.addStretch()
 
         self.tts_enabled_checkbox = NoWheelCheckBox()
-        self.tts_enabled_checkbox.setChecked(True)
+        self.tts_enabled_checkbox.setChecked(tts_enabled)
         self.tts_enabled_checkbox.stateChanged.connect(self._on_tts_enabled_changed)
         enable_layout.addWidget(self.tts_enabled_checkbox)
 
         layout.addLayout(enable_layout)
+
+        # Enable/Disable Beep (independent from TTS)
+        beep_layout = QHBoxLayout()
+        beep_label = QLabel("Bật tiếng pip pip")
+        beep_label.setObjectName("subtitle")
+        beep_layout.addWidget(beep_label)
+        beep_layout.addStretch()
+
+        self.beep_enabled_checkbox = NoWheelCheckBox()
+        self.beep_enabled_checkbox.setChecked(beep_enabled)
+        self.beep_enabled_checkbox.stateChanged.connect(self._on_beep_enabled_changed)
+        beep_layout.addWidget(self.beep_enabled_checkbox)
+        layout.addLayout(beep_layout)
 
         # Voice selection
         voice_layout = QVBoxLayout()
@@ -342,7 +361,7 @@ class SettingsView(QWidget):
         self.volume_slider = NoWheelSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setMinimum(0)
         self.volume_slider.setMaximum(100)
-        self.volume_slider.setValue(100)
+        self.volume_slider.setValue(max(0, min(100, selected_volume)))
         self.volume_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.volume_slider.setTickInterval(10)
         self.volume_slider.valueChanged.connect(self._on_volume_changed)
@@ -350,19 +369,40 @@ class SettingsView(QWidget):
 
         layout.addLayout(volume_layout)
 
-        # Test button
+        # Test buttons
+        test_btn_row = QHBoxLayout()
+
         test_btn = QPushButton("🔊 Thử giọng đọc")
         test_btn.setObjectName("primary")
         test_btn.setFixedWidth(180)
         test_btn.clicked.connect(self._test_tts)
-        layout.addWidget(test_btn)
+        test_btn_row.addWidget(test_btn)
+
+        beep_test_btn = QPushButton("🔔 Thử pip pip")
+        beep_test_btn.setObjectName("secondary")
+        beep_test_btn.setFixedWidth(140)
+        beep_test_btn.clicked.connect(self._test_beep)
+        test_btn_row.addWidget(beep_test_btn)
+        test_btn_row.addStretch()
+        layout.addLayout(test_btn_row)
 
         # Info
-        info = QLabel("Thông báo sẽ đọc số tiền và tên người gửi khi có giao dịch")
+        info = QLabel("TTS và pip pip hoạt động độc lập. Bạn có thể bật từng chế độ riêng.")
         info.setStyleSheet(
             f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-style: italic;"
         )
         layout.addWidget(info)
+
+        # Restore selected voice + enabled states
+        idx = self.voice_combo.findData(selected_voice)
+        if idx >= 0:
+            self.voice_combo.setCurrentIndex(idx)
+        self.voice_combo.setEnabled(tts_enabled)
+        self.volume_slider.setEnabled(tts_enabled)
+
+        # Sync runtime services with persisted settings
+        self._on_tts_enabled_changed(Qt.CheckState.Checked.value if tts_enabled else Qt.CheckState.Unchecked.value)
+        self._on_beep_enabled_changed(Qt.CheckState.Checked.value if beep_enabled else Qt.CheckState.Unchecked.value)
 
         return content
 
@@ -375,6 +415,16 @@ class SettingsView(QWidget):
             tts_service = self.container.get("tts_service")
             if tts_service:
                 tts_service.set_enabled(enabled)
+        self._save_audio_settings()
+
+    def _on_beep_enabled_changed(self, state):
+        """Handle beep enable/disable (independent from TTS)."""
+        enabled = state == Qt.CheckState.Checked.value
+        if self.container:
+            main_window = self.container.get("main_window")
+            if main_window and hasattr(main_window, "set_beep_enabled"):
+                main_window.set_beep_enabled(enabled)
+        self._save_audio_settings()
 
     def _on_voice_changed(self, index):
         """Handle voice selection change"""
@@ -383,6 +433,7 @@ class SettingsView(QWidget):
             tts_service = self.container.get("tts_service")
             if tts_service:
                 tts_service.set_voice(voice)
+        self._save_audio_settings()
 
     def _on_volume_changed(self, value):
         """Handle volume change"""
@@ -391,6 +442,7 @@ class SettingsView(QWidget):
             tts_service = self.container.get("tts_service")
             if tts_service:
                 tts_service.set_volume(value)
+        self._save_audio_settings()
 
     def _test_tts(self):
         """Test TTS with sample message"""
@@ -404,6 +456,49 @@ class SettingsView(QWidget):
                 QMessageBox.warning(self, "Lỗi", "TTS service không khả dụng")
         else:
             QMessageBox.warning(self, "Lỗi", "Container không khả dụng")
+
+    def _test_beep(self):
+        """Play short pip-pip test sound."""
+        try:
+            import winsound
+            winsound.Beep(1200, 120)
+            winsound.Beep(1600, 120)
+        except Exception:
+            QMessageBox.information(self, "Thông báo", "Thiết bị không hỗ trợ pip pip ở môi trường hiện tại.")
+
+    def _load_audio_settings(self) -> dict:
+        """Load audio settings from disk with safe defaults."""
+        defaults = {
+            "tts_enabled": False,
+            "beep_enabled": False,
+            "voice": "edge_female",
+            "volume": 100,
+        }
+        if self._AUDIO_CFG_PATH.exists():
+            try:
+                data = json.loads(self._AUDIO_CFG_PATH.read_text(encoding="utf-8"))
+                if isinstance(data, dict):
+                    defaults.update(data)
+            except Exception:
+                pass
+        return defaults
+
+    def _save_audio_settings(self):
+        """Persist TTS + beep settings."""
+        try:
+            data = {
+                "tts_enabled": self.tts_enabled_checkbox.isChecked() if hasattr(self, "tts_enabled_checkbox") else False,
+                "beep_enabled": self.beep_enabled_checkbox.isChecked() if hasattr(self, "beep_enabled_checkbox") else False,
+                "voice": self.voice_combo.currentData() if hasattr(self, "voice_combo") else "edge_female",
+                "volume": self.volume_slider.value() if hasattr(self, "volume_slider") else 100,
+            }
+            self._AUDIO_CFG_PATH.parent.mkdir(parents=True, exist_ok=True)
+            self._AUDIO_CFG_PATH.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
 
     def _network_content(self) -> QWidget:
         content = QWidget()
@@ -874,6 +969,7 @@ class SettingsView(QWidget):
     _BANK_CFG_PATH = Path(__file__).parents[3] / "config" / "bank_settings.json"
     _BANK_PROFILES_PATH = Path(__file__).parents[3] / "config" / "bank_profiles.json"
     _TUNNEL_STATE_PATH = Path(__file__).parents[3] / "config" / "tunnel_state.json"
+    _AUDIO_CFG_PATH = Path(__file__).parents[3] / "config" / "audio_settings.json"
 
     def _write_tunnel_state(self, url: str, status: str = "up", provider: str = ""):
         """Persist current tunnel URL so notification_service can expose it via /api/config."""
@@ -1055,9 +1151,27 @@ class SettingsView(QWidget):
         self._bank_profile_combo.clear()
         self._bank_profile_combo.addItem("-- Chon template --", None)
         profiles = self._load_bank_profiles()
+        active = {}
+        if self._BANK_CFG_PATH.exists():
+            try:
+                active = json.loads(self._BANK_CFG_PATH.read_text(encoding="utf-8"))
+            except Exception:
+                active = {}
+
+        active_index = 0
         for p in profiles:
             label = f"{p.get('holder', '?')} - {p.get('account', '?')} ({p.get('bin', '?')})"
             self._bank_profile_combo.addItem(label, p)
+            idx = self._bank_profile_combo.count() - 1
+            if (
+                p.get("account") == active.get("account")
+                and p.get("bin") == active.get("bin")
+                and (p.get("holder", "") or "").upper() == (active.get("holder", "") or "").upper()
+            ):
+                active_index = idx
+
+        if active_index > 0:
+            self._bank_profile_combo.setCurrentIndex(active_index)
         self._bank_profile_combo.blockSignals(False)
 
     def _on_bank_profile_selected(self, index):
@@ -1093,6 +1207,7 @@ class SettingsView(QWidget):
 
         self._save_bank_profiles_to_disk(profiles)
         self._refresh_bank_profiles()
+        self._auto_save_bank(data)
         QMessageBox.information(self, "OK", f"Đã lưu template: {data['holder']} - {data['account']}")
 
     def _delete_bank_profile(self):

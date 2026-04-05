@@ -7,12 +7,131 @@ from datetime import datetime
 
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer
 from PyQt6.QtGui import QIntValidator
-from PyQt6.QtWidgets import (QApplication, QFrame, QGridLayout, QHBoxLayout,
-                             QLabel, QLineEdit, QPushButton, QScrollArea,
-                             QTabWidget, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
+                             QHBoxLayout, QLabel, QLineEdit, QPushButton,
+                             QScrollArea, QTabWidget, QVBoxLayout, QWidget)
 
 from ..theme import AppColors
 from ...database.repositories import BankRepository
+
+
+class HistoryDialog(QDialog):
+    """Dialog hiển thị lịch sử tính toán."""
+
+    result_clicked = pyqtSignal(str)  # Emit value when user clicks a history entry
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Lịch sử tính toán")
+        self.setMinimumSize(380, 500)
+        self.resize(400, 560)
+        self.setStyleSheet(f"background-color: {AppColors.BG_SECONDARY};")
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(10)
+
+        # Header
+        header = QLabel("LỊCH SỬ TÍNH TOÁN")
+        header.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 10px; "
+            f"letter-spacing: 2.5px; padding-bottom: 4px;"
+        )
+        layout.addWidget(header)
+
+        # Scroll area
+        self.scroll = QScrollArea()
+        self.scroll.setWidgetResizable(True)
+        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll.setStyleSheet("background: transparent;")
+
+        self.container = QWidget()
+        self.v_layout = QVBoxLayout(self.container)
+        self.v_layout.setSpacing(10)
+        self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.empty_label = QLabel("Chưa có lịch sử tính")
+        self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.empty_label.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600; padding: 24px 8px;"
+        )
+        self.v_layout.addWidget(self.empty_label)
+
+        self.scroll.setWidget(self.container)
+        layout.addWidget(self.scroll)
+
+        # Clear button
+        clear_btn = QPushButton("Xóa lịch sử")
+        clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        clear_btn.setMinimumHeight(36)
+        clear_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: white; color: {AppColors.ERROR};
+                border-radius: 8px; border: 1.5px solid {AppColors.BORDER};
+                font-size: 12px; font-weight: 700; padding: 0 16px;
+            }}
+            QPushButton:hover {{ background: #fef2f2; border-color: {AppColors.ERROR}; }}
+        """)
+        clear_btn.clicked.connect(self.clear_history)
+        layout.addWidget(clear_btn)
+
+    def add_entry(self, expr: str, res: str):
+        """Add a history entry to the dialog."""
+        if self.empty_label.parent() is not None:
+            self.empty_label.setParent(None)
+
+        frame = QFrame()
+        frame.setStyleSheet(f"""
+            QFrame {{
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #fafbfc, stop:1 #f1f5f9);
+                border-radius: 10px;
+                padding: 8px;
+                border: 1px solid #e2e8f0;
+            }}
+            QFrame:hover {{
+                border-color: {AppColors.PRIMARY};
+                background: #f0fdf4;
+            }}
+        """)
+
+        fl = QVBoxLayout(frame)
+        fl.setContentsMargins(10, 8, 10, 8)
+
+        ts = QLabel(datetime.now().strftime("%H:%M:%S"))
+        ts.setStyleSheet("color: #94a3b8; font-size: 10px; font-weight: 600; background: transparent;")
+        ts.setAlignment(Qt.AlignmentFlag.AlignRight)
+        fl.addWidget(ts)
+
+        eq = QLabel(expr)
+        eq.setStyleSheet("color: #475569; font-size: 13px; font-weight: 600; background: transparent;")
+        eq.setWordWrap(True)
+        fl.addWidget(eq)
+
+        rs = QLabel(res)
+        rs.setStyleSheet(f"color: {AppColors.TEXT}; font-weight: 800; font-size: 18px; background: transparent;")
+        rs.setAlignment(Qt.AlignmentFlag.AlignRight)
+        fl.addWidget(rs)
+
+        frame.setCursor(Qt.CursorShape.PointingHandCursor)
+        frame.mousePressEvent = lambda e, v=res.replace(",", ""): self._on_click(v)
+
+        self.v_layout.insertWidget(0, frame)
+
+    def _on_click(self, val: str):
+        self.result_clicked.emit(val)
+
+    def clear_history(self):
+        while self.v_layout.count():
+            w = self.v_layout.takeAt(0).widget()
+            if w:
+                w.deleteLater()
+        self.empty_label = QLabel("Chưa có lịch sử tính")
+        self.empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.empty_label.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600; padding: 24px 8px;"
+        )
+        self.v_layout.addWidget(self.empty_label)
 
 
 class CalculatorToolView(QWidget):
@@ -29,6 +148,10 @@ class CalculatorToolView(QWidget):
 
         # Accept keyboard focus so keyPressEvent fires without needing a click
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+
+        # History dialog
+        self._history_dialog = HistoryDialog(self)
+        self._history_dialog.result_clicked.connect(self._reuse)
 
         self._setup_ui()
         
@@ -87,16 +210,28 @@ class CalculatorToolView(QWidget):
         """)
         outer.addWidget(self.sub_tabs)
 
-        # ===== TAB 1: Calculator + History =====
+        # ===== TAB 1: Calculator + Money Counter =====
+        # Wrap in scroll area so content doesn't overflow
+        calc_scroll = QScrollArea()
+        calc_scroll.setWidgetResizable(True)
+        calc_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        calc_scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+
         calc_page = QWidget()
         calc_page.setStyleSheet("background: transparent;")
-        calc_h_layout = QHBoxLayout(calc_page)
-        calc_h_layout.setContentsMargins(0, 12, 0, 0)
-        calc_h_layout.setSpacing(16)
+        calc_page_layout = QVBoxLayout(calc_page)
+        calc_page_layout.setContentsMargins(0, 12, 0, 0)
+        calc_page_layout.setSpacing(16)
+
+        calc_scroll.setWidget(calc_page)
+
+        # Calculator and Money Counter side by side
+        main_h_layout = QHBoxLayout()
+        main_h_layout.setContentsMargins(0, 0, 0, 0)
+        main_h_layout.setSpacing(14)
 
         # --- LEFT: CALCULATOR ---
         calc_container = QFrame()
-        calc_container.setFixedWidth(390)
         calc_container.setStyleSheet(f"""
             QFrame {{
                 background-color: white;
@@ -163,7 +298,7 @@ class CalculatorToolView(QWidget):
         action_layout = QHBoxLayout()
         action_layout.setSpacing(8)
 
-        actions = [("Copy Kết quả", "#2563eb")]
+        actions = [("Copy Kết quả", "#2563eb"), ("Lịch sử", "#7c3aed")]
 
         for text, fg in actions:
             btn = QPushButton(text)
@@ -260,75 +395,29 @@ class CalculatorToolView(QWidget):
             grid.addWidget(btn, r, c)
 
         calc_layout.addLayout(grid)
-        calc_h_layout.addWidget(calc_container)
+        main_h_layout.addWidget(calc_container, 1)
 
-        # --- Spacer between calc and history ---
-        calc_h_layout.addStretch(1)
+        # --- RIGHT: MONEY COUNTER ---
+        money_section = QWidget()
+        money_section.setStyleSheet("background: transparent;")
+        self._build_money_counter(money_section, embedded=True)
+        main_h_layout.addWidget(money_section, 1)
 
-        # --- RIGHT: HISTORY ---
-        history_side = QFrame()
-        history_side.setFixedWidth(300)
-        history_side.setStyleSheet(f"""
-            QFrame {{
-                background-color: white;
-                border-radius: 16px;
-                border: 1px solid {AppColors.BORDER};
-            }}
-        """)
+        calc_page_layout.addLayout(main_h_layout)
 
-        hist_layout = QVBoxLayout(history_side)
-        hist_layout.setContentsMargins(14, 18, 14, 14)
-        hist_layout.setSpacing(8)
+        self.sub_tabs.addTab(calc_scroll, "Máy tính & Đếm tiền")
 
-        hist_label = QLabel("LỊCH SỬ")
-        hist_label.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-weight: 700; font-size: 9px; letter-spacing: 2.5px; margin-bottom: 10px;"
-        )
-        hist_layout.addWidget(hist_label)
+        # ===== TAB 2: Demo tính tiền =====
+        demo_scroll = QScrollArea()
+        demo_scroll.setWidgetResizable(True)
+        demo_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        demo_scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
 
-        self.scroll = QScrollArea()
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setFrameShape(QFrame.Shape.NoFrame)
-        self.scroll.setStyleSheet("background: transparent;")
-
-        self.hist_container = QWidget()
-        self.hist_v_layout = QVBoxLayout(self.hist_container)
-        self.hist_v_layout.setSpacing(10)
-        self.hist_v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        self.hist_empty = QLabel("Chưa có lịch sử tính")
-        self.hist_empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.hist_empty.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600; padding: 24px 8px;"
-        )
-        self.hist_v_layout.addWidget(self.hist_empty)
-
-        self.scroll.setWidget(self.hist_container)
-        hist_layout.addWidget(self.scroll)
-
-        clear_btn = QPushButton("Xóa lịch sử")
-        clear_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        clear_btn.setStyleSheet(
-            f"QPushButton {{ background: transparent; color: #94a3b8; font-size: 11px; font-weight: 600; border: none; padding: 10px; }} QPushButton:hover {{ color: {AppColors.ERROR}; }}"
-        )
-        clear_btn.clicked.connect(self._clear_history)
-        hist_layout.addWidget(clear_btn)
-
-        calc_h_layout.addWidget(history_side)
-
-        self.sub_tabs.addTab(calc_page, "Máy tính")
-
-        # ===== TAB 2: Money Counter =====
-        money_page = QWidget()
-        money_page.setStyleSheet("background: transparent;")
-        self._build_money_counter(money_page)
-        self.sub_tabs.addTab(money_page, "Đếm tiền")
-
-        # ===== TAB 3: Demo tính tiền =====
-        demo_page = QWidget()
-        demo_page.setStyleSheet("background: transparent;")
-        self._build_demo_calculator(demo_page)
-        self.sub_tabs.addTab(demo_page, "Demo tính tiền")
+        demo_section = QWidget()
+        demo_section.setStyleSheet("background: transparent;")
+        self._build_demo_calculator(demo_section)
+        demo_scroll.setWidget(demo_section)
+        self.sub_tabs.addTab(demo_scroll, "Tính tiền ca")
 
     # ================================================================
     # MONEY COUNTER
@@ -347,10 +436,10 @@ class CalculatorToolView(QWidget):
         5_000:   "#0d9488", 2_000:  "#64748b", 1_000:  "#64748b",
     }
 
-    def _build_money_counter(self, parent_widget):
-        """Build full-width money counter as its own tab with proper table alignment."""
+    def _build_money_counter(self, parent_widget, embedded: bool = False):
+        """Build money counter section. Use embedded mode when rendered inside calculator tab."""
         page_layout = QVBoxLayout(parent_widget)
-        page_layout.setContentsMargins(0, 12, 0, 0)
+        page_layout.setContentsMargins(0, 0, 0, 0 if embedded else 0)
         page_layout.setSpacing(12)
 
         # Main card
@@ -388,38 +477,29 @@ class CalculatorToolView(QWidget):
         table_grid.setVerticalSpacing(6)
         table_grid.setContentsMargins(0, 0, 0, 0)
 
-        # Column headers for both sides
+        # Column headers (vertical list)
         col_headers = ["Mệnh giá", "Số lượng", "Thành tiền"]
-        for group in range(2):  # 2 groups side-by-side
-            base_col = group * 4  # 0 or 4 (col 3 and 7 are spacers)
-            for i, hdr_text in enumerate(col_headers):
-                hdr = QLabel(hdr_text)
-                align = Qt.AlignmentFlag.AlignRight if i == 2 else Qt.AlignmentFlag.AlignLeft
-                hdr.setAlignment(align)
-                hdr.setStyleSheet(
-                    f"color: {AppColors.TEXT_SECONDARY}; font-size: 9px; "
-                    f"font-weight: 700; letter-spacing: 1.5px; padding-bottom: 6px;"
-                    f"border-bottom: 2px solid {AppColors.BORDER};"
-                )
-                table_grid.addWidget(hdr, 0, base_col + i)
+        for i, hdr_text in enumerate(col_headers):
+            hdr = QLabel(hdr_text)
+            align = Qt.AlignmentFlag.AlignRight if i == 2 else Qt.AlignmentFlag.AlignLeft
+            hdr.setAlignment(align)
+            hdr.setStyleSheet(
+                f"color: {AppColors.TEXT_SECONDARY}; font-size: 9px; "
+                f"font-weight: 700; letter-spacing: 1.5px; padding-bottom: 6px;"
+                f"border-bottom: 2px solid {AppColors.BORDER};"
+            )
+            table_grid.addWidget(hdr, 0, i)
 
-        # Spacer column between groups
-        spacer = QLabel()
-        spacer.setFixedWidth(32)
-        table_grid.addWidget(spacer, 0, 3)
-
-        # --- Denomination rows: 5 rows × 2 groups ---
+        # --- Denomination rows: single vertical column ---
         for idx, denom in enumerate(self.VND_DENOMINATIONS):
-            group = idx // 5       # 0 = left group, 1 = right group
-            row_num = (idx % 5) + 1  # rows 1..5 (row 0 is header)
-            base_col = group * 4
+            row_num = idx + 1  # rows 1..9 (row 0 is header)
 
             color = self._DENOM_COLORS.get(denom, "#64748b")
 
             # Column 0: Denomination label with color dot
             denom_widget = QWidget()
             # Alternate row background for zebra-stripe effect
-            row_bg = "#f8fafc" if (row_num % 2 == 0) else "transparent"
+            row_bg = "#f8fafc" if (idx % 2 == 1) else "transparent"
             denom_widget.setStyleSheet(f"background: {row_bg}; border-radius: 6px;")
             denom_h = QHBoxLayout(denom_widget)
             denom_h.setContentsMargins(6, 4, 0, 4)
@@ -441,7 +521,7 @@ class CalculatorToolView(QWidget):
             )
             denom_h.addWidget(lbl)
             denom_h.addStretch()
-            table_grid.addWidget(denom_widget, row_num, base_col + 0)
+            table_grid.addWidget(denom_widget, row_num, 0)
 
             # Column 1: Quantity input
             qty_input = QLineEdit()
@@ -469,7 +549,7 @@ class CalculatorToolView(QWidget):
                 }}
             """)
             qty_input.textChanged.connect(lambda _: self._update_money_totals())
-            table_grid.addWidget(qty_input, row_num, base_col + 1)
+            table_grid.addWidget(qty_input, row_num, 1)
             self._money_inputs[denom] = qty_input
 
             # Enter key → jump to next denomination input
@@ -484,7 +564,7 @@ class CalculatorToolView(QWidget):
             sub.setStyleSheet(
                 f"color: {AppColors.TEXT_SECONDARY}; font-size: 13px; font-weight: 600;"
             )
-            table_grid.addWidget(sub, row_num, base_col + 2)
+            table_grid.addWidget(sub, row_num, 2)
             self._money_subtotals[denom] = sub
 
         card_layout.addLayout(table_grid)
@@ -615,7 +695,8 @@ class CalculatorToolView(QWidget):
         bank_layout.addWidget(self.bank_total_label)
         
         page_layout.addWidget(bank_card)
-        page_layout.addStretch()
+        if not embedded:
+            page_layout.addStretch()
 
     def _build_demo_calculator(self, parent_widget):
         """Build demo calculator to check if money is negative."""
@@ -1260,51 +1341,7 @@ class CalculatorToolView(QWidget):
         return {"*": "×", "/": "÷", "-": "-", "+": "+"}.get(op, op)
 
     def _add_to_history(self, expr, res):
-        if self.hist_empty and self.hist_empty.parent() is not None:
-            self.hist_empty.setParent(None)
-
-        frame = QFrame()
-        frame.setStyleSheet(f"""
-            QFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #fafbfc, stop:1 #f1f5f9);
-                border-radius: 10px;
-                padding: 8px;
-                border: 1px solid #e2e8f0;
-            }}
-            QFrame:hover {{
-                border-color: {AppColors.PRIMARY};
-                background: #f0fdf4;
-            }}
-        """)
-
-        layout = QVBoxLayout(frame)
-        layout.setContentsMargins(10, 8, 10, 8)
-
-        # Timestamp
-        ts = QLabel(datetime.now().strftime("%H:%M:%S"))
-        ts.setStyleSheet(
-            "color: #94a3b8; font-size: 10px; font-weight: 600; background: transparent;"
-        )
-        ts.setAlignment(Qt.AlignmentFlag.AlignRight)
-        layout.addWidget(ts)
-
-        eq = QLabel(expr)
-        eq.setStyleSheet("color: #475569; font-size: 13px; font-weight: 600; background: transparent;")
-        eq.setWordWrap(True)
-
-        rs = QLabel(res)
-        rs.setStyleSheet(f"color: {AppColors.TEXT}; font-weight: 800; font-size: 18px; background: transparent;")
-        rs.setAlignment(Qt.AlignmentFlag.AlignRight)
-
-        layout.addWidget(eq)
-        layout.addWidget(rs)
-
-        frame.setCursor(Qt.CursorShape.PointingHandCursor)
-        # Reuse result on click
-        frame.mousePressEvent = lambda e, v=res.replace(",", ""): self._reuse(v)
-
-        self.hist_v_layout.insertWidget(0, frame)
+        self._history_dialog.add_entry(expr, res)
 
     def _reuse(self, val):
         self.current_value = val
@@ -1312,19 +1349,19 @@ class CalculatorToolView(QWidget):
         self.new_num = True
 
     def _clear_history(self):
-        while self.hist_v_layout.count():
-            w = self.hist_v_layout.takeAt(0).widget()
-            if w:
-                w.deleteLater()
-        self.hist_empty = QLabel("Chưa có lịch sử tính")
-        self.hist_empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.hist_empty.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px; font-weight: 600; padding: 24px 8px;"
-        )
-        self.hist_v_layout.addWidget(self.hist_empty)
+        self._history_dialog.clear_history()
+
+    def _show_history(self):
+        self._history_dialog.show()
+        self._history_dialog.raise_()
+        self._history_dialog.activateWindow()
 
     def _on_special_action(self, action):
         try:
+            if "Lịch sử" in action:
+                self._show_history()
+                return
+
             curr = float(self.current_value)
             if "VAT 10%" in action:
                 res = curr * 1.1
@@ -1345,8 +1382,14 @@ class CalculatorToolView(QWidget):
         key = event.key()
         text = event.text()
 
-        # If money counter tab is active, let its inputs handle events
+        # Demo tab has dedicated inputs; don't hijack keyboard shortcuts there.
         if self.sub_tabs.currentIndex() == 1:
+            super().keyPressEvent(event)
+            return
+
+        # In merged tab, if focus is inside money-counter fields, let that field handle input.
+        fw = QApplication.focusWidget()
+        if hasattr(self, "_money_inputs") and fw in self._money_inputs.values():
             super().keyPressEvent(event)
             return
 

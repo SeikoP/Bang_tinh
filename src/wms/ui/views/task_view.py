@@ -940,44 +940,6 @@ class PaymentLinkDialog(QDialog):
         self._refresh_status()
         layout.addWidget(self._status_label)
 
-        # QR text preview for text-only channels
-        qr_text_row = QHBoxLayout()
-        qr_text_hint = QLabel("QR văn bản (sao chép thủ công):")
-        qr_text_hint.setStyleSheet("font-size: 12px; color: #94a3b8;")
-        qr_text_row.addWidget(qr_text_hint)
-        qr_text_row.addStretch(1)
-
-        self._qr_text_mode = QComboBox()
-        self._qr_text_mode.addItem("Data URL ảnh (khuyên dùng)", "dataurl")
-        self._qr_text_mode.addItem("Double-halfblock", "doublehalf")
-        self._qr_text_mode.addItem("Double-width", "double")
-        self._qr_text_mode.addItem("Braille", "braille")
-        self._qr_text_mode.addItem("Half-block", "halfblock")
-        self._qr_text_mode.addItem("Block", "block")
-        self._qr_text_mode.addItem("ASCII", "ascii")
-        self._qr_text_mode.setCurrentIndex(0)
-        self._qr_text_mode.setFixedWidth(230)
-        self._qr_text_mode.currentIndexChanged.connect(self._on_qr_mode_changed)
-        qr_text_row.addWidget(self._qr_text_mode)
-
-        self._qr_invert = QCheckBox("Đảo màu")
-        self._qr_invert.setStyleSheet("font-size: 11px; color: #94a3b8;")
-        self._qr_invert.toggled.connect(lambda _=None: self._refresh_qr_text_preview())
-        qr_text_row.addWidget(self._qr_invert)
-        layout.addLayout(qr_text_row)
-
-        self._qr_text_view = QPlainTextEdit()
-        self._qr_text_view.setReadOnly(True)
-        self._qr_text_view.setMinimumHeight(150)
-        self._qr_text_view.setStyleSheet(
-            "font-family: 'Consolas', 'Courier New', monospace;"
-            "font-size: 11px;"
-            "line-height: 1.0;"
-            "background: #0b1220; color: #e2e8f0; border: 1px solid #334155; border-radius: 8px;"
-        )
-        self._qr_text_view.setPlaceholderText("Chưa có QR text. Bấm 'Tạo / Làm mới QR' để tạo.")
-        layout.addWidget(self._qr_text_view)
-
         # Button row
         btn_row = QHBoxLayout()
 
@@ -988,25 +950,15 @@ class PaymentLinkDialog(QDialog):
         self._gen_btn.clicked.connect(self._generate_qr)
         btn_row.addWidget(self._gen_btn)
 
-        self._copy_msg_btn = QPushButton("Sao chép tin nhắn TT")
-        self._copy_msg_btn.setFixedHeight(36)
-        self._copy_msg_btn.setStyleSheet(
+        self._copy_link_btn = QPushButton("Sao chép link")
+        self._copy_link_btn.setFixedHeight(36)
+        self._copy_link_btn.setStyleSheet(
             "background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; padding: 0 12px;"
             "QPushButton:hover { background: #1d4ed8; }"
         )
-        self._copy_msg_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._copy_msg_btn.clicked.connect(self._copy_payment_message)
-        btn_row.addWidget(self._copy_msg_btn)
-
-        self._copy_qr_text_btn = QPushButton("Sao chép QR văn bản")
-        self._copy_qr_text_btn.setFixedHeight(36)
-        self._copy_qr_text_btn.setStyleSheet(
-            "background: #3b82f6; color: white; border: none; border-radius: 6px; font-weight: bold; padding: 0 12px;"
-            "QPushButton:hover { background: #2563eb; }"
-        )
-        self._copy_qr_text_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self._copy_qr_text_btn.clicked.connect(self._copy_qr_text)
-        btn_row.addWidget(self._copy_qr_text_btn)
+        self._copy_link_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._copy_link_btn.clicked.connect(self._copy_link_with_guide)
+        btn_row.addWidget(self._copy_link_btn)
 
         close_btn = QPushButton("Đóng")
         close_btn.setFixedHeight(36)
@@ -1020,7 +972,6 @@ class PaymentLinkDialog(QDialog):
         # Auto-load QR image if URL present
         if task.vietqr_url:
             self._rebuild_emvco_from_url()
-            self._refresh_qr_text_preview()
             QTimer.singleShot(50, self._load_qr_image)
 
     def _rebuild_emvco_from_url(self):
@@ -1066,83 +1017,79 @@ class PaymentLinkDialog(QDialog):
         QApplication.clipboard().setText(self._tc_value.text())
         self._tc_value.selectAll()
 
-    def _on_qr_mode_changed(self, _=None):
-        is_dataurl = (self._qr_text_mode.currentData() == "dataurl")
-        self._qr_invert.setEnabled(not is_dataurl)
-        self._refresh_qr_text_preview()
+    def _normalize_token(self, text: str, fallback: str = "X") -> str:
+        """Return compact uppercase token (A-Z0-9 only) for short addInfo fields."""
+        cleaned = re.sub(r"[^A-Za-z0-9]", "", (text or "").upper())
+        return cleaned or fallback
 
-    def _refresh_qr_text_preview(self):
-        qr_text = self._build_qr_text()
-        mode = self._qr_text_mode.currentData() if hasattr(self, '_qr_text_mode') else 'doublehalf'
-        if mode != 'dataurl' and hasattr(self, '_qr_invert') and self._qr_invert.isChecked() and qr_text:
-            table = str.maketrans("█░▀▄⣿⠀10X ", "░█▄▀⠀⣿01 X")
-            qr_text = qr_text.translate(table)
-        self._qr_text_view.setPlainText(qr_text)
+    def _build_transfer_content(self, holder: str) -> str:
+        """Build compact transfer content with all fields under addInfo length constraints."""
+        notes_text = getattr(self.task, "notes", "") or ""
+        product_lines = [line.strip() for line in notes_text.strip().split("\n") if line.strip()]
 
-    def _build_qr_text(self) -> str:
-        """Build text QR from EMVCo payload for text-only chat systems."""
-        emvco = getattr(self, "_emvco_payload", "")
-        if not emvco:
-            return ""
-        try:
-            mode = "dataurl"
-            if hasattr(self, "_qr_text_mode"):
-                mode = self._qr_text_mode.currentData() or "dataurl"
+        total_qty = 0
+        for line in product_lines:
+            qty_match = re.search(r"x\s*(\d+)", line)
+            if qty_match:
+                total_qty += int(qty_match.group(1))
+            else:
+                total_qty += 1
 
-            if mode == "dataurl":
-                from ...utils.vietqr import generate_qr_data_url
-                return generate_qr_data_url(emvco)
-
-            from ...utils.vietqr import generate_qr_text
-            try:
-                return generate_qr_text(emvco, mode=mode)
-            except Exception:
-                return generate_qr_text(emvco)
-        except Exception:
-            return ""
-
-    def _build_payment_message(self) -> str:
-        """Build short payment message for manual transfer in text-only channels."""
+        code = self._normalize_token(self.task.note_code, fallback=f"GC{self.task.id}")
+        customer = self._normalize_token((self.task.customer_name or "").split()[0] if self.task.customer_name else "", fallback="X")
+        holder_token = self._normalize_token((holder or "").split()[0] if holder else "", fallback="X")
+        product_count = max(len(product_lines), 1)
+        quantity = max(total_qty, product_count)
         amount = int(self.task.amount or 0)
-        amount_text = f"{amount:,} d" if amount > 0 else "theo hoa don"
+
+        code = code[:16]
+        customer = customer[:12]
+        holder_token = holder_token[:12]
+
+        def _compose(code_value: str, cust_value: str, holder_value: str) -> str:
+            return f"C{code_value}_K{cust_value}_P{product_count}_Q{quantity}_A{amount}_H{holder_value}"
+
+        transfer_content = _compose(code, customer, holder_token)
+        while len(transfer_content) > 50:
+            if len(customer) > 1:
+                customer = customer[:-1]
+            elif len(holder_token) > 1:
+                holder_token = holder_token[:-1]
+            elif len(code) > 4:
+                code = code[:-1]
+            else:
+                break
+            transfer_content = _compose(code, customer, holder_token)
+
+        return transfer_content[:50]
+
+    def _build_share_text(self) -> str:
+        """Build copy-ready share text with short instructions for scanner."""
+        url = (self.task.vietqr_url or "").strip()
         transfer_content = (self._tc_value.text() or self.task.note_code).strip()
-        account = ""
-        holder = ""
-        try:
-            cfg_path = Path(__file__).parents[3] / "config" / "bank_settings.json"
-            if cfg_path.exists():
-                bank = json.loads(cfg_path.read_text(encoding="utf-8"))
-                account = (bank.get("account", "") or "").strip()
-                holder = (bank.get("holder", "") or "").strip()
-        except Exception:
-            pass
-
-        lines = [f"So tien: {amount_text}"]
-        if account:
-            lines.append(f"STK: {account}")
-        if holder:
-            lines.append(f"Chu TK: {holder}")
-        lines.append(f"Noi dung: {transfer_content}")
-
+        amount = int(self.task.amount or 0)
+        amount_text = f"{amount:,} đ" if amount > 0 else "theo hóa đơn"
+        lines = [
+            "Hướng dẫn thanh toán:",
+            "1) Mở app ngân hàng có hỗ trợ VietQR.",
+            "2) Quét mã VietQR trong ảnh hoặc dùng link bên dưới.",
+            f"3) Kiểm tra nội dung CK: {transfer_content}.",
+            f"Số tiền: {amount_text}",
+            f"Link VietQR: {url}",
+        ]
         return "\n".join(lines)
 
-    def _copy_payment_message(self):
+    def _copy_link_with_guide(self):
         from PyQt6.QtWidgets import QApplication
-        QApplication.clipboard().setText(self._build_payment_message())
-        self._copy_msg_btn.setText("Đã copy!")
-        QTimer.singleShot(1500, lambda: self._copy_msg_btn.setText("Sao chép tin nhắn TT"))
 
-    def _copy_qr_text(self):
-        """Copy QR text block to clipboard for manual send in text channels."""
-        from PyQt6.QtWidgets import QApplication
-        qr_text = self._qr_text_view.toPlainText().strip() or self._build_qr_text()
-        if qr_text:
-            QApplication.clipboard().setText(qr_text)
-            self._copy_qr_text_btn.setText("Đã sao chép")
-            QTimer.singleShot(1500, lambda: self._copy_qr_text_btn.setText("Sao chép QR văn bản"))
-        else:
-            self._copy_qr_text_btn.setText("Chưa có QR")
-            QTimer.singleShot(1500, lambda: self._copy_qr_text_btn.setText("Sao chép QR văn bản"))
+        if not (self.task.vietqr_url or "").strip():
+            self._copy_link_btn.setText("Tạo QR trước")
+            QTimer.singleShot(1500, lambda: self._copy_link_btn.setText("Sao chép link"))
+            return
+
+        QApplication.clipboard().setText(self._build_share_text())
+        self._copy_link_btn.setText("Đã copy")
+        QTimer.singleShot(1500, lambda: self._copy_link_btn.setText("Sao chép link"))
 
     def _generate_qr(self):
         """Build VietQR URL from bank settings and update task"""
@@ -1165,39 +1112,8 @@ class PaymentLinkDialog(QDialog):
                 "Cần nhập BIN ngân hàng và số tài khoản trong Cài đặt.")
             return
 
-        # Build detailed transfer content: GC{id} + customer + product summary
-        parts = [self.task.note_code]
-        if self.task.customer_name:
-            # Abbreviate customer name (first word only to save space)
-            cust_short = self.task.customer_name.split()[0] if self.task.customer_name.strip() else ""
-            if cust_short:
-                parts.append(cust_short)
-
-        # Summarize products from notes: count items
-        notes_text = getattr(self.task, "notes", "") or ""
-        product_lines = [l.strip() for l in notes_text.strip().split("\n") if l.strip()]
-        if product_lines:
-            total_qty = 0
-            for line in product_lines:
-                # Parse "Name x Qty @ Price" format
-                import re as _re
-                qty_match = _re.search(r'x\s*(\d+)', line)
-                if qty_match:
-                    total_qty += int(qty_match.group(1))
-                else:
-                    total_qty += 1
-            parts.append(f"{len(product_lines)}SP")
-            if total_qty > len(product_lines):
-                parts.append(f"SL{total_qty}")
-
-        amount_k = int(self.task.amount // 1000) if self.task.amount else 0
-        if amount_k > 0:
-            parts.append(f"{amount_k}K")
-        tc = " ".join(parts)
-
-        # VietQR addInfo limit is ~50 chars for most banks
-        if len(tc) > 50:
-            tc = tc[:47] + "..."
+        holder = (bank.get("holder", "") or "").strip().upper()
+        tc = self._build_transfer_content(holder)
 
         amount = int(self.task.amount)
 
@@ -1220,7 +1136,6 @@ class PaymentLinkDialog(QDialog):
         self._emvco_payload = emvco_payload
         self._tc_value.setText(tc)
         self._refresh_status()
-        self._refresh_qr_text_preview()
         self._load_qr_image()
 
     def _load_qr_image(self):

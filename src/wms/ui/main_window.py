@@ -4,6 +4,7 @@ PyQt6 Version - Modern Premium Design - Refactored
 """
 
 import html
+import json
 import sys
 import time
 from pathlib import Path
@@ -84,6 +85,7 @@ class MainWindow(QMainWindow):
             container = Container(config)
 
         self.container = container
+        self.container.register_singleton("main_window", self)
         self.logger = container.get("logger")
         self.config = container.get("config")
         self.error_handler = None  # Will be initialized in _setup_ui
@@ -112,10 +114,16 @@ class MainWindow(QMainWindow):
         # Initialize TTS service
         from ..services.tts_service import TTSService
 
+        self._audio_cfg_path = Path(__file__).parents[2] / "config" / "audio_settings.json"
+        self._audio_settings = self._load_audio_settings()
+
         self._tts_service = TTSService(logger=self.logger)
-        self._tts_service.set_enabled(True)  # Enable by default
-        self._tts_service.set_voice("edge_female")  # Use Premium Edge TTS (Hoai My)
+        self._tts_service.set_enabled(bool(self._audio_settings.get("tts_enabled", False)))
+        self._tts_service.set_voice(self._audio_settings.get("voice", "edge_female"))
+        self._tts_service.set_volume(int(self._audio_settings.get("volume", 100)))
         self._tts_service.error_occurred.connect(self._on_tts_error)
+
+        self._beep_enabled = bool(self._audio_settings.get("beep_enabled", False))
 
         # Register TTS service in container for settings access
         self.container.register_singleton("tts_service", self._tts_service)
@@ -999,6 +1007,9 @@ class MainWindow(QMainWindow):
             # Show banner (Bank notifications stay until closed or replaced)
             self.notif_banner.show_message(rich_text)
 
+            # Play optional pip-pip notification
+            self._play_payment_sound()
+
             # Speak notification using TTS
             if self._tts_service and amount:
                 self._tts_service.speak_transaction(amount, sender_name)
@@ -1052,9 +1063,6 @@ class MainWindow(QMainWindow):
         except Exception:
             pass
 
-        # Play payment success sound (kaching)
-        self._play_payment_sound()
-
         # Show completion popup with task details + QR + notes
         # Each match gets its own popup — they stack for concurrent payments
         try:
@@ -1080,18 +1088,55 @@ class MainWindow(QMainWindow):
         self._refresh_tasks()
 
     def _play_payment_sound(self):
-        """Play a 'kaching' sound on payment match using winsound (Windows)."""
+        """Play short pip-pip sound when beep notification is enabled."""
+        if not self._beep_enabled:
+            return
         try:
             import winsound
             import threading
+
             def _beep():
-                # Two-tone ascending beep: "ka-ching!"
-                winsound.Beep(800, 100)   # low tone
-                winsound.Beep(1200, 100)  # mid tone
-                winsound.Beep(1600, 200)  # high tone (longer)
+                winsound.Beep(1200, 120)
+                winsound.Beep(1600, 120)
+
             threading.Thread(target=_beep, daemon=True).start()
         except Exception:
             pass  # winsound only on Windows; silently skip elsewhere
+
+    def set_beep_enabled(self, enabled: bool, persist: bool = False):
+        """Update beep runtime state. Optionally persist to disk."""
+        self._beep_enabled = bool(enabled)
+        if persist:
+            self._audio_settings["beep_enabled"] = self._beep_enabled
+            self._save_audio_settings(self._audio_settings)
+
+    def _load_audio_settings(self) -> dict:
+        """Load audio settings with safe defaults."""
+        defaults = {
+            "tts_enabled": False,
+            "beep_enabled": False,
+            "voice": "edge_female",
+            "volume": 100,
+        }
+        if self._audio_cfg_path.exists():
+            try:
+                data = json.loads(self._audio_cfg_path.read_text(encoding="utf-8"))
+                if isinstance(data, dict):
+                    defaults.update(data)
+            except Exception:
+                pass
+        return defaults
+
+    def _save_audio_settings(self, data: dict):
+        """Persist audio settings."""
+        try:
+            self._audio_cfg_path.parent.mkdir(parents=True, exist_ok=True)
+            self._audio_cfg_path.write_text(
+                json.dumps(data, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+        except Exception:
+            pass
 
     def _refresh_tasks(self):
         if hasattr(self, "task_view"):

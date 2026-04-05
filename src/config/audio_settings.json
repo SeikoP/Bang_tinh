@@ -1,0 +1,6 @@
+{
+  "tts_enabled": false,
+  "beep_enabled": true,
+  "voice": "edge_female",
+  "volume": 100
+}
