@@ -391,20 +391,22 @@ class TaskRepository:
         """Append an event to the note event log."""
         with get_connection() as conn:
             cursor = conn.cursor()
-            try:
-                if note_id == 0:
-                    cursor.execute("PRAGMA foreign_keys = OFF")
-                cursor.execute(
-                    """
-                    INSERT INTO note_events (note_id, event_type, message, metadata, created_at)
-                    VALUES (?, ?, ?, ?, ?)
-                    """,
-                    (note_id, event_type, message, metadata, datetime.now().isoformat()),
-                )
-                conn.commit()
-            finally:
-                if note_id == 0:
-                    cursor.execute("PRAGMA foreign_keys = ON")
+            effective_note_id = note_id
+            if effective_note_id <= 0:
+                cursor.execute("SELECT id FROM tasks ORDER BY id ASC LIMIT 1")
+                row = cursor.fetchone()
+                if not row:
+                    # No task exists yet; skip event write to avoid FK failure.
+                    return
+                effective_note_id = int(row[0])
+            cursor.execute(
+                """
+                INSERT INTO note_events (note_id, event_type, message, metadata, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (effective_note_id, event_type, message, metadata, datetime.now().isoformat()),
+            )
+            conn.commit()
 
     @staticmethod
     def get_events(note_id: int) -> List[NoteEvent]:

@@ -105,12 +105,12 @@ class BankStatementParser:
     # Transfer content / note code patterns
     _TRANSFER_CONTENT_RE = [
         re.compile(r"(?:ND|Noi\s*dung|ND:)\s*([^\n]{2,60})", re.IGNORECASE),
-        re.compile(r"(?<![A-Za-z\d])(?:GC\d+|INV(?:-\d{4}-\d{2})?-\d+)(?![A-Za-z\d])", re.IGNORECASE),
+            re.compile(r"(?<![A-Za-z\d])(?:GC\d+(?!\d)|INV(?:-\d{4}-\d{2})?-\d+(?![A-Za-z\d]))", re.IGNORECASE),
     ]
     _NOTE_CODE_RE = re.compile(
-        r"(?<![A-Za-z\d])(?:GC(?P<gc>\d+)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+))(?![A-Za-z\d])",
-        re.IGNORECASE,
-    )
+            r"(?<![A-Za-z\d])(?:GC(?P<gc>\d+)(?!\d)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+)(?![A-Za-z\d]))",
+            re.IGNORECASE,
+        )
 
     @classmethod
     def parse(cls, raw_message: str) -> Dict[str, Any]:
@@ -309,7 +309,7 @@ class BankStatementParser:
             return False
 
         # Default to incoming as most notifications are for deposits in these cafes
-        return True
+            # Fallback: grab the first Noi dung / ND value (first 40 chars only)
 
     @classmethod
     def _extract_datetime(cls, message: str) -> Optional[datetime]:

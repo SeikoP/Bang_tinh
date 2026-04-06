@@ -706,7 +706,7 @@ class TaskCompletionPopup(QDialog):
         super().__init__(parent)
         self.task = task
         self.setWindowTitle(f"✅ Hoàn thành — {task.note_code}")
-        self.setFixedWidth(440)
+        self.setFixedWidth(500)
         self.setModal(False)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         self.setStyleSheet(f"""
@@ -757,6 +757,57 @@ class TaskCompletionPopup(QDialog):
 
         root.addWidget(banner)
 
+        # ── Payment details (new) ─────────────────────────────
+        detail_frame = QFrame()
+        detail_frame.setStyleSheet(f"""
+            QFrame {{
+                background: {AppColors.SURFACE};
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 10px;
+            }}
+        """)
+        detail_lay = QVBoxLayout(detail_frame)
+        detail_lay.setContentsMargins(14, 10, 14, 10)
+        detail_lay.setSpacing(8)
+
+        title = QLabel("Thông tin thanh toán")
+        title.setStyleSheet(f"font-size: 11px; font-weight: 800; color: {AppColors.TEXT_SECONDARY};")
+        detail_lay.addWidget(title)
+
+        settled_amount = str(amount_text).strip() or (f"{int(task.amount):,} đ" if task.amount else "—")
+        transfer_content = (getattr(task, "transfer_content", "") or "").strip() or task.note_code
+
+        row1 = QHBoxLayout()
+        row1.setSpacing(10)
+        code_chip = QLabel(f"Mã CK: {transfer_content}")
+        code_chip.setStyleSheet(
+            "background: #eef2ff; color: #1d4ed8; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700;"
+        )
+        row1.addWidget(code_chip, 1)
+
+        state_chip = QLabel("Đã hoàn tất")
+        state_chip.setStyleSheet(
+            "background: #dcfce7; color: #166534; border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 700;"
+        )
+        row1.addWidget(state_chip)
+        detail_lay.addLayout(row1)
+
+        row2 = QHBoxLayout()
+        row2.setSpacing(10)
+        paid_lbl = QLabel(f"Đã nhận: <b>{settled_amount}</b>")
+        paid_lbl.setStyleSheet(f"font-size: 12px; color: {AppColors.TEXT};")
+        row2.addWidget(paid_lbl)
+
+        if getattr(task, "completed_at", None):
+            done_time = task.completed_at.strftime("%d/%m %H:%M")
+            done_lbl = QLabel(f"Lúc: <b>{done_time}</b>")
+            done_lbl.setStyleSheet(f"font-size: 12px; color: {AppColors.TEXT_SECONDARY};")
+            row2.addWidget(done_lbl)
+
+        row2.addStretch()
+        detail_lay.addLayout(row2)
+        root.addWidget(detail_frame)
+
         # ── Task info ──────────────────────────────────────────
         info_frame = QFrame()
         info_frame.setStyleSheet(f"""
@@ -788,6 +839,12 @@ class TaskCompletionPopup(QDialog):
             amt_lbl = QLabel(f"💰 {int(task.amount):,} đ")
             amt_lbl.setStyleSheet(f"font-size: 14px; font-weight: 800; color: {AppColors.SUCCESS}; background: transparent; border: none;")
             info_lay.addWidget(amt_lbl)
+
+        created_at = getattr(task, "created_at", None)
+        if created_at:
+            created_lbl = QLabel(f"Tạo lúc: {created_at.strftime('%d/%m/%Y %H:%M')}")
+            created_lbl.setStyleSheet(f"font-size: 11px; color: {AppColors.TEXT_SECONDARY}; background: transparent; border: none;")
+            info_lay.addWidget(created_lbl)
 
         root.addWidget(info_frame)
 
@@ -842,6 +899,20 @@ class TaskCompletionPopup(QDialog):
         btn_row = QHBoxLayout()
         btn_row.addStretch()
 
+        copy_code_btn = QPushButton("Sao chép mã CK")
+        copy_code_btn.setFixedHeight(36)
+        copy_code_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        copy_code_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: #e2e8f0; color: {AppColors.TEXT}; border: none;
+                border-radius: 8px; font-weight: 700; font-size: 12px;
+                padding: 0 12px;
+            }}
+            QPushButton:hover {{ background: #cbd5e1; }}
+        """)
+        copy_code_btn.clicked.connect(lambda: self._copy_transfer_content(transfer_content))
+        btn_row.addWidget(copy_code_btn)
+
         close_btn = QPushButton("Đóng")
         close_btn.setFixedHeight(36)
         close_btn.setFixedWidth(100)
@@ -857,6 +928,10 @@ class TaskCompletionPopup(QDialog):
         btn_row.addWidget(close_btn)
 
         root.addLayout(btn_row)
+
+    def _copy_transfer_content(self, value: str):
+        from PyQt6.QtWidgets import QApplication
+        QApplication.clipboard().setText(value)
 
     def _load_qr(self, url: str):
         try:
@@ -910,13 +985,12 @@ class PaymentLinkDialog(QDialog):
         holder = self._bank_info.get("holder", "")
         account = self._bank_info.get("account", "")
         bin_code = self._bank_info.get("bin", "")
-        if holder or account:
-            ben = QLabel(
-                f"Người nhận: <b>{holder or '—'}</b>  |  "
-                f"STK: <b>{account or '—'}</b>  |  BIN: <b>{bin_code or '—'}</b>"
-            )
-            ben.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px;")
-            layout.addWidget(ben)
+        self._beneficiary_label = QLabel(
+            f"Người nhận: <b>{holder or '—'}</b>  |  "
+            f"STK: <b>{account or '—'}</b>  |  BIN: <b>{bin_code or '—'}</b>"
+        )
+        self._beneficiary_label.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px;")
+        layout.addWidget(self._beneficiary_label)
 
         # Transfer content row
         content_row = QHBoxLayout()
@@ -955,6 +1029,12 @@ class PaymentLinkDialog(QDialog):
 
         # Button row
         btn_row = QHBoxLayout()
+
+        self._bank_btn = QPushButton("Cấu hình NH")
+        self._bank_btn.setFixedHeight(36)
+        self._bank_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._bank_btn.clicked.connect(self._open_bank_config)
+        btn_row.addWidget(self._bank_btn)
 
         self._gen_btn = QPushButton("Tạo / Làm mới QR")
         self._gen_btn.setFixedHeight(36)
@@ -1113,9 +1193,90 @@ class PaymentLinkDialog(QDialog):
             QTimer.singleShot(1500, lambda: self._copy_link_btn.setText("Sao chép link"))
             return
 
+        # Ensure status is pending when sharing/using payment link.
+        if self.task.payment_status == "none":
+            TaskRepository.update_payment(
+                self.task.id,
+                "pending",
+                self.task.vietqr_url,
+                self.task.transfer_content or self._tc_value.text().strip(),
+            )
+            self.task.payment_status = "pending"
+            self._refresh_status()
+
         QApplication.clipboard().setText(self._build_share_text())
         self._copy_link_btn.setText("Đã copy")
         QTimer.singleShot(1500, lambda: self._copy_link_btn.setText("Sao chép link"))
+
+    def _open_bank_config(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Cấu hình tài khoản ngân hàng")
+        dlg.setMinimumWidth(420)
+
+        layout = QVBoxLayout(dlg)
+        form = QFormLayout()
+        form.setSpacing(10)
+
+        holder_input = QLineEdit(self._bank_info.get("holder", ""))
+        holder_input.setPlaceholderText("VD: NGUYEN VAN A")
+        account_input = QLineEdit(self._bank_info.get("account", ""))
+        account_input.setPlaceholderText("VD: 107875070594")
+        bin_input = QLineEdit(self._bank_info.get("bin", ""))
+        bin_input.setPlaceholderText("VD: 970415")
+
+        form.addRow("Chủ tài khoản", holder_input)
+        form.addRow("Số tài khoản", account_input)
+        form.addRow("BIN ngân hàng", bin_input)
+        layout.addLayout(form)
+
+        hint = QLabel("Mẹo: VietinBank = 970415, Vietcombank = 970436")
+        hint.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px;")
+        layout.addWidget(hint)
+
+        row = QHBoxLayout()
+        row.addStretch()
+        cancel_btn = QPushButton("Hủy")
+        save_btn = QPushButton("Lưu")
+        save_btn.setObjectName("primary")
+        row.addWidget(cancel_btn)
+        row.addWidget(save_btn)
+        layout.addLayout(row)
+
+        cancel_btn.clicked.connect(dlg.reject)
+
+        def _save():
+            holder = holder_input.text().strip().upper()
+            account = account_input.text().strip()
+            bin_code = bin_input.text().strip()
+            if not account or not bin_code:
+                QMessageBox.warning(dlg, "Thiếu thông tin", "Cần nhập Số tài khoản và BIN.")
+                return
+            cfg_path = Path(__file__).parents[3] / "config" / "bank_settings.json"
+            cfg_path.parent.mkdir(parents=True, exist_ok=True)
+            cfg_path.write_text(
+                json.dumps(
+                    {
+                        "holder": holder,
+                        "account": account,
+                        "bin": bin_code,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            self._bank_info = {
+                "holder": holder,
+                "account": account,
+                "bin": bin_code,
+            }
+            self._beneficiary_label.setText(
+                f"Người nhận: <b>{holder or '—'}</b>  |  STK: <b>{account or '—'}</b>  |  BIN: <b>{bin_code or '—'}</b>"
+            )
+            dlg.accept()
+
+        save_btn.clicked.connect(_save)
+        dlg.exec()
 
     def _generate_qr(self):
         """Build VietQR URL from bank settings and update task"""
@@ -1158,8 +1319,28 @@ class PaymentLinkDialog(QDialog):
         self._load_qr_image()
 
     def _load_qr_image(self):
-        """Generate and display QR image locally, fallback to vietqr.io download."""
-        # Prefer local EMVCo generation (offline, fast, shorter payload)
+        """Display QR image, preferring official VietQR render for scanner compatibility."""
+        # Prefer vietqr.io image (same as user opens in browser) for best bank-app compatibility.
+        url = self.task.vietqr_url
+        if url:
+            try:
+                with urllib.request.urlopen(url, timeout=5) as resp:
+                    data = resp.read()
+                pixmap = QPixmap()
+                pixmap.loadFromData(QByteArray(data))
+                if not pixmap.isNull():
+                    pixmap = pixmap.scaled(
+                        200, 200,
+                        Qt.AspectRatioMode.KeepAspectRatio,
+                        Qt.TransformationMode.SmoothTransformation,
+                    )
+                    self._qr_label.setPixmap(pixmap)
+                    self._qr_label.setText("")
+                    return
+            except Exception:
+                pass
+
+        # Fallback: local EMVCo generation (offline mode)
         emvco = getattr(self, "_emvco_payload", "")
         if emvco:
             try:
@@ -1175,29 +1356,9 @@ class PaymentLinkDialog(QDialog):
                     self._qr_label.setText("")
                     return
             except Exception:
-                pass  # Fall through to vietqr.io download
+                pass
 
-        # Fallback: download from vietqr.io
-        url = self.task.vietqr_url
-        if not url:
-            return
-        try:
-            with urllib.request.urlopen(url, timeout=5) as resp:
-                data = resp.read()
-            pixmap = QPixmap()
-            pixmap.loadFromData(QByteArray(data))
-            if not pixmap.isNull():
-                pixmap = pixmap.scaled(
-                    200, 200,
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-                self._qr_label.setPixmap(pixmap)
-                self._qr_label.setText("")
-            else:
-                self._qr_label.setText("Không tải được ảnh QR")
-        except Exception as e:
-            self._qr_label.setText(f"Lỗi tải QR: {e}")
+        self._qr_label.setText("Không tải được ảnh QR")
 
     def _mark_paid(self):
         TaskRepository.complete_payment(self.task.id, source="Manual/Desktop")
