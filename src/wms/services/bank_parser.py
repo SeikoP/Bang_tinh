@@ -105,10 +105,10 @@ class BankStatementParser:
     # Transfer content / note code patterns
     _TRANSFER_CONTENT_RE = [
         re.compile(r"(?:ND|Noi\s*dung|ND:)\s*([^\n]{2,60})", re.IGNORECASE),
-        re.compile(r"\b(?:GC\d+|INV(?:-\d{4}-\d{2})?-\d+)\b", re.IGNORECASE),
+        re.compile(r"(?<![A-Za-z\d])(?:GC\d+|INV(?:-\d{4}-\d{2})?-\d+)(?![A-Za-z\d])", re.IGNORECASE),
     ]
     _NOTE_CODE_RE = re.compile(
-        r"\b(?:GC(?P<gc>\d+)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+))\b",
+        r"(?<![A-Za-z\d])(?:GC(?P<gc>\d+)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+))(?![A-Za-z\d])",
         re.IGNORECASE,
     )
 

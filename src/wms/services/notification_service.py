@@ -596,10 +596,19 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
 
                     # Auto-match only when note code is present (GC/INV formats).
                     note_code = BankStatementParser.extract_note_code(content + " " + transfer_content)
+                    if hasattr(self.server, "logger"):
+                        self.server.logger.info(
+                            f"[MATCH] note_code={note_code!r}, transfer_content={transfer_content!r}, "
+                            f"amount={amount_str!r}, pkg={pkg}"
+                        )
                     if note_code:
                         matched_task = TaskRepository.find_pending_by_code(note_code)
                         if matched_task:
                             matched_by = "code"
+                        elif hasattr(self.server, "logger"):
+                            self.server.logger.warning(
+                                f"[MATCH] code {note_code} found but no pending unpaid task in DB"
+                            )
 
                     if matched_task:
                         TaskRepository.complete_payment(matched_task.id, source=f"Android/{pkg}")

@@ -1076,7 +1076,7 @@ class PaymentLinkDialog(QDialog):
         holder_token = holder_token[:12]
 
         def _compose(code_value: str, cust_value: str, holder_value: str) -> str:
-            return f"C{code_value}_K{cust_value}_P{product_count}_Q{quantity}_A{amount}_H{holder_value}"
+            return f"{code_value}_K{cust_value}_P{product_count}_Q{quantity}_A{amount}_H{holder_value}"
 
         transfer_content = _compose(code, customer, holder_token)
         while len(transfer_content) > 50:

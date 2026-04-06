@@ -255,7 +255,7 @@ class TaskRepository:
         if not note_code:
             return None
         match = re.search(
-            r"\b(?:GC(?P<gc>\d+)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+))\b",
+            r"(?<![A-Za-z\d])(?:GC(?P<gc>\d+)|INV(?:-\d{4}-\d{2})?-(?P<inv>\d+))(?![A-Za-z\d])",
             str(note_code),
             re.IGNORECASE,
         )
@@ -391,14 +391,20 @@ class TaskRepository:
         """Append an event to the note event log."""
         with get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute(
-                """
-                INSERT INTO note_events (note_id, event_type, message, metadata, created_at)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (note_id, event_type, message, metadata, datetime.now().isoformat()),
-            )
-            conn.commit()
+            try:
+                if note_id == 0:
+                    cursor.execute("PRAGMA foreign_keys = OFF")
+                cursor.execute(
+                    """
+                    INSERT INTO note_events (note_id, event_type, message, metadata, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (note_id, event_type, message, metadata, datetime.now().isoformat()),
+                )
+                conn.commit()
+            finally:
+                if note_id == 0:
+                    cursor.execute("PRAGMA foreign_keys = ON")
 
     @staticmethod
     def get_events(note_id: int) -> List[NoteEvent]:

@@ -184,10 +184,21 @@ class NotificationProcessor(QObject):
                     matched_by = ""
 
                     note_code = BankStatementParser.extract_note_code(search_text)
+                    if self.logger:
+                        self.logger.info(
+                            f"[NOTIF PIPELINE] Step 3.5 - extract_note_code={note_code!r}, "
+                            f"transfer_content={transfer_content!r}, "
+                            f"search_text_tail=...{search_text[-80:]!r}"
+                        )
                     if note_code:
                         matched_task = TaskRepository.find_pending_by_code(note_code)
                         if matched_task:
                             matched_by = "code"
+                        elif self.logger:
+                            self.logger.warning(
+                                f"[NOTIF PIPELINE] Step 3.5 - code {note_code} found but "
+                                f"find_pending_by_code returned None (no pending unpaid task)"
+                            )
 
                     if matched_task:
                         TaskRepository.complete_payment(matched_task.id, source=source)
