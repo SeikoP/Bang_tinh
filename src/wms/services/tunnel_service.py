@@ -308,13 +308,14 @@ class TunnelService(QObject):
         self._worker.progress.connect(self.progress.emit)
         self._worker.start()
 
-    def stop(self):
+    def stop(self, wait_ms: int = 5000):
         if self._worker:
             self._worker.stop()
-            if not self._worker.wait(5000):
-                # Force terminate the thread if it didn't stop in time
+            # During application shutdown we may request a short non-blocking wait.
+            if wait_ms > 0 and not self._worker.wait(wait_ms):
+                # Force terminate the thread if it didn't stop in time.
                 self._worker.terminate()
-                self._worker.wait(2000)
+                self._worker.wait(min(2000, max(200, wait_ms)))
             self._worker = None
         self._public_url = ""
 

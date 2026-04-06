@@ -183,26 +183,31 @@ class ConnectionDetailDialog(QDialog):
 
         root.addWidget(banner)
 
-        # ── Network info card ──────────────────────────────────
-        net_inner = self._card(root)
-        net_inner.addWidget(self._section_title("THONG TIN MANG"))
-
-        ip = self._info.get("ip", "—")
-        port = str(self._info.get("port", "—"))
-        net_inner.addLayout(self._info_row("Dia chi IP", ip, mono=True))
-        net_inner.addLayout(self._info_row("Cong (Port)", port, mono=True))
-        net_inner.addLayout(self._info_row(
-            "Secret Key", self._info.get("secret_key_short", "—"), mono=True
+        # ── Action-focused summary card ───────────────────────
+        main_inner = self._card(root)
+        main_inner.addWidget(self._section_title("BẠN CẦN QUAN TÂM"))
+        main_inner.addLayout(self._info_row(
+            "Mức sẵn sàng", self._info.get("readiness_label", "—")
+        ))
+        main_inner.addLayout(self._info_row(
+            "Android kết nối", self._info.get("preferred_channel", "—")
+        ))
+        main_inner.addLayout(self._info_row(
+            "Địa chỉ nên dùng", self._info.get("preferred_endpoint", "—"), mono=True
         ))
 
-        # All IPs
-        all_ips = self._info.get("all_ips", [])
-        if len(all_ips) > 1:
-            net_inner.addLayout(self._info_row(
-                "Tat ca IP", ", ".join(all_ips), mono=True
-            ))
+        rec_text = self._info.get("recommendation", "")
+        if rec_text:
+            rec = QLabel(f"💡 {rec_text}")
+            rec.setWordWrap(True)
+            rec.setStyleSheet(f"""
+                color: {AppColors.WARNING_AMBER}; font-size: 11px; font-weight: 600;
+                background: rgba(245, 158, 11, 0.08); padding: 6px 8px;
+                border-radius: 6px; border: none;
+            """)
+            main_inner.addWidget(rec)
 
-        # ── Devices card ───────────────────────────────────────
+        # ── Devices card (kept concise) ───────────────────────
         devices = self._info.get("devices", [])
         dev_inner = self._card(root)
         online_count = sum(1 for d in devices if d.get("is_online"))
@@ -216,173 +221,39 @@ class ConnectionDetailDialog(QDialog):
             for dev in devices:
                 self._build_device_row(dev_inner, dev)
         else:
-            empty = QLabel("Chưa có thiết bị nào kết nối")
+            empty = QLabel("Chưa có thiết bị Android gửi tín hiệu")
             empty.setStyleSheet(f"""
                 color: {AppColors.TEXT_SECONDARY}; font-size: 11px;
                 font-style: italic; background: transparent; border: none;
             """)
             dev_inner.addWidget(empty)
 
-        # ── Tunnel card ────────────────────────────────────────
-        tunnel_url = self._info.get("tunnel_url", "Không có")
-        tunnel_status_raw = str(self._info.get("tunnel_status", "down")).strip().lower()
-        has_tunnel = tunnel_status_raw == "up" and tunnel_url not in ("Không có", "", "—")
-
-        tun_inner = self._card(root)
-        tun_inner.addWidget(self._section_title("CLOUDFLARE TUNNEL"))
-
-        tun_row = QHBoxLayout()
-        tun_row.setSpacing(8)
-
-        tun_dot = StatusDot(size=6)
-        tun_dot.set_color(AppColors.PRIMARY if has_tunnel else "#9CA3AF")
-        tun_row.addWidget(tun_dot)
-
-        if has_tunnel:
-            tunnel_label = "Đang hoạt động"
-        elif tunnel_status_raw == "error":
-            tunnel_label = "Lỗi tunnel"
-        else:
-            tunnel_label = "Không kích hoạt"
-        tun_status = QLabel(tunnel_label)
-        tun_status_color = AppColors.PRIMARY if has_tunnel else AppColors.TEXT_SECONDARY
-        tun_status.setStyleSheet(f"""
-            color: {tun_status_color}; font-size: 12px; font-weight: 600;
-            background: transparent; border: none;
-        """)
-        tun_row.addWidget(tun_status)
-        tun_row.addStretch()
-
-        if has_tunnel:
-            copy_tun_btn = QPushButton("Sao chép URL")
-            copy_tun_btn.setFixedHeight(26)
-            copy_tun_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            copy_tun_btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: {AppColors.BG_HOVER}; color: {AppColors.TEXT};
-                    border: 1px solid {AppColors.BORDER}; border-radius: 5px;
-                    font-size: 10px; font-weight: 600; padding: 0 10px;
-                }}
-                QPushButton:hover {{
-                    background: {AppColors.PRIMARY}; color: white;
-                    border-color: {AppColors.PRIMARY};
-                }}
-            """)
-            copy_tun_btn.clicked.connect(
-                lambda: QApplication.clipboard().setText(tunnel_url)
-            )
-            tun_row.addWidget(copy_tun_btn)
-
-        tun_inner.addLayout(tun_row)
-
-        if has_tunnel:
-            url_lbl = QLabel(tunnel_url)
-            url_lbl.setStyleSheet(f"""
-                color: {AppColors.INFO}; font-size: 11px;
-                font-family: 'Roboto', monospace;
-                background: rgba(37, 99, 235, 0.06); padding: 6px 10px;
-                border-radius: 6px; border: none;
-            """)
-            url_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-            url_lbl.setWordWrap(True)
-            tun_inner.addWidget(url_lbl)
-
-        # ── Health checks card ─────────────────────────────────
+        # ── Technical details (only when there are issues) ─────
         checks = self._info.get("server_checks")
-        chk_inner = self._card(root)
-        chk_inner.addWidget(self._section_title("KIỂM TRA HỆ THỐNG"))
+        has_check_issue = bool(checks) and not all(checks.values())
+        server_errors = self._info.get("server_errors") or []
+        if has_check_issue or server_errors or state != "running":
+            tech = self._card(root)
+            tech.addWidget(self._section_title("CHI TIẾT KỸ THUẬT"))
+            tech.addLayout(self._info_row("IP", self._info.get("ip", "—"), mono=True))
+            tech.addLayout(self._info_row("Port", str(self._info.get("port", "—")), mono=True))
+            tech.addLayout(self._info_row("Key", self._info.get("secret_key_short", "—"), mono=True))
 
-        if checks:
-            all_ok = all(checks.values())
-            summary_color = AppColors.PRIMARY if all_ok else AppColors.ERROR
-            summary_text = "Tất cả bình thường" if all_ok else "Có lỗi cần xử lý"
-            summary = QLabel(summary_text)
-            summary.setStyleSheet(f"""
-                color: {summary_color}; font-size: 11px; font-weight: 700;
-                background: transparent; border: none; margin-bottom: 2px;
-            """)
-            chk_inner.addWidget(summary)
+            if checks:
+                for name, ok in checks.items():
+                    display_name = self._CHECK_LABELS.get(name, name.capitalize())
+                    tech.addLayout(self._info_row(display_name, "OK" if ok else "LỖI"))
 
-            for name, ok in checks.items():
-                display_name = self._CHECK_LABELS.get(name, name.capitalize())
-                chk_row = QHBoxLayout()
-                chk_row.setSpacing(8)
-
-                chk_dot = StatusDot(size=6)
-                chk_dot.set_color(AppColors.PRIMARY if ok else AppColors.ERROR)
-                chk_row.addWidget(chk_dot)
-
-                chk_name = QLabel(display_name)
-                chk_name.setStyleSheet(f"""
-                    color: {AppColors.TEXT}; font-size: 12px; font-weight: 500;
-                    background: transparent; border: none;
-                """)
-                chk_row.addWidget(chk_name, 1)
-
-                chk_badge = QLabel("OK" if ok else "LỖI")
-                badge_bg = "rgba(16,185,129,0.1)" if ok else "rgba(220,38,38,0.1)"
-                badge_color = AppColors.PRIMARY if ok else AppColors.ERROR
-                chk_badge.setStyleSheet(f"""
-                    background: {badge_bg}; color: {badge_color};
-                    font-size: 10px; font-weight: 700; padding: 2px 8px;
-                    border-radius: 4px; border: none;
-                """)
-                chk_badge.setFixedHeight(20)
-                chk_row.addWidget(chk_badge)
-
-                chk_inner.addLayout(chk_row)
-
-            errors = self._info.get("server_errors")
-            if errors:
-                for err in errors:
-                    e_lbl = QLabel(f"  {err}")
+            if server_errors:
+                for err in server_errors:
+                    e_lbl = QLabel(f"• {err}")
                     e_lbl.setWordWrap(True)
                     e_lbl.setStyleSheet(f"""
                         font-size: 11px; color: {AppColors.ERROR};
                         background: rgba(220,38,38,0.06); padding: 4px 8px;
                         border-radius: 4px; border: none;
                     """)
-                    chk_inner.addWidget(e_lbl)
-        else:
-            no_chk = QLabel("Không kiểm tra được (server chưa chạy?)")
-            no_chk.setStyleSheet(f"""
-                color: {AppColors.TEXT_SECONDARY}; font-size: 11px;
-                font-style: italic; background: transparent; border: none;
-            """)
-            chk_inner.addWidget(no_chk)
-
-        # ── Connection event log ───────────────────────────────
-        events = self._info.get("connection_events", [])
-        if events:
-            log_inner = self._card(root)
-            log_inner.addWidget(self._section_title("LỊCH SỪ KẾT NỐI"))
-            for ev in events[:15]:  # show last 15
-                ev_row = QHBoxLayout()
-                ev_row.setSpacing(6)
-
-                ev_icon = QLabel(ev.get("icon", "•"))
-                ev_icon.setFixedWidth(16)
-                ev_icon.setStyleSheet("""
-                    font-size: 11px; background: transparent; border: none;
-                """)
-                ev_row.addWidget(ev_icon)
-
-                ev_text = QLabel(ev.get("text", ""))
-                ev_text.setStyleSheet(f"""
-                    color: {AppColors.TEXT}; font-size: 11px;
-                    background: transparent; border: none;
-                """)
-                ev_row.addWidget(ev_text, 1)
-
-                ev_time = QLabel(ev.get("time", ""))
-                ev_time.setStyleSheet(f"""
-                    color: {AppColors.TEXT_SECONDARY}; font-size: 10px;
-                    font-family: 'Roboto', monospace;
-                    background: transparent; border: none;
-                """)
-                ev_row.addWidget(ev_time)
-
-                log_inner.addLayout(ev_row)
+                    tech.addWidget(e_lbl)
 
         # ── Last notification ──────────────────────────────────
         last_notif = self._info.get("last_notification", "Chưa có")
@@ -407,7 +278,7 @@ class ConnectionDetailDialog(QDialog):
         btn_row.setSpacing(8)
         btn_row.setContentsMargins(0, 2, 0, 0)
 
-        copy_btn = QPushButton("Sao chép IP:Port")
+        copy_btn = QPushButton("Sao chép địa chỉ dùng")
         copy_btn.setFixedHeight(36)
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         copy_btn.setStyleSheet(f"""
@@ -537,6 +408,10 @@ class ConnectionDetailDialog(QDialog):
         parent_layout.addWidget(row_frame)
 
     def _copy_address(self):
+        endpoint = self._info.get("preferred_endpoint", "")
+        if endpoint and endpoint != "—":
+            QApplication.clipboard().setText(endpoint)
+            return
         ip = self._info.get("ip", "")
         port = self._info.get("port", 5005)
         QApplication.clipboard().setText(f"{ip}:{port}")
@@ -731,6 +606,10 @@ class StatusIndicator(QFrame):
             "devices": [],
             "all_ips": [],
             "connection_events": list(self._connection_events),
+            "preferred_channel": "—",
+            "preferred_endpoint": "—",
+            "readiness_label": "Chưa xác định",
+            "recommendation": "",
         }
 
         # Last notification time
@@ -781,6 +660,7 @@ class StatusIndicator(QFrame):
             info["device_count"] = sum(1 for d in devices_data if d["is_online"])
 
         # Tunnel URL from state file
+        info["tunnel_status"] = "down"
         try:
             tunnel_path = Path(__file__).parents[3] / "config" / "tunnel_state.json"
             if tunnel_path.exists():
@@ -811,5 +691,36 @@ class StatusIndicator(QFrame):
                 info["server_errors"] = result.get("errors")
         except Exception:
             pass
+
+        # Action-first summary used by ConnectionDetailDialog.
+        has_tunnel = (
+            info.get("tunnel_status") == "up"
+            and info.get("tunnel_url") not in ("", "—", "Không có")
+        )
+        ip = info.get("ip", "—")
+        port = info.get("port", 5005)
+        if has_tunnel:
+            info["preferred_channel"] = "Cloudflare Tunnel"
+            info["preferred_endpoint"] = info.get("tunnel_url", "—")
+        else:
+            info["preferred_channel"] = "LAN / Cùng mạng"
+            if ip not in ("", "—"):
+                info["preferred_endpoint"] = f"http://{ip}:{port}"
+
+        checks = info.get("server_checks") or {}
+        checks_ok = all(checks.values()) if checks else (info.get("state") == self.STATE_RUNNING)
+        online_devices = info.get("device_count", 0)
+        if info.get("state") == self.STATE_STOPPED:
+            info["readiness_label"] = "Chưa sẵn sàng (server đang tắt)"
+            info["recommendation"] = "Mở app desktop và đợi trạng thái Server: BẬT trước khi test Android."
+        elif not checks_ok:
+            info["readiness_label"] = "Giảm chất lượng (có lỗi hệ thống)"
+            info["recommendation"] = "Mở phần Chi tiết kỹ thuật bên dưới để xử lý lỗi đang báo."
+        elif online_devices <= 0:
+            info["readiness_label"] = "Server sẵn sàng, chưa thấy Android online"
+            info["recommendation"] = "Mở app Android và bấm Thử kết nối để gửi heartbeat."
+        else:
+            info["readiness_label"] = "Sẵn sàng nhận giao dịch"
+            info["recommendation"] = "Kết nối ổn định. Có thể dùng địa chỉ ở trên để cấu hình máy mới."
 
         return info

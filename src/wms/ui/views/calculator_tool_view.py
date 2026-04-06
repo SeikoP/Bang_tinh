@@ -699,94 +699,84 @@ class CalculatorToolView(QWidget):
             page_layout.addStretch()
 
     def _build_demo_calculator(self, parent_widget):
-        """Build demo calculator to check if money is negative."""
+        """Build shift pricing calculator - 2-column layout (inputs left, results right)."""
         page_layout = QVBoxLayout(parent_widget)
-        page_layout.setContentsMargins(0, 12, 0, 0)
-        page_layout.setSpacing(12)
+        page_layout.setContentsMargins(0, 0, 0, 0)
+        page_layout.setSpacing(0)
 
-        # Main card
-        card = QFrame()
-        card.setStyleSheet(f"""
-            QFrame#demo_card {{
-                background-color: white;
-                border-radius: 16px;
-                border: 1px solid {AppColors.BORDER};
-            }}
-        """)
-        card.setObjectName("demo_card")
+        # ===== ACTION BAR =====
+        action_bar = QFrame()
+        action_bar.setStyleSheet(f"background: {AppColors.BG_SECONDARY}; border: none;")
+        action_bar.setFixedHeight(50)
+        action_layout = QHBoxLayout(action_bar)
+        action_layout.setContentsMargins(16, 6, 16, 6)
+        action_layout.setSpacing(8)
 
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(24, 20, 24, 20)
-        card_layout.setSpacing(14)
+        for btn_text, handler in [
+            ("↓ Tính toán", self._load_from_calculation),
+            ("↓ Đếm tiền", self._load_from_money_counter),
+            ("✕ Đặt lại", self._reset_demo),
+        ]:
+            btn = QPushButton(btn_text)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setFixedHeight(32)
+            btn.setFixedWidth(100)
+            btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: white;
+                    color: {AppColors.TEXT};
+                    border: 1px solid {AppColors.BORDER};
+                    border-radius: 4px;
+                    font-size: 10px;
+                    font-weight: 700;
+                }}
+                QPushButton:hover {{ background: #f8fafc; }}
+            """)
+            btn.clicked.connect(handler)
+            action_layout.addWidget(btn)
 
-        # Header with action buttons
-        header_row = QHBoxLayout()
-        header_label = QLabel("TÍNH TIỀN CA")
-        header_label.setStyleSheet(
-            f"color: {AppColors.TEXT}; font-weight: 800; "
-            f"font-size: 15px; letter-spacing: 0.5px;"
-        )
-        header_row.addWidget(header_label)
-        header_row.addStretch()
+        action_layout.addStretch()
+        page_layout.addWidget(action_bar)
 
-        btn_style_template = """
-            QPushButton {{
-                background: white; 
-                color: {color};
-                border-radius: 6px; 
-                border: 1.5px solid {color};
-                font-size: 11px; 
-                font-weight: 700; 
-                padding: 5px 14px;
-            }}
-            QPushButton:hover {{ background: {color}; color: white; }}
-            QPushButton:pressed {{ background: {color}; color: white; }}
-        """
-
-        load_calc_btn = QPushButton("Lấy từ Tính toán")
-        load_calc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        load_calc_btn.setFixedHeight(30)
-        load_calc_btn.setStyleSheet(btn_style_template.replace("{color}", AppColors.PRIMARY))
-        load_calc_btn.clicked.connect(self._load_from_calculation)
-        header_row.addWidget(load_calc_btn)
-
-        load_money_btn = QPushButton("Lấy từ Đếm tiền")
-        load_money_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        load_money_btn.setFixedHeight(30)
-        load_money_btn.setStyleSheet(btn_style_template.replace("{color}", AppColors.SUCCESS))
-        load_money_btn.clicked.connect(self._load_from_money_counter)
-        header_row.addWidget(load_money_btn)
-
-        reset_demo_btn = QPushButton("Đặt lại")
-        reset_demo_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        reset_demo_btn.setFixedHeight(30)
-        reset_demo_btn.setStyleSheet(btn_style_template.replace("{color}", AppColors.BORDER))
-        reset_demo_btn.clicked.connect(self._reset_demo)
-        header_row.addWidget(reset_demo_btn)
-
-        card_layout.addLayout(header_row)
-
-        # --- Input fields: 2 columns with clear grouping ---
-        input_container = QFrame()
-        input_container.setStyleSheet(f"""
-            QFrame {{
-                background: #f8fafc;
-                border-radius: 10px;
-            }}
-        """)
-        input_grid = QGridLayout(input_container)
-        input_grid.setHorizontalSpacing(20)
-        input_grid.setVerticalSpacing(10)
-        input_grid.setContentsMargins(16, 14, 16, 14)
+        # ===== MAIN 2-COLUMN CONTENT =====
+        main_container = QWidget()
+        main_container.setStyleSheet("background: white;")
+        main_h_layout = QHBoxLayout(main_container)
+        main_h_layout.setContentsMargins(16, 16, 16, 16)
+        main_h_layout.setSpacing(16)
 
         self._demo_inputs = {}
 
-        # Left column: THU (income) fields
-        left_title = QLabel("THU")
-        left_title.setStyleSheet(
-            f"color: {AppColors.PRIMARY_DARK}; font-size: 10px; font-weight: 800; letter-spacing: 1.5px;"
+        # ==================== LEFT COLUMN: INPUTS ====================
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        left_scroll.setStyleSheet("QScrollArea { background: white; border: none; }")
+
+        left_widget = QWidget()
+        left_widget.setStyleSheet("background: white;")
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(12)
+
+        # --- SECTION 1: THU (Income) ---
+        thu_section = QFrame()
+        thu_section.setStyleSheet(f"""
+            QFrame {{
+                background: #f0fdf4;
+                border-radius: 6px;
+                border-left: 3px solid {AppColors.SUCCESS};
+            }}
+        """)
+        thu_layout = QVBoxLayout(thu_section)
+        thu_layout.setContentsMargins(12, 10, 12, 10)
+        thu_layout.setSpacing(8)
+
+        thu_header = QLabel("📥 THU NHẬP")
+        thu_header.setStyleSheet(
+            f"color: {AppColors.SUCCESS}; font-size: 11px; font-weight: 800; letter-spacing: 0.3px;"
         )
-        input_grid.addWidget(left_title, 0, 0, 1, 2)
+        thu_layout.addWidget(thu_header)
 
         left_fields = [
             ("tong_hop_ca", "Tổng hợp ca"),
@@ -794,179 +784,242 @@ class CalculatorToolView(QWidget):
             ("tien_ca_truoc", "Tiền ca trước"),
         ]
 
-        for i, (key, label_text) in enumerate(left_fields):
-            row = i + 1
+        for key, label_text in left_fields:
+            row_layout = QHBoxLayout()
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(8)
+
             lbl = QLabel(label_text)
-            lbl.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px; font-weight: 600;")
-            input_grid.addWidget(lbl, row, 0)
+            lbl.setFixedWidth(90)
+            lbl.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 10px; font-weight: 600;")
+            row_layout.addWidget(lbl)
 
             inp = QLineEdit()
             inp.setText("0")
             inp.setAlignment(Qt.AlignmentFlag.AlignRight)
-            inp.setMinimumHeight(34)
+            inp.setMinimumHeight(30)
             inp.setStyleSheet(f"""
                 QLineEdit {{
                     border: 1px solid {AppColors.BORDER};
-                    border-radius: 6px;
+                    border-radius: 3px;
                     background: white;
-                    color: {AppColors.TEXT};
-                    font-size: 13px;
+                    color: {AppColors.SUCCESS};
+                    font-size: 11px;
                     font-weight: 700;
-                    padding: 0 10px;
+                    padding: 0 6px;
                 }}
                 QLineEdit:focus {{
-                    border: 2px solid {AppColors.PRIMARY};
+                    border: 2px solid {AppColors.SUCCESS};
                     background: white;
                 }}
             """)
             inp.textChanged.connect(self._update_demo_result)
-            input_grid.addWidget(inp, row, 1)
+            row_layout.addWidget(inp, 1)
+            thu_layout.addLayout(row_layout)
             self._demo_inputs[key] = inp
 
-        # Right column: CHI (expense) fields
-        right_title = QLabel("CHI")
-        right_title.setStyleSheet(
-            f"color: {AppColors.ERROR}; font-size: 10px; font-weight: 800; letter-spacing: 1.5px;"
+        left_layout.addWidget(thu_section)
+
+        # --- SECTION 2: CHI (Expenses) ---
+        chi_section = QFrame()
+        chi_section.setStyleSheet(f"""
+            QFrame {{
+                background: #fef2f2;
+                border-radius: 6px;
+                border-left: 3px solid {AppColors.ERROR};
+            }}
+        """)
+        chi_layout = QVBoxLayout(chi_section)
+        chi_layout.setContentsMargins(12, 10, 12, 10)
+        chi_layout.setSpacing(8)
+
+        chi_header = QLabel("📤 CHI TIÊU")
+        chi_header.setStyleSheet(
+            f"color: {AppColors.ERROR}; font-size: 11px; font-weight: 800; letter-spacing: 0.3px;"
         )
-        input_grid.addWidget(right_title, 0, 2, 1, 2)
+        chi_layout.addWidget(chi_header)
 
         right_fields = [
             ("dem_tien", "Đếm tiền"),
             ("phu_phi", "Phụ phí"),
-            ("tien_hien_tai", "Tiền hiện tại"),
         ]
 
-        for i, (key, label_text) in enumerate(right_fields):
-            row = i + 1
+        for key, label_text in right_fields:
+            row_layout = QHBoxLayout()
+            row_layout.setContentsMargins(0, 0, 0, 0)
+            row_layout.setSpacing(8)
+
             lbl = QLabel(label_text)
-            lbl.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px; font-weight: 600;")
-            input_grid.addWidget(lbl, row, 2)
+            lbl.setFixedWidth(90)
+            lbl.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 10px; font-weight: 600;")
+            row_layout.addWidget(lbl)
 
             inp = QLineEdit()
             inp.setText("0")
             inp.setAlignment(Qt.AlignmentFlag.AlignRight)
-            inp.setMinimumHeight(34)
+            inp.setMinimumHeight(30)
             inp.setStyleSheet(f"""
                 QLineEdit {{
                     border: 1px solid {AppColors.BORDER};
-                    border-radius: 6px;
+                    border-radius: 3px;
                     background: white;
-                    color: {AppColors.TEXT};
-                    font-size: 13px;
+                    color: {AppColors.ERROR};
+                    font-size: 11px;
                     font-weight: 700;
-                    padding: 0 10px;
+                    padding: 0 6px;
                 }}
                 QLineEdit:focus {{
-                    border: 2px solid {AppColors.PRIMARY};
+                    border: 2px solid {AppColors.ERROR};
                     background: white;
                 }}
             """)
             inp.textChanged.connect(self._update_demo_result)
-            input_grid.addWidget(inp, row, 1 + 2)
+            row_layout.addWidget(inp, 1)
+            chi_layout.addLayout(row_layout)
             self._demo_inputs[key] = inp
 
-        # Column stretch: labels fixed, inputs expand
-        input_grid.setColumnStretch(0, 0)
-        input_grid.setColumnStretch(1, 1)
-        input_grid.setColumnStretch(2, 0)
-        input_grid.setColumnStretch(3, 1)
+        left_layout.addWidget(chi_section)
 
-        card_layout.addWidget(input_container)
-
-        # Formula
-        formula_label = QLabel("Công thức: Tiền hiện tại - [(Tiền máy + Tổng hợp ca + Tiền ca trước) - (Đếm tiền + Phụ phí)]")
-        formula_label.setWordWrap(True)
-        formula_label.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; "
-            f"padding: 8px 12px; background: #fffbeb; border-radius: 6px; "
-            f"border-left: 3px solid #f59e0b;"
-        )
-        card_layout.addWidget(formula_label)
-
-        # --- Result + Comparison side by side ---
-        result_compare_row = QHBoxLayout()
-        result_compare_row.setSpacing(12)
-
-        # Result box
-        result_frame = QFrame()
-        result_frame.setStyleSheet(f"""
+        # --- SECTION 3: Tiền hiện tại ---
+        current_section = QFrame()
+        current_section.setStyleSheet(f"""
             QFrame {{
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #ecfdf5, stop:1 #d1fae5);
-                border-radius: 10px;
-                border: 2px solid {AppColors.PRIMARY_DARK};
+                background: #f0f9ff;
+                border-radius: 6px;
+                border-left: 3px solid {AppColors.PRIMARY};
             }}
         """)
-        result_layout = QVBoxLayout(result_frame)
-        result_layout.setContentsMargins(16, 14, 16, 14)
-        result_layout.setSpacing(4)
+        current_layout = QVBoxLayout(current_section)
+        current_layout.setContentsMargins(12, 10, 12, 10)
+        current_layout.setSpacing(8)
+
+        current_header = QLabel("💰 TIỀN HIỆN TẠI")
+        current_header.setStyleSheet(
+            f"color: {AppColors.PRIMARY}; font-size: 11px; font-weight: 800; letter-spacing: 0.3px;"
+        )
+        current_layout.addWidget(current_header)
+
+        current_row = QHBoxLayout()
+        current_row.setContentsMargins(0, 0, 0, 0)
+        current_row.setSpacing(8)
+
+        current_lbl = QLabel("Tiền hiện tại")
+        current_lbl.setFixedWidth(90)
+        current_lbl.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 10px; font-weight: 600;")
+        current_row.addWidget(current_lbl)
+
+        current_inp = QLineEdit()
+        current_inp.setText("0")
+        current_inp.setAlignment(Qt.AlignmentFlag.AlignRight)
+        current_inp.setMinimumHeight(30)
+        current_inp.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {AppColors.BORDER};
+                border-radius: 3px;
+                background: white;
+                color: {AppColors.PRIMARY};
+                font-size: 11px;
+                font-weight: 700;
+                padding: 0 6px;
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {AppColors.PRIMARY};
+                background: white;
+            }}
+        """)
+        current_inp.textChanged.connect(self._update_demo_result)
+        current_row.addWidget(current_inp, 1)
+        current_layout.addLayout(current_row)
+        self._demo_inputs["tien_hien_tai"] = current_inp
+
+        left_layout.addWidget(current_section)
+        left_layout.addStretch()
+
+        left_scroll.setWidget(left_widget)
+        main_h_layout.addWidget(left_scroll, 1)
+
+        # ==================== RIGHT COLUMN: RESULTS ====================
+        right_layout = QVBoxLayout()
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(12)
+
+        # --- Result card (prominent) ---
+        result_box = QFrame()
+        result_box.setStyleSheet(f"""
+            QFrame {{
+                background: {AppColors.PRIMARY};
+                border-radius: 6px;
+            }}
+        """)
+        result_box.setMinimumHeight(140)
+        result_layout = QVBoxLayout(result_box)
+        result_layout.setContentsMargins(14, 12, 14, 12)
+        result_layout.setSpacing(6)
 
         result_title = QLabel("KẾT QUẢ")
-        result_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         result_title.setStyleSheet(
-            f"color: {AppColors.TEXT}; font-weight: 700; "
-            f"font-size: 9px; letter-spacing: 1.5px;"
+            f"color: rgba(255,255,255,0.8); font-size: 9px; font-weight: 800; letter-spacing: 0.3px;"
         )
         result_layout.addWidget(result_title)
 
         self._demo_result_label = QLabel("0")
         self._demo_result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._demo_result_label.setStyleSheet(
-            f"color: {AppColors.PRIMARY_DARK}; font-weight: 900; "
-            f"font-size: 28px; letter-spacing: -1px;"
+            f"color: white; font-weight: 900; font-size: 40px; letter-spacing: -1px;"
         )
-        result_layout.addWidget(self._demo_result_label)
+        result_layout.addWidget(self._demo_result_label, 1)
 
-        self._demo_status_label = QLabel("Kết quả tính toán")
+        self._demo_status_label = QLabel("Nhập dữ liệu")
         self._demo_status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._demo_status_label.setStyleSheet(
-            f"color: {AppColors.PRIMARY_DARK}; font-size: 11px; font-weight: 700;"
+            f"color: rgba(255,255,255,0.7); font-size: 10px; font-weight: 600;"
         )
         result_layout.addWidget(self._demo_status_label)
 
-        result_compare_row.addWidget(result_frame, 1)
-        self._demo_result_frame = result_frame
+        right_layout.addWidget(result_box)
+        self._demo_result_frame = result_box
 
-        # Comparison box
-        compare_frame = QFrame()
-        compare_frame.setStyleSheet(f"""
+        # --- Comparison card ---
+        compare_section = QFrame()
+        compare_section.setStyleSheet(f"""
             QFrame {{
                 background: #f8fafc;
-                border-radius: 10px;
+                border-radius: 6px;
                 border: 1px solid {AppColors.BORDER};
             }}
         """)
-        compare_layout = QVBoxLayout(compare_frame)
-        compare_layout.setContentsMargins(16, 14, 16, 14)
+        compare_layout = QVBoxLayout(compare_section)
+        compare_layout.setContentsMargins(12, 10, 12, 10)
         compare_layout.setSpacing(8)
 
-        compare_title = QLabel("SO SÁNH")
-        compare_title.setStyleSheet(
-            f"color: {AppColors.TEXT}; font-size: 9px; font-weight: 700; letter-spacing: 1.5px;"
+        compare_header = QLabel("📊 SO SÁNH")
+        compare_header.setStyleSheet(
+            f"color: {AppColors.TEXT_SECONDARY}; font-size: 10px; font-weight: 800; letter-spacing: 0.3px;"
         )
-        compare_layout.addWidget(compare_title)
+        compare_layout.addWidget(compare_header)
 
-        input_row = QHBoxLayout()
-        input_row.setSpacing(8)
-        compare_label = QLabel("Tiền ban đầu:")
-        compare_label.setStyleSheet(
-            f"color: {AppColors.TEXT}; font-size: 12px; font-weight: 600;"
-        )
-        input_row.addWidget(compare_label)
+        compare_row = QHBoxLayout()
+        compare_row.setContentsMargins(0, 0, 0, 0)
+        compare_row.setSpacing(6)
+
+        compare_lbl = QLabel("Ban đầu")
+        compare_lbl.setFixedWidth(65)
+        compare_lbl.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 10px; font-weight: 600;")
+        compare_row.addWidget(compare_lbl)
 
         self._tien_ban_dau_input = QLineEdit()
         self._tien_ban_dau_input.setText("0")
         self._tien_ban_dau_input.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self._tien_ban_dau_input.setMinimumHeight(32)
+        self._tien_ban_dau_input.setMinimumHeight(28)
         self._tien_ban_dau_input.setStyleSheet(f"""
             QLineEdit {{
                 border: 1px solid {AppColors.BORDER};
-                border-radius: 6px;
+                border-radius: 3px;
                 background: white;
                 color: {AppColors.TEXT};
-                font-size: 12px;
+                font-size: 10px;
                 font-weight: 700;
-                padding: 0 8px;
+                padding: 0 6px;
             }}
             QLineEdit:focus {{
                 border: 2px solid {AppColors.PRIMARY};
@@ -974,22 +1027,23 @@ class CalculatorToolView(QWidget):
             }}
         """)
         self._tien_ban_dau_input.textChanged.connect(self._update_comparison)
-        input_row.addWidget(self._tien_ban_dau_input)
-        compare_layout.addLayout(input_row)
+        compare_row.addWidget(self._tien_ban_dau_input, 1)
+        compare_layout.addLayout(compare_row)
 
         self._comparison_result_label = QLabel("")
         self._comparison_result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._comparison_result_label.setWordWrap(True)
         self._comparison_result_label.setStyleSheet(
-            f"color: {AppColors.TEXT_SECONDARY}; font-size: 11px; font-weight: 600; padding: 6px;"
+            f"color: {AppColors.TEXT}; font-size: 10px; font-weight: 700; padding: 6px;"
         )
         compare_layout.addWidget(self._comparison_result_label)
 
-        result_compare_row.addWidget(compare_frame, 1)
-        card_layout.addLayout(result_compare_row)
+        right_layout.addWidget(compare_section)
+        right_layout.addStretch()
 
-        page_layout.addWidget(card)
-        page_layout.addStretch()
+        main_h_layout.addLayout(right_layout, 0)
+
+        page_layout.addWidget(main_container)
 
     def _parse_money_input(self, text: str) -> float:
         """Parse money input, removing commas and handling empty strings."""

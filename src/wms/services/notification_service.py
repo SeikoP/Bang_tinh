@@ -349,6 +349,8 @@ class NotificationRequestHandler(BaseHTTPRequestHandler):
 
                     body = json.dumps({
                         "success": True,
+                        "auth_token": expected_key or "",
+                        "k": expected_key or "",
                         "tunnel_url": _tunnel_url,
                         "tunnel_status": _tunnel_status,
                         "tunnel_updated_at": _tunnel_updated_at,

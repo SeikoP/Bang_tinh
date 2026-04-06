@@ -884,6 +884,7 @@ class PaymentLinkDialog(QDialog):
     def __init__(self, task, parent=None):
         super().__init__(parent)
         self.task = task
+        self._bank_info = self._load_bank_info()
         self.setWindowTitle(f"Thanh Toán - {task.note_code}")
         self.setMinimumWidth(420)
         self.setModal(True)
@@ -904,6 +905,18 @@ class PaymentLinkDialog(QDialog):
         )
         info.setStyleSheet(f"color: {AppColors.TEXT_SECONDARY}; font-size: 12px;")
         layout.addWidget(info)
+
+        # Beneficiary info (critical for payer verification before transfer)
+        holder = self._bank_info.get("holder", "")
+        account = self._bank_info.get("account", "")
+        bin_code = self._bank_info.get("bin", "")
+        if holder or account:
+            ben = QLabel(
+                f"Người nhận: <b>{holder or '—'}</b>  |  "
+                f"STK: <b>{account or '—'}</b>  |  BIN: <b>{bin_code or '—'}</b>"
+            )
+            ben.setStyleSheet(f"color: {AppColors.TEXT}; font-size: 12px;")
+            layout.addWidget(ben)
 
         # Transfer content row
         content_row = QHBoxLayout()
@@ -1022,6 +1035,22 @@ class PaymentLinkDialog(QDialog):
         cleaned = re.sub(r"[^A-Za-z0-9]", "", (text or "").upper())
         return cleaned or fallback
 
+    def _load_bank_info(self) -> dict:
+        cfg_path = Path(__file__).parents[3] / "config" / "bank_settings.json"
+        if not cfg_path.exists():
+            return {}
+        try:
+            data = json.loads(cfg_path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return {
+                    "bin": (data.get("bin", "") or "").strip(),
+                    "account": (data.get("account", "") or "").strip(),
+                    "holder": (data.get("holder", "") or "").strip().upper(),
+                }
+        except Exception:
+            pass
+        return {}
+
     def _build_transfer_content(self, holder: str) -> str:
         """Build compact transfer content with all fields under addInfo length constraints."""
         notes_text = getattr(self.task, "notes", "") or ""
@@ -1064,18 +1093,15 @@ class PaymentLinkDialog(QDialog):
         return transfer_content[:50]
 
     def _build_share_text(self) -> str:
-        """Build copy-ready share text with short instructions for scanner."""
+        """Build minimal copy-ready payment instructions (recipient + link only)."""
         url = (self.task.vietqr_url or "").strip()
-        transfer_content = (self._tc_value.text() or self.task.note_code).strip()
-        amount = int(self.task.amount or 0)
-        amount_text = f"{amount:,} đ" if amount > 0 else "theo hóa đơn"
+        holder = self._bank_info.get("holder", "")
+        account = self._bank_info.get("account", "")
+        bin_code = self._bank_info.get("bin", "")
         lines = [
-            "Hướng dẫn thanh toán:",
-            "1) Mở app ngân hàng có hỗ trợ VietQR.",
-            "2) Quét mã VietQR trong ảnh hoặc dùng link bên dưới.",
-            f"3) Kiểm tra nội dung CK: {transfer_content}.",
-            f"Số tiền: {amount_text}",
-            f"Link VietQR: {url}",
+            "Thanh toán:",
+            f"{holder or 'N/A'} | {account or 'N/A'} | {bin_code or 'N/A'}",
+            url,
         ]
         return "\n".join(lines)
 
@@ -1093,26 +1119,19 @@ class PaymentLinkDialog(QDialog):
 
     def _generate_qr(self):
         """Build VietQR URL from bank settings and update task"""
-        cfg_path = Path(__file__).parents[3] / "config" / "bank_settings.json"
-        if not cfg_path.exists():
+        if not self._bank_info:
             QMessageBox.warning(self, "Thiếu cấu hình",
                 "Chưa cấu hình tài khoản ngân hàng.\nVui lòng vào Cài đặt → Tài khoản NH để nhập thông tin.")
             return
 
-        try:
-            bank = json.loads(cfg_path.read_text(encoding="utf-8"))
-        except Exception as e:
-            QMessageBox.warning(self, "Lỗi", f"Không đọc được cấu hình ngân hàng: {e}")
-            return
-
-        bin_code = bank.get("bin", "")
-        account = bank.get("account", "")
+        bin_code = self._bank_info.get("bin", "")
+        account = self._bank_info.get("account", "")
         if not bin_code or not account:
             QMessageBox.warning(self, "Thiếu thông tin",
                 "Cần nhập BIN ngân hàng và số tài khoản trong Cài đặt.")
             return
 
-        holder = (bank.get("holder", "") or "").strip().upper()
+        holder = self._bank_info.get("holder", "")
         tc = self._build_transfer_content(holder)
 
         amount = int(self.task.amount)

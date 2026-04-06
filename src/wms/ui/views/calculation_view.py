@@ -295,10 +295,12 @@ class SaveSessionDialog(QDialog):
 class CalculationView(QWidget):
     """View bảng tính kèm quản lý danh mục sản phẩm"""
 
-    def __init__(self, container=None, on_refresh_stock=None):
+    def __init__(self, container=None, on_refresh_stock=None, get_online_count=None):
         super().__init__()
         # Inject services from container
         self.container = container
+        # Callable() -> int: number of connected Android devices; None = skip check
+        self._get_online_count = get_online_count
         if container:
             self.calc_service = container.get("calculator")
             self.report_service = container.get("report_service") or ReportService()
@@ -1226,6 +1228,24 @@ class CalculationView(QWidget):
         if self._is_saving:
             return
 
+        # Block Chốt ca when no Android device is connected
+        if self._get_online_count is not None:
+            online = self._get_online_count()
+            if online == 0:
+                msg = QMessageBox(self)
+                msg.setWindowTitle("Chưa kết nối Android")
+                msg.setIcon(QMessageBox.Icon.Warning)
+                msg.setText(
+                    "<b>Không thể chốt ca khi chưa có thiết bị Android kết nối.</b>"
+                )
+                msg.setInformativeText(
+                    "Ứng dụng cần nhận thông báo từ Android để đảm bảo\n"
+                    "dữ liệu thanh toán đầy đủ trước khi kết thúc ca.\n\n"
+                    "Hãy kiểm tra kết nối rồi thử lại."
+                )
+                msg.exec()
+                return
+
         self._is_saving = True
         try:
             save_btn = self.sender()
@@ -1237,6 +1257,17 @@ class CalculationView(QWidget):
 
             dialog = SaveSessionDialog(total, self)
             if dialog.exec() == QDialog.DialogCode.Accepted and dialog.result_data:
+                # Re-check after dialog closed: if user chose Giao ca, allow regardless
+                if not dialog.result_data["is_handover"] and self._get_online_count is not None:
+                    if self._get_online_count() == 0:
+                        self._is_saving = False
+                        msg = QMessageBox(self)
+                        msg.setWindowTitle("Chưa kết nối Android")
+                        msg.setIcon(QMessageBox.Icon.Warning)
+                        msg.setText("<b>Không thể chốt ca khi chưa có thiết bị Android kết nối.</b>")
+                        msg.setInformativeText("Kiểm tra kết nối Android và thử lại.")
+                        msg.exec()
+                        return
                 is_handover = dialog.result_data["is_handover"]
 
                 # Save to history

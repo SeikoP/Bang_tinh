@@ -461,8 +461,17 @@ class SettingsView(QWidget):
         """Play short pip-pip test sound."""
         try:
             import winsound
-            winsound.Beep(1200, 120)
-            winsound.Beep(1600, 120)
+            import time
+
+            pattern = [
+                (1500, 130),
+                (2100, 130),
+                (1500, 130),
+                (2300, 180),
+            ]
+            for freq, duration in pattern:
+                winsound.Beep(freq, duration)
+                time.sleep(0.035)
         except Exception:
             QMessageBox.information(self, "Thông báo", "Thiết bị không hỗ trợ pip pip ở môi trường hiện tại.")
 
@@ -772,7 +781,7 @@ class SettingsView(QWidget):
         if self._tunnel_service and self._tunnel_service.is_running:
             self.tunnel_toggle_btn.setText("Đang dừng...")
             self.tunnel_toggle_btn.setEnabled(False)
-            self._tunnel_service.stop()
+            self._tunnel_service.stop(wait_ms=1200)
             self._tunnel_service = None
             provider = self.tunnel_provider_combo.currentData()
             label = "Bật ngrok" if provider == "ngrok" else "Bật Cloudflare Tunnel"

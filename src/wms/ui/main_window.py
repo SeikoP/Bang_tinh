@@ -686,7 +686,9 @@ class MainWindow(QMainWindow):
 
         # Pass container to views
         self.calc_view = CalculationView(
-            container=self.container, on_refresh_stock=self._refresh_stock
+            container=self.container,
+            on_refresh_stock=self._refresh_stock,
+            get_online_count=self._get_android_online_count,
         )
         self.stock_view = StockView(on_refresh_calc=self._refresh_calc)
         self.product_view = ProductView(
@@ -891,6 +893,12 @@ class MainWindow(QMainWindow):
             self.status_indicator.set_device_count(status.get("online_count", 0))
             self.status_indicator.update_heartbeat_status(status)
 
+    def _get_android_online_count(self) -> int:
+        """Return number of currently online Android devices."""
+        if hasattr(self, "_heartbeat"):
+            return self._heartbeat.get_online_count()
+        return 0
+
     def _show_connection_detail(self):
         """Show the connection detail popup from StatusIndicator."""
         from .widgets.status_indicator import ConnectionDetailDialog
@@ -1088,20 +1096,32 @@ class MainWindow(QMainWindow):
         self._refresh_tasks()
 
     def _play_payment_sound(self):
-        """Play short pip-pip sound when beep notification is enabled."""
+        """Play a clearer, higher-contrast beep pattern when enabled."""
         if not self._beep_enabled:
             return
         try:
             import winsound
             import threading
+            import time
 
             def _beep():
-                winsound.Beep(1200, 120)
-                winsound.Beep(1600, 120)
+                pattern = [
+                    (1500, 130),
+                    (2100, 130),
+                    (1500, 130),
+                    (2300, 180),
+                ]
+                for freq, duration in pattern:
+                    winsound.Beep(freq, duration)
+                    time.sleep(0.035)
 
             threading.Thread(target=_beep, daemon=True).start()
         except Exception:
-            pass  # winsound only on Windows; silently skip elsewhere
+            try:
+                import winsound
+                winsound.MessageBeep(winsound.MB_ICONEXCLAMATION)
+            except Exception:
+                pass
 
     def set_beep_enabled(self, enabled: bool, persist: bool = False):
         """Update beep runtime state. Optionally persist to disk."""
@@ -1418,6 +1438,21 @@ class MainWindow(QMainWindow):
         """Handle window close event - cleanup resources"""
         self.logger.info("Application closing - cleaning up resources")
 
+        def _safe_stop_thread(thread_obj, wait_ms: int = 250):
+            """Best-effort stop without freezing UI during shutdown."""
+            if not thread_obj:
+                return
+            try:
+                if hasattr(thread_obj, "stop"):
+                    thread_obj.stop()
+            except Exception:
+                pass
+            try:
+                if hasattr(thread_obj, "isRunning") and thread_obj.isRunning():
+                    thread_obj.wait(wait_ms)
+            except Exception:
+                pass
+
         # Create shutdown backup
         if hasattr(self, "backup_service") and self.backup_service:
             try:
@@ -1435,20 +1470,17 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_status_timer"):
             self._status_timer.stop()
         if self._update_worker and self._update_worker.isRunning():
-            self._update_worker.wait(500)
+            self._update_worker.wait(100)
 
         # Stop network monitor + heartbeat
         if hasattr(self, "_network_monitor"):
-            self._network_monitor.stop()
-            self._network_monitor.wait(2000)
+            _safe_stop_thread(self._network_monitor, wait_ms=250)
         if hasattr(self, "_heartbeat"):
-            self._heartbeat.stop()
-            self._heartbeat.wait(2000)
+            _safe_stop_thread(self._heartbeat, wait_ms=250)
 
         # Stop discovery server
         if hasattr(self, "_discovery_thread"):
-            self._discovery_thread.stop()
-            self._discovery_thread.wait(2000)
+            _safe_stop_thread(self._discovery_thread, wait_ms=250)
 
         # Stop TTS
         if hasattr(self, "_tts_service"):
@@ -1458,13 +1490,12 @@ class MainWindow(QMainWindow):
         if hasattr(self, "settings_view") and hasattr(self.settings_view, "_tunnel_service"):
             svc = self.settings_view._tunnel_service
             if svc and svc.is_running:
-                svc.stop()
+                svc.stop(wait_ms=250)
                 self.logger.info("Tunnel stopped")
 
         # Stop notification server
         if hasattr(self, "notif_thread"):
-            self.notif_thread.stop()
-            self.notif_thread.wait(2000)  # Wait max 2 seconds
+            _safe_stop_thread(self.notif_thread, wait_ms=300)
 
         # Cleanup views
         if hasattr(self, "bank_view"):
